@@ -77,6 +77,7 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
       form.reset();
 
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      onClose();
     },
     onError: (error: Error) => {
       notifications.show({

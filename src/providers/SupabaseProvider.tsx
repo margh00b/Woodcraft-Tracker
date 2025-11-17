@@ -4,9 +4,6 @@ import React, { ReactNode, createContext, useEffect, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { useAuth } from "@clerk/nextjs";
 
-/**
- * Context for Supabase client
- */
 export const SupabaseContext = createContext<SupabaseClient | null>(null);
 
 export function SupabaseProvider({ children }: { children: ReactNode }) {
