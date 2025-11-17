@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSupabase } from "@/hooks";
 import {
   Stack,
   SimpleGrid,
@@ -22,6 +23,7 @@ interface AddClientModalProps {
 }
 export default function AddClient({ opened, onClose }: AddClientModalProps) {
   const { user, isLoaded } = useUser();
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   const form = useForm<ClientType>({
@@ -52,17 +54,19 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
       }
       values.designer = user.username;
 
-      const res = await fetch("/api/Clients/addClient", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      // Insert directly into Supabase
+      const { data: newClient, error: dbError } = await supabase
+        .from("client")
+        .insert(values)
+        .select()
+        .single();
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create client");
+      if (dbError) {
+        console.error("Supabase Create Error:", dbError);
+        throw new Error(dbError.message || "Failed to create client");
       }
-      return res.json();
+
+      return newClient;
     },
     onSuccess: () => {
       notifications.show({

@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import { Notifications } from "@mantine/notifications";
 import localFont from "next/font/local";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { SupabaseProvider } from "@/providers";
 
 const Quicksand = localFont({
   src: "../../public/Fonts/Quicksand/Quicksand-Regular.ttf",
@@ -30,13 +31,15 @@ export default function RootLayout({
         <head></head>
 
         <body className={`${Quicksand.className} `}>
-          <QueryProvider>
-            <MantineProvider>
-              <Notifications />
-              <Navbar />
-              {children}
-            </MantineProvider>
-          </QueryProvider>
+          <SupabaseProvider>
+            <QueryProvider>
+              <MantineProvider>
+                <Notifications />
+                <Navbar />
+                {children}
+              </MantineProvider>
+            </QueryProvider>
+          </SupabaseProvider>
         </body>
       </html>
     </ClerkProvider>
