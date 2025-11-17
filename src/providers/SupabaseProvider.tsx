@@ -2,51 +2,50 @@
 
 import React, { ReactNode, createContext, useEffect, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { useAuth } from "@clerk/nextjs";
+import useClerkToken from "@/hooks/useClerkToken";
+
 
 export const SupabaseContext = createContext<SupabaseClient | null>(null);
 
-export function SupabaseProvider({ children }: { children: ReactNode }) {
-  const { getToken, isSignedIn } = useAuth();
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-  const [initializing, setInitializing] = useState(true);
+export default function SupabaseProvider({
+	children,
+}: {
+	children: ReactNode;
+}) {
+	const token = useClerkToken();
+	const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-  useEffect(() => {
-    const initializeSupabase = async () => {
-      try {
-        const supabaseToken = await getToken({ template: "supabase" });
-        let headers = {};
-        if (supabaseToken) {
-          headers = { Authorization: `Bearer ${supabaseToken}` };
-        }
+	useEffect(() => {
+		const initializeSupabase = async () => {
+			try {
+				let headers = {};
+				if (token) {
+					headers = { Authorization: `Bearer ${token}` };
+				}
 
-        const client = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            global: {
-              headers,
-            },
-          }
-        );
+				const client = createClient(
+					process.env.NEXT_PUBLIC_SUPABASE_URL!,
+					process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+					{
+						global: {
+							headers,
+						},
+					}
+				);
 
-        setSupabase(client);
-      } catch (error) {
-        console.error("Failed to initialize Supabase client:", error);
-        setSupabase(null);
-      } finally {
-        setInitializing(false);
-      }
-    };
+				setSupabase(client);
+			} catch (error) {
+				console.error("Failed to initialize Supabase client:", error);
+				setSupabase(null);
+			}
+		};
 
-    initializeSupabase();
-  }, [getToken, isSignedIn]);
-  if (initializing) {
-    return null;
-  }
-  return (
-    <SupabaseContext.Provider value={supabase}>
-      {children}
-    </SupabaseContext.Provider>
-  );
+		initializeSupabase();
+	}, [token]);
+
+	return (
+		<SupabaseContext.Provider value={supabase}>
+			{children}
+		</SupabaseContext.Provider>
+	);
 }

@@ -14,7 +14,8 @@ import Navbar from "@/components/Navbar/Navbar";
 import { Notifications } from "@mantine/notifications";
 import localFont from "next/font/local";
 import QueryProvider from "@/components/providers/QueryProvider";
-import { SupabaseProvider } from "@/providers/SupabaseProvider";
+import ClerkTokenProvider from "@/providers/ClerkTokenProvider";
+import SupabaseProvider from "@/providers/SupabaseProvider";
 
 const Quicksand = localFont({
   src: "../../public/Fonts/Quicksand/Quicksand-Regular.ttf",
@@ -31,15 +32,17 @@ export default function RootLayout({
         <head></head>
 
         <body className={`${Quicksand.className} `}>
-          <SupabaseProvider>
-            <QueryProvider>
-              <MantineProvider>
-                <Notifications />
-                <Navbar />
-                {children}
-              </MantineProvider>
-            </QueryProvider>
-          </SupabaseProvider>
+          <ClerkTokenProvider>
+            <SupabaseProvider>
+              <QueryProvider>
+                <MantineProvider>
+                  <Notifications />
+                  <Navbar />
+                  {children}
+                </MantineProvider>
+              </QueryProvider>
+            </SupabaseProvider>
+          </ClerkTokenProvider>
         </body>
       </html>
     </ClerkProvider>

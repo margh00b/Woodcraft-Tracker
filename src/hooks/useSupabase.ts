@@ -9,9 +9,5 @@ import { SupabaseContext } from '@/providers/SupabaseProvider';
 export function useSupabase() {
   const supabase = useContext(SupabaseContext);
 
-  if (!supabase) {
-    throw new Error('useSupabase must be used within SupabaseProvider');
-  }
-
   return supabase;
 }
