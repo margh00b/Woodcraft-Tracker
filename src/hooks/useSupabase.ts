@@ -12,5 +12,8 @@ export function useSupabase() {
     throw new Error("useSupabase must be used within SupabaseProvider");
   }
 
-  return { supabase, token };
+  return {
+    supabase,
+    isAuthenticated: !!token,
+  };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
@@ -52,7 +52,7 @@ export default function ClientsTable() {
     pageIndex: 0,
     pageSize: 17,
   });
-  const { supabase, token } = useSupabase();
+  const { supabase, isAuthenticated } = useSupabase();
   const [editModalOpened, { open: editModalOpen, close: editModalClose }] =
     useDisclosure(false);
   const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
@@ -87,7 +87,7 @@ export default function ClientsTable() {
     isError,
     error,
   } = useQuery<ClientType[]>({
-    queryKey: ["clients", token],
+    queryKey: ["clients"],
     queryFn: async () => {
       const { data: clients, error: dbError } = await supabase
         .from("client")
@@ -100,6 +100,7 @@ export default function ClientsTable() {
       }
       return clients;
     },
+    enabled: isAuthenticated,
     placeholderData: (previousData) => previousData,
   });
 
@@ -209,7 +210,12 @@ export default function ClientsTable() {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  if (loading) {
+  const shouldShowLoader = useMemo(
+    () => !isAuthenticated || loading,
+    [isAuthenticated, loading]
+  );
+
+  if (shouldShowLoader) {
     return (
       <Center className="py-10">
         <Loader />
