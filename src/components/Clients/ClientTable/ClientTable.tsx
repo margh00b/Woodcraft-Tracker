@@ -89,9 +89,6 @@ export default function ClientsTable() {
   } = useQuery<ClientType[]>({
     queryKey: ["clients", token],
     queryFn: async () => {
-      if (!supabase) {
-        throw new Error("Supabase not initialized...");
-      }
       const { data: clients, error: dbError } = await supabase
         .from("client")
         .select("*")
