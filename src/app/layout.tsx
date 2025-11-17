@@ -14,7 +14,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import { Notifications } from "@mantine/notifications";
 import localFont from "next/font/local";
 import QueryProvider from "@/components/providers/QueryProvider";
-import { SupabaseProvider } from "@/providers";
+import { SupabaseProvider } from "@/providers/SupabaseProvider";
 
 const Quicksand = localFont({
   src: "../../public/Fonts/Quicksand/Quicksand-Regular.ttf",

@@ -1,34 +1,26 @@
 "use client";
 
-import React, { ReactNode, createContext, useEffect, useState } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { useAuth } from '@clerk/nextjs';
+import React, { ReactNode, createContext, useEffect, useState } from "react";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { useAuth } from "@clerk/nextjs";
 
 /**
  * Context for Supabase client
  */
 export const SupabaseContext = createContext<SupabaseClient | null>(null);
 
-/**
- * SupabaseProvider component that wraps your application
- * Initializes the authenticated Supabase client and provides it via context
- * 
- * Usage in layout.tsx:
- * <SupabaseProvider>
- *   <YourApp />
- * </SupabaseProvider>
- */
 export function SupabaseProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn } = useAuth();
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const initializeSupabase = async () => {
       try {
-        const supabaseToken = await getToken({ template: 'supabase' });
-		let headers = {};
+        const supabaseToken = await getToken({ template: "supabase" });
+        let headers = {};
         if (supabaseToken) {
-			headers = { Authorization: `Bearer ${supabaseToken}` };
+          headers = { Authorization: `Bearer ${supabaseToken}` };
         }
 
         const client = createClient(
@@ -43,14 +35,18 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
         setSupabase(client);
       } catch (error) {
-        console.error('Failed to initialize Supabase client:', error);
+        console.error("Failed to initialize Supabase client:", error);
         setSupabase(null);
+      } finally {
+        setInitializing(false);
       }
     };
 
     initializeSupabase();
   }, [getToken, isSignedIn]);
-
+  if (initializing) {
+    return null;
+  }
   return (
     <SupabaseContext.Provider value={supabase}>
       {children}

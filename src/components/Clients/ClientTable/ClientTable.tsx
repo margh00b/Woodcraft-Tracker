@@ -44,6 +44,7 @@ import { ClientType } from "@/zod/client.schema";
 import { useDisclosure } from "@mantine/hooks";
 import EditClient from "../EditClient/EditClient";
 import AddClient from "../AddClient/AddClient";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export default function ClientsTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -51,6 +52,7 @@ export default function ClientsTable() {
     pageIndex: 0,
     pageSize: 17,
   });
+  const supabase = useSupabase();
   const [editModalOpened, { open: editModalOpen, close: editModalClose }] =
     useDisclosure(false);
   const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
@@ -87,12 +89,16 @@ export default function ClientsTable() {
   } = useQuery<ClientType[]>({
     queryKey: ["clients"],
     queryFn: async () => {
-      const res = await fetch(`/api/Clients/getAllClients`);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to fetch clients");
+      const { data: clients, error: dbError } = await supabase
+        .from("client")
+        .select("*")
+        .order("createdAt", { ascending: false });
+
+      if (dbError) {
+        console.error("Supabase query error:", dbError);
+        throw new Error(dbError.message || "Failed to fetch clients");
       }
-      return res.json();
+      return clients;
     },
     placeholderData: (previousData) => previousData,
   });
@@ -155,7 +161,7 @@ export default function ClientsTable() {
     columnHelper.accessor("createdAt", {
       header: "Created",
       size: 130,
-      minSize: 100, 
+      minSize: 100,
       cell: (info) => new Date(info.getValue<string>()).toLocaleDateString(),
     }),
 

@@ -7,7 +7,6 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSupabase } from "@/hooks";
 import {
   Stack,
   SimpleGrid,
@@ -17,6 +16,7 @@ import {
   Modal,
   Fieldset,
 } from "@mantine/core";
+import { useSupabase } from "@/hooks/useSupabase";
 interface AddClientModalProps {
   opened: boolean;
   onClose: () => void;
@@ -52,9 +52,9 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
       if (!isLoaded || !user?.username) {
         throw new Error("User info not loaded yet. Please wait...");
       }
-      values.designer = user.username;
+      const validatedInput = ClientSchema.parse(values);
+      validatedInput.designer = user.username;
 
-      // Insert directly into Supabase
       const { data: newClient, error: dbError } = await supabase
         .from("client")
         .insert(values)

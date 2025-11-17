@@ -19,6 +19,7 @@ import {
 } from "@/zod/client.schema";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useEffect } from "react";
+import { useSupabase } from "@/hooks/useSupabase";
 
 interface EditClientModalProps {
   opened: boolean;
@@ -31,9 +32,11 @@ export default function EditClient({
   onClose,
   client,
 }: EditClientModalProps) {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
 
   const form = useForm<ClientInput>({
+    mode: "uncontrolled",
     initialValues: {
       lastName: client.lastName,
       street: client.street ?? "",
@@ -49,17 +52,24 @@ export default function EditClient({
   });
   const editMutation = useMutation({
     mutationFn: async (values: ClientInput) => {
-      const res = await fetch(`/api/Clients/editClient/${client.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      const validated = ClientInputSchema.partial().parse(values);
+      const { data: updatedClient, error: dbError } = await supabase
+        .from("client")
+        .update(validated)
+        .eq("id", client.id)
+        .select()
+        .single();
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to update client");
+      if (dbError) {
+        console.error("Supabase Update Error:", dbError);
+        throw new Error(dbError.message || "Failed to update client");
       }
-      return res.json();
+
+      if (!updatedClient) {
+        throw new Error("Update failed or client not found.");
+      }
+
+      return updatedClient;
     },
     onSuccess: () => {
       notifications.show({
@@ -68,6 +78,7 @@ export default function EditClient({
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client", client.id] });
       onClose();
     },
     onError: (error: Error) => {
@@ -82,7 +93,6 @@ export default function EditClient({
     if (opened) {
       form.setValues({
         lastName: client.lastName,
-        firstName: client.firstName ?? "",
         street: client.street ?? "",
         city: client.city ?? "",
         province: client.province ?? "",
@@ -95,12 +105,20 @@ export default function EditClient({
       form.resetDirty();
     }
   }, [client, opened]);
+
+  const handleSubmit = async (values: ClientInput) => {
+    form.setSubmitting(true);
+
+    try {
+      await editMutation.mutateAsync(values);
+    } finally {
+      form.setSubmitting(false);
+    }
+  };
+
   return (
     <Modal opened={opened} onClose={onClose} title="Edit Client" size="xl">
-      <form
-        onSubmit={form.onSubmit((values) => editMutation.mutate(values))}
-        noValidate
-      >
+      <form onSubmit={form.onSubmit(handleSubmit)} noValidate>
         <Stack>
           <Fieldset legend="Client Details">
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -140,7 +158,11 @@ export default function EditClient({
           </Fieldset>
 
           <Group justify="flex-end" mt="md">
-            <Button type="submit" loading={editMutation.isPending}>
+            <Button
+              type="submit"
+              loading={form.submitting}
+              disabled={!form.isDirty()}
+            >
               Save Changes
             </Button>
           </Group>
