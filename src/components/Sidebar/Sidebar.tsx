@@ -86,8 +86,8 @@ export default function Sidebar({ links }: SidebarProps) {
     <Box
       style={{
         width: rem(200),
-        height: "100vh", // FORCE exact viewport height
-        overflowY: "auto", // PREVENT overflow issues
+        height: "100vh",
+        overflowY: "auto",
         background: "linear-gradient(180deg, #7b2ff7, #2b86c5)",
         borderRight: `1px solid ${theme.colors.gray[3]}`,
         display: "flex",
