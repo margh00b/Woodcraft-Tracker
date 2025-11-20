@@ -26,6 +26,11 @@ const dashboardLinks: {
   { iconName: "FaHome", label: "Dashboard", path: "/dashboard" },
   { iconName: "FaUsers", label: "Clients", path: "/dashboard/clients" },
   { iconName: "FaGears", label: "Production", path: "/dashboard/production" },
+  {
+    iconName: "FaShippingFast",
+    label: "Installation",
+    path: "/dashboard/installation",
+  },
 ];
 export default function RootLayout({
   children,

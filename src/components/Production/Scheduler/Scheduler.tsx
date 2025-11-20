@@ -400,115 +400,113 @@ export default function EditProductionSchedulePage({
                         Cabinet Details
                       </Text>
                       {/* --- General Cabinet Info --- */}
-                      <Paper p="md" radius="md" shadow="sm" withBorder>
-                        <Grid>
-                          <Grid.Col span={8}>
-                            <Text size="sm">
-                              <strong>Box:</strong> {cabinet.box || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Color:</strong> {cabinet.color || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Finish:</strong> {cabinet.finish || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Species:</strong> {cabinet.species || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Interior:</strong>{" "}
-                              {cabinet.interior || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Piece Count:</strong>{" "}
-                              {cabinet.piece_count || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Glass Type:</strong>{" "}
-                              {cabinet.glass_type || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Door Style:</strong>{" "}
-                              {cabinet.door_style || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Top Drawer Front:</strong>{" "}
-                              {cabinet.top_drawer_front || "—"}
-                            </Text>
-                            <Text size="sm">
-                              <strong>Drawer Box:</strong>{" "}
-                              {cabinet.drawer_box || "—"}
-                            </Text>
-                          </Grid.Col>
-                          <Grid.Col span={4}>
-                            <Text
-                              size="sm"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <strong>Glass:</strong>{" "}
-                              {cabinet.glass && (
-                                <FaCheck color="#8e2de2" size={12} />
-                              )}
-                            </Text>
-                            <Text
-                              size="sm"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <strong>Doors Parts Only:</strong>{" "}
-                              {cabinet.doors_parts_only && (
-                                <FaCheck color="#8e2de2" size={12} />
-                              )}
-                            </Text>
-                            <Text
-                              size="sm"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <strong>Handles Selected:</strong>{" "}
-                              {cabinet.handles_selected && (
-                                <FaCheck color="#8e2de2" size={12} />
-                              )}
-                            </Text>
-                            <Text
-                              size="sm"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <strong>Handles Supplied:</strong>{" "}
-                              {cabinet.handles_supplied && (
-                                <FaCheck color="#8e2de2" size={12} />
-                              )}
-                            </Text>
-                            <Text
-                              size="sm"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <strong>Hinge Soft Close:</strong>{" "}
-                              {cabinet.hinge_soft_close && (
-                                <FaCheck color="#8e2de2" size={12} />
-                              )}
-                            </Text>
-                          </Grid.Col>
-                        </Grid>
-                      </Paper>
+
+                      <Grid>
+                        <Grid.Col span={8}>
+                          <Text size="sm">
+                            <strong>Box:</strong> {cabinet.box || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Color:</strong> {cabinet.color || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Finish:</strong> {cabinet.finish || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Species:</strong> {cabinet.species || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Interior:</strong> {cabinet.interior || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Piece Count:</strong>{" "}
+                            {cabinet.piece_count || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Glass Type:</strong>{" "}
+                            {cabinet.glass_type || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Door Style:</strong>{" "}
+                            {cabinet.door_style || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Top Drawer Front:</strong>{" "}
+                            {cabinet.top_drawer_front || "—"}
+                          </Text>
+                          <Text size="sm">
+                            <strong>Drawer Box:</strong>{" "}
+                            {cabinet.drawer_box || "—"}
+                          </Text>
+                        </Grid.Col>
+                        <Grid.Col span={4}>
+                          <Text
+                            size="sm"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <strong>Glass:</strong>{" "}
+                            {cabinet.glass && (
+                              <FaCheck color="#8e2de2" size={12} />
+                            )}
+                          </Text>
+                          <Text
+                            size="sm"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <strong>Doors Parts Only:</strong>{" "}
+                            {cabinet.doors_parts_only && (
+                              <FaCheck color="#8e2de2" size={12} />
+                            )}
+                          </Text>
+                          <Text
+                            size="sm"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <strong>Handles Selected:</strong>{" "}
+                            {cabinet.handles_selected && (
+                              <FaCheck color="#8e2de2" size={12} />
+                            )}
+                          </Text>
+                          <Text
+                            size="sm"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <strong>Handles Supplied:</strong>{" "}
+                            {cabinet.handles_supplied && (
+                              <FaCheck color="#8e2de2" size={12} />
+                            )}
+                          </Text>
+                          <Text
+                            size="sm"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <strong>Hinge Soft Close:</strong>{" "}
+                            {cabinet.hinge_soft_close && (
+                              <FaCheck color="#8e2de2" size={12} />
+                            )}
+                          </Text>
+                        </Grid.Col>
+                      </Grid>
                     </Paper>
                   )}
                 </SimpleGrid>
@@ -563,7 +561,7 @@ export default function EditProductionSchedulePage({
 
                       <Select
                         w={150}
-                        label="Ship Status"
+                        label="Shipping Date Status"
                         data={[
                           { value: "unprocessed", label: "Unprocessed" },
                           { value: "tentative", label: "Tentative" },
