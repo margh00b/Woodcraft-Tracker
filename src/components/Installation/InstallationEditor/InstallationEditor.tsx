@@ -1060,7 +1060,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                               <Button
                                 size="xs"
                                 mt={2}
-                                pl={0}
                                 variant="light"
                                 color={isCompleted ? "red" : "green"}
                                 onClick={() => handleCompletionToggle(step.key)}
