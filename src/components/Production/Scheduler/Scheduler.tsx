@@ -706,7 +706,7 @@ export default function EditProductionSchedulePage({
 
           {/* TIMELINE */}
           <Grid.Col span={2}>
-            <Box pt="md" pos={"fixed"}>
+            <Box pt="md" style={{ justifyItems: "center" }}>
               <Text
                 fw={600}
                 size="lg"
@@ -717,7 +717,7 @@ export default function EditProductionSchedulePage({
               >
                 <FaCalendarCheck style={{ marginRight: 8 }} /> Actual Progress
               </Text>
-              <Paper shadow="sm" p="md" radius="md">
+              <Paper shadow="sm" p="md" radius="md" w={"100%"}>
                 <Timeline
                   bulletSize={24}
                   lineWidth={2}
