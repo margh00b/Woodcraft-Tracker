@@ -44,37 +44,21 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
+import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 
-type ServiceOrderRow = {
-  service_order_id: number;
-  service_order_number: string;
-  job_id: number;
-  due_date: string | null;
-  installer_id: number | null;
-  service_type: string | null;
-  service_by: string | null;
-  hours_estimated: number | null;
-  date_entered: string;
-  completed_at: string | null;
-  jobs?: {
-    job_number: string;
-    sales_orders?: {
-      shipping_street: string | null;
-      shipping_city: string | null;
-      shipping_province: string | null;
-      shipping_zip: string | null;
-      client?: {
-        lastName: string;
-      } | null;
-    } | null;
-  } | null;
-  installers?: {
-    company_name: string;
-    first_name: string;
-    last_name: string;
-  } | null;
+type ServiceOrderRow = Tables<"service_orders"> & {
+  jobs:
+    | (Tables<"jobs"> & {
+        sales_orders:
+          | (Tables<"sales_orders"> & {
+              client: Tables<"client"> | null;
+            })
+          | null;
+      })
+    | null;
+  installers: Tables<"installers"> | null;
 };
 
 export default function ServiceOrdersTable() {

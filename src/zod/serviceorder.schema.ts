@@ -29,4 +29,4 @@ export const ServiceOrderSchema = z.object({
 });
 
 export type ServiceOrderPartType = z.infer<typeof ServiceOrderPartSchema>;
-export type ServiceOrderInput = z.infer<typeof ServiceOrderSchema>;
+export type ServiceOrderFormValues = z.infer<typeof ServiceOrderSchema>;

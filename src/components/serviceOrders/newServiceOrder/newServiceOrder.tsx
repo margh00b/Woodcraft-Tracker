@@ -30,7 +30,7 @@ import { DateInput } from "@mantine/dates";
 import { FaPlus, FaTrash, FaTools, FaSave } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
-  ServiceOrderInput,
+  ServiceOrderFormValues,
   ServiceOrderSchema,
 } from "@/zod/serviceorder.schema";
 import { useJobs } from "@/hooks/useJobs";
@@ -68,7 +68,7 @@ export default function NewServiceOrder() {
   }, [installersData]);
 
   // 3. Form Setup
-  const form = useForm<ServiceOrderInput>({
+  const form = useForm<ServiceOrderFormValues>({
     initialValues: {
       job_id: "",
       service_order_number: "", // Could be auto-generated logic here if preferred
@@ -136,7 +136,7 @@ export default function NewServiceOrder() {
 
   // 4. Submit Mutation
   const submitMutation = useMutation({
-    mutationFn: async (values: ServiceOrderInput) => {
+    mutationFn: async (values: ServiceOrderFormValues) => {
       if (!user) throw new Error("User not authenticated");
 
       // A. Insert Service Order
@@ -200,7 +200,7 @@ export default function NewServiceOrder() {
     },
   });
 
-  const handleSubmit = (values: ServiceOrderInput) => {
+  const handleSubmit = (values: ServiceOrderFormValues) => {
     submitMutation.mutate(values);
   };
 

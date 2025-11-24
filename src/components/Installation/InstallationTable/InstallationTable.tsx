@@ -40,38 +40,22 @@ import {
   FaCalendarCheck,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
+import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
 
-interface ClientType {
-  lastName: string;
-}
-
-interface InstallerType {
-  company_name?: string;
-  first_name?: string;
-  last_name?: string;
-  phone_number?: string;
-}
-
-interface InstallationType {
-  installation_id: number;
-  installer?: InstallerType | null;
-  installation_date?: string | null;
-  installation_completed?: string | null;
-  wrap_date?: string | null;
-  has_shipped: boolean;
-  inspection_date?: string | null;
-  inspection_completed?: string | null;
-}
-
-interface InstallationJobView {
-  id: number;
-  job_number: string;
-  job_base_number: number;
-  sales_orders?: { client?: ClientType } | null;
-  installation?: InstallationType | null;
-}
+type InstallationJobView = Tables<"jobs"> & {
+  sales_orders:
+    | (Tables<"sales_orders"> & {
+        client: Tables<"client"> | null;
+      })
+    | null;
+  installation:
+    | (Tables<"installation"> & {
+        installer: Tables<"installers"> | null;
+      })
+    | null;
+};
 
 const genericFilter: FilterFn<InstallationJobView> = (
   row,

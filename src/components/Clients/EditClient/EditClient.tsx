@@ -12,11 +12,8 @@ import {
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
-import {
-  ClientInput,
-  ClientInputSchema,
-  ClientType,
-} from "@/zod/client.schema";
+import { ClientFormValues, ClientSchema } from "@/zod/client.schema";
+import { Tables } from "@/types/db";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useEffect } from "react";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -24,7 +21,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 interface EditClientModalProps {
   opened: boolean;
   onClose: () => void;
-  client: ClientType;
+  client: Tables<"client">;
 }
 
 export default function EditClient({
@@ -35,7 +32,7 @@ export default function EditClient({
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
 
-  const form = useForm<ClientInput>({
+  const form = useForm<ClientFormValues>({
     mode: "uncontrolled",
     initialValues: {
       lastName: client.lastName,
@@ -48,11 +45,11 @@ export default function EditClient({
       email1: client.email1 ?? "",
       email2: client.email2 ?? "",
     },
-    validate: zodResolver(ClientInputSchema),
+    validate: zodResolver(ClientSchema),
   });
   const editMutation = useMutation({
-    mutationFn: async (values: ClientInput) => {
-      const validated = ClientInputSchema.partial().parse(values);
+    mutationFn: async (values: ClientFormValues) => {
+      const validated = ClientSchema.parse(values);
       const { data: updatedClient, error: dbError } = await supabase
         .from("client")
         .update(validated)
@@ -106,7 +103,7 @@ export default function EditClient({
     }
   }, [client, opened]);
 
-  const handleSubmit = async (values: ClientInput) => {
+  const handleSubmit = async (values: ClientFormValues) => {
     form.setSubmitting(true);
 
     try {

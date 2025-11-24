@@ -23,7 +23,4 @@ export const InstallerSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-export type InstallerType = z.infer<typeof InstallerSchema> & {
-  installer_id: number;
-  created_at?: string;
-};
+export type InstallerFormValues = z.infer<typeof InstallerSchema>;

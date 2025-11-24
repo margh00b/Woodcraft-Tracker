@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
-import { ClientType, ClientSchema } from "@/zod/client.schema";
+import { ClientFormValues, ClientSchema } from "@/zod/client.schema";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -26,7 +26,7 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
 
-  const form = useForm<ClientType>({
+  const form = useForm<ClientFormValues>({
     initialValues: {
       lastName: "",
       street: "",
@@ -48,7 +48,7 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
   }, [isLoaded, user?.username, form]);
 
   const addMutation = useMutation({
-    mutationFn: async (values: ClientType) => {
+    mutationFn: async (values: ClientFormValues) => {
       if (!isLoaded || !user?.username) {
         throw new Error("User info not loaded yet. Please wait...");
       }

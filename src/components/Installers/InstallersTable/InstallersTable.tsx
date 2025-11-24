@@ -45,7 +45,7 @@ import {
 } from "react-icons/fa";
 import { useDisclosure } from "@mantine/hooks";
 import { useSupabase } from "@/hooks/useSupabase";
-import { InstallerType } from "@/zod/installer.schema";
+import { Tables } from "@/types/db";
 import AddInstaller from "../AddInstaller/AddInstaller";
 import EditInstaller from "../EditInstaller/EditInstaller";
 
@@ -62,14 +62,14 @@ export default function InstallersTable() {
   const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
     useDisclosure(false);
   const [selectedInstaller, setSelectedInstaller] =
-    useState<InstallerType | null>(null);
+    useState<Tables<"installers"> | null>(null);
 
   const {
     data: installers,
     isLoading: loading,
     isError,
     error,
-  } = useQuery<InstallerType[]>({
+  } = useQuery<Tables<"installers">[]>({
     queryKey: ["installers"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -78,12 +78,12 @@ export default function InstallersTable() {
         .order("first_name", { ascending: true });
 
       if (error) throw new Error(error.message || "Failed to fetch installers");
-      return data as InstallerType[];
+      return data as Tables<"installers">[];
     },
     enabled: isAuthenticated,
   });
 
-  const columnHelper = createColumnHelper<InstallerType>();
+  const columnHelper = createColumnHelper<Tables<"installers">>();
   const columns = [
     columnHelper.accessor("installer_id", {
       header: "ID",

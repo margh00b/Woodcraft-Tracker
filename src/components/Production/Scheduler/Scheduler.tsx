@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useSupabase } from "@/hooks/useSupabase";
+import { Tables, TablesUpdate } from "@/types/db";
 import {
   Container,
   Paper,
@@ -43,80 +44,15 @@ import {
 import { schedulingSchema } from "@/zod/prod.schema";
 
 // ---------- Types ----------
-type ClientType = {
-  id: number;
-  firstName?: string;
-  lastName: string;
-  street?: string;
-  city?: string;
-  province?: string;
-  zip?: string;
-  phone1?: string;
-  phone2?: string;
-  email1?: string;
-  email2?: string;
+
+type SalesOrderType = Tables<"sales_orders"> & {
+  client: Tables<"client">;
+  cabinet: Tables<"cabinets">;
 };
 
-type CabinetType = {
-  id: number;
-  species: string;
-  color: string;
-  finish: string;
-  glaze: string;
-  door_style: string;
-  top_drawer_front: string;
-  interior: string;
-  drawer_box: string | null;
-  drawer_hardware: string;
-  box: string;
-  hinge_soft_close: boolean;
-  doors_parts_only: boolean;
-  hardware_only?: boolean;
-  handles_selected?: boolean;
-  handles_supplied?: boolean;
-  glass: boolean;
-  piece_count: string;
-  hardware_quantity?: string | null;
-  glass_type: string;
-  created_at: string;
-  updated_at: string;
-};
+type SchedulingFormValues = TablesUpdate<"production_schedule">;
 
-type SalesOrderType = {
-  id: number;
-  client: ClientType;
-  cabinet: CabinetType;
-};
-
-type SchedulingFormValues = {
-  rush: boolean;
-  received_date: string | null;
-  placement_date: string | null;
-  doors_in_schedule: string | null;
-  doors_out_schedule: string | null;
-  cut_finish_schedule: string | null;
-  cut_melamine_schedule: string | null;
-  paint_in_schedule: string | null;
-  paint_out_schedule: string | null;
-  assembly_schedule: string | null;
-  ship_schedule: string | null;
-  in_plant_actual: string | null;
-  ship_status: "unprocessed" | "tentative" | "confirmed";
-
-  doors_completed_actual: string | null;
-  cut_finish_completed_actual: string | null;
-  custom_finish_completed_actual: string | null;
-  drawer_completed_actual: string | null;
-  cut_melamine_completed_actual: string | null;
-  paint_completed_actual: string | null;
-  assembly_completed_actual: string | null;
-};
-
-type JobType = {
-  id: number;
-  job_number: string;
-  job_base_number: number;
-  job_suffix?: string;
+type JobType = Tables<"jobs"> & {
   sales_orders: SalesOrderType;
   production_schedule: SchedulingFormValues;
 };
@@ -198,7 +134,7 @@ export default function EditProductionSchedulePage({
       cut_melamine_completed_actual: null,
       paint_completed_actual: null,
       assembly_completed_actual: null,
-    },
+    } as SchedulingFormValues,
     validate: zodResolver(schedulingSchema),
   });
 

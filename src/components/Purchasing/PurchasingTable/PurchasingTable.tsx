@@ -43,32 +43,19 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
+import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
 
 // --- Types ---
-interface PurchaseTrackingRow {
-  purchase_check_id: number;
-  job_id: number;
-  doors_ordered_at: string | null;
-  doors_received_at: string | null;
-  glass_ordered_at: string | null;
-  glass_received_at: string | null;
-  handles_ordered_at: string | null;
-  handles_received_at: string | null;
-  acc_ordered_at: string | null;
-  acc_received_at: string | null;
-  purchasing_comments: string | null;
-  job: {
-    job_number: string;
-    production_schedule: {
-      ship_schedule: string | null;
-    } | null;
-    sales_orders: {
-      client: { lastName: string };
+type PurchaseTrackingRow = Tables<"purchase_tracking"> & {
+  job: Tables<"jobs"> & {
+    production_schedule: Tables<"production_schedule"> | null;
+    sales_orders: Tables<"sales_orders"> & {
+      client: Tables<"client"> | null;
     };
   };
-}
+};
 
 // --- Helper Component for Cells ---
 const StatusCell = ({

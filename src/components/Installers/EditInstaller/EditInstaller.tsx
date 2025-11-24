@@ -13,7 +13,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InstallerSchema, InstallerType } from "@/zod/installer.schema";
+import { InstallerSchema, InstallerFormValues } from "@/zod/installer.schema";
+import { Tables } from "@/types/db";
 import { useSupabase } from "@/hooks/useSupabase";
 import { notifications } from "@mantine/notifications";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
@@ -21,7 +22,7 @@ import { zodResolver } from "@/utils/zodResolver/zodResolver";
 interface EditInstallerProps {
   opened: boolean;
   onClose: () => void;
-  installer: InstallerType;
+  installer: Tables<"installers">;
 }
 
 export default function EditInstaller({
@@ -32,7 +33,7 @@ export default function EditInstaller({
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
 
-  const form = useForm({
+  const form = useForm<InstallerFormValues>({
     mode: "uncontrolled",
     initialValues: {
       first_name: "",
@@ -79,7 +80,7 @@ export default function EditInstaller({
   }, [installer, opened]);
 
   const updateMutation = useMutation({
-    mutationFn: async (values: typeof form.values) => {
+    mutationFn: async (values: InstallerFormValues) => {
       const { error } = await supabase
         .from("installers")
         .update(values)

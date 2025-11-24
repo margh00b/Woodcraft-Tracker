@@ -46,59 +46,20 @@ import {
   FaRegCircle,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
+import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { DateInput, DatePicker } from "@mantine/dates";
 
 // --- 1. Types ---
-interface ClientType {
-  firstName?: string;
-  lastName: string;
-  phone1?: string;
-  email1?: string;
-}
-
-interface CabinetType {
-  species: string;
-  color: string;
-  door_style: string;
-}
-
-interface ProductionScheduleType {
-  rush: boolean;
-  received_date?: string | null;
-  placement_date?: string | null;
-  ship_schedule?: string | null;
-  ship_status: "unprocessed" | "tentative" | "confirmed";
-  // Add the actual fields here:
-  in_plant_actual?: string | null;
-  doors_completed_actual?: string | null;
-  cut_finish_completed_actual?: string | null;
-  custom_finish_completed_actual?: string | null;
-  drawer_completed_actual?: string | null;
-  cut_melamine_completed_actual?: string | null;
-  paint_completed_actual?: string | null;
-  assembly_completed_actual?: string | null;
-}
-
-interface SalesOrderType {
-  client: ClientType;
-  cabinet: CabinetType;
-  shipping_street: string;
-  shipping_city: string;
-  shipping_province: string;
-  shipping_zip: string;
-}
-
-interface JobType {
-  id: number;
-  job_number: string;
-  job_base_number: number;
-  job_suffix?: string;
-  production_schedule?: ProductionScheduleType;
-  sales_orders?: SalesOrderType;
-}
-
-interface ProductionJobView extends JobType {}
+type ProductionJobView = Tables<"jobs"> & {
+  production_schedule: Tables<"production_schedule"> | null;
+  sales_orders:
+    | (Tables<"sales_orders"> & {
+        client: Tables<"client"> | null;
+        cabinet: Tables<"cabinets"> | null;
+      })
+    | null;
+};
 
 // --- 2. Generic Filter ---
 const genericFilter: FilterFn<ProductionJobView> = (
@@ -302,7 +263,10 @@ export default function ProdTable() {
         const schedule = info.row.original.production_schedule;
         if (!schedule) return <Text c="dimmed">—</Text>;
 
-        const steps: { key: keyof ProductionScheduleType; label: string }[] = [
+        const steps: {
+          key: keyof Tables<"production_schedule">;
+          label: string;
+        }[] = [
           { key: "in_plant_actual", label: "In Plant" },
           { key: "doors_completed_actual", label: "Doors" },
           { key: "cut_finish_completed_actual", label: "Cut Finish" },

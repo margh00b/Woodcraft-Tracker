@@ -36,7 +36,7 @@ import {
   MasterOrderInput,
   MasterOrderSchema,
 } from "@/zod/salesOrder_Cabinets_Jobs.schema";
-import { ClientType } from "@/zod/client.schema";
+import { Tables } from "@/types/db";
 import {
   DeliveryTypeOptions,
   DoorStyleOptions,
@@ -56,7 +56,7 @@ type EditSaleProps = {
 type ClientSelectOption = {
   value: string;
   label: string;
-  original: ClientType;
+  original: Tables<"client">;
 };
 
 export default function EditSale({ salesOrderId }: EditSaleProps) {
@@ -67,7 +67,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [selectedClientData, setSelectedClientData] =
-    useState<ClientType | null>(null);
+    useState<Tables<"client"> | null>(null);
 
   // State for Add Color/Species Modals
   const [speciesSearch, setSpeciesSearch] = useState("");
@@ -194,7 +194,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         .order("lastName");
 
       if (error) throw error;
-      return data as ClientType[];
+      return data as Tables<"client">[];
     },
     enabled: isAuthenticated,
   });
@@ -308,15 +308,17 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const copyClientToShipping = () => {
     if (!selectedClientData) return;
     form.setFieldValue("shipping", {
-      shipping_client_name: `${selectedClientData.firstName} ${selectedClientData.lastName}`,
-      shipping_street: selectedClientData.street,
-      shipping_city: selectedClientData.city,
-      shipping_province: selectedClientData.province,
-      shipping_zip: selectedClientData.zip,
-      shipping_phone_1: selectedClientData.phone1,
-      shipping_phone_2: selectedClientData.phone2,
-      shipping_email_1: selectedClientData.email1,
-      shipping_email_2: selectedClientData.email2,
+      shipping_client_name: `${selectedClientData.firstName ?? ""} ${
+        selectedClientData.lastName
+      }`,
+      shipping_street: selectedClientData.street ?? "",
+      shipping_city: selectedClientData.city ?? "",
+      shipping_province: selectedClientData.province ?? "",
+      shipping_zip: selectedClientData.zip ?? "",
+      shipping_phone_1: selectedClientData.phone1 ?? "",
+      shipping_phone_2: selectedClientData.phone2 ?? "",
+      shipping_email_1: selectedClientData.email1 ?? "",
+      shipping_email_2: selectedClientData.email2 ?? "",
     });
   };
 
@@ -520,7 +522,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 {...form.getInputProps("client_id")}
                 renderOption={({ option }) => {
                   const clientOption = option as ClientSelectOption;
-                  const clientData: ClientType = clientOption.original;
+                  const clientData: Tables<"client"> = clientOption.original;
                   return (
                     <Group
                       justify="space-between"
@@ -548,7 +550,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   const fullObj = clientSelectOptions.find(
                     (c) => c.value === val
                   )?.original;
-                  setSelectedClientData(fullObj as ClientType);
+                  setSelectedClientData(fullObj as Tables<"client">);
                   form.setFieldValue("shipping", {
                     shipping_client_name: "",
                     shipping_street: "",

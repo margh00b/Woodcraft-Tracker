@@ -42,7 +42,7 @@ import {
   FaSortDown,
   FaSortUp,
 } from "react-icons/fa";
-import { ClientType } from "@/zod/client.schema";
+import { Tables } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import EditClient from "../EditClient/EditClient";
 import AddClient from "../AddClient/AddClient";
@@ -60,8 +60,10 @@ export default function ClientsTable() {
     useDisclosure(false);
   const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
     useDisclosure(false);
-  const [selectedClient, setSelectedClient] = useState<ClientType | null>(null);
-  const multiColumnFilter: FilterFn<ClientType> = (
+  const [selectedClient, setSelectedClient] = useState<Tables<"client"> | null>(
+    null
+  );
+  const multiColumnFilter: FilterFn<Tables<"client">> = (
     row,
     columnId,
     filterValue
@@ -88,7 +90,7 @@ export default function ClientsTable() {
     isLoading: loading,
     isError,
     error,
-  } = useQuery<ClientType[]>({
+  } = useQuery<Tables<"client">[]>({
     queryKey: ["clients"],
     queryFn: async () => {
       const { data: clients, error: dbError } = await supabase
@@ -106,7 +108,7 @@ export default function ClientsTable() {
     placeholderData: (previousData) => previousData,
   });
 
-  const columnHelper = createColumnHelper<ClientType>();
+  const columnHelper = createColumnHelper<Tables<"client">>();
   const columns = [
     columnHelper.accessor("id", {
       header: "Client #",

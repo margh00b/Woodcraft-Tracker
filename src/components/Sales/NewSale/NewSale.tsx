@@ -37,7 +37,7 @@ import {
   MasterOrderInput,
   MasterOrderSchema,
 } from "@/zod/salesOrder_Cabinets_Jobs.schema";
-import { ClientType } from "@/zod/client.schema";
+import { Tables } from "@/types/db";
 import AddClient from "@/components/Clients/AddClient/AddClient";
 import { useJobBaseNumbers } from "@/hooks/useJobBaseNumbers";
 import {
@@ -62,7 +62,7 @@ export default function NewSale() {
   const queryClient = useQueryClient();
 
   const [selectedClientData, setSelectedClientData] =
-    useState<ClientType | null>(null);
+    useState<Tables<"client"> | null>(null);
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
 
   const [successBannerData, setSuccessBannerData] = useState<{
@@ -99,7 +99,7 @@ export default function NewSale() {
         )
         .order("lastName");
       if (error) throw error;
-      return data as ClientType[];
+      return data as Tables<"client">[];
     },
     enabled: isAuthenticated,
   });
@@ -107,7 +107,7 @@ export default function NewSale() {
   type ClientSelectOption = {
     value: string;
     label: string;
-    original: ClientType;
+    original: Tables<"client">;
   };
   type JobResult = {
     out_job_id: number;
@@ -119,7 +119,7 @@ export default function NewSale() {
   const clientSelectOptions = useMemo(() => {
     const safeClients = clientsData || [];
     return safeClients.map((c) => {
-      const clientItem = c as ClientType;
+      const clientItem = c as Tables<"client">;
       return {
         value: String(clientItem.id),
         label: clientItem.lastName,
@@ -424,14 +424,14 @@ export default function NewSale() {
       shipping_client_name: `${selectedClientData.firstName ?? ""} ${
         selectedClientData.lastName
       }`,
-      shipping_street: selectedClientData.street,
-      shipping_city: selectedClientData.city,
-      shipping_province: selectedClientData.province,
-      shipping_zip: selectedClientData.zip,
-      shipping_phone_1: selectedClientData.phone1,
-      shipping_phone_2: selectedClientData.phone2,
-      shipping_email_1: selectedClientData.email1,
-      shipping_email_2: selectedClientData.email2,
+      shipping_street: selectedClientData.street ?? "",
+      shipping_city: selectedClientData.city ?? "",
+      shipping_province: selectedClientData.province ?? "",
+      shipping_zip: selectedClientData.zip ?? "",
+      shipping_phone_1: selectedClientData.phone1 ?? "",
+      shipping_phone_2: selectedClientData.phone2 ?? "",
+      shipping_email_1: selectedClientData.email1 ?? "",
+      shipping_email_2: selectedClientData.email2 ?? "",
     });
   };
 
@@ -601,7 +601,7 @@ export default function NewSale() {
                 {...form.getInputProps("client_id")}
                 renderOption={({ option }) => {
                   const clientOption = option as ClientSelectOption;
-                  const clientData: ClientType = clientOption.original;
+                  const clientData: Tables<"client"> = clientOption.original;
                   return (
                     <Group
                       justify="space-between"
@@ -629,7 +629,7 @@ export default function NewSale() {
                   const fullObj = clientSelectOptions.find(
                     (c) => c.value === val
                   )?.original;
-                  setSelectedClientData(fullObj as ClientType);
+                  setSelectedClientData(fullObj as Tables<"client">);
                   form.setFieldValue(`shipping`, {
                     shipping_client_name: "",
                     shipping_street: "",
