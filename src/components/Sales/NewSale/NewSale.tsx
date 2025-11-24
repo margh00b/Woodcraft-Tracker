@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Container,
   Button,
@@ -30,7 +31,7 @@ import {
   Modal,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { FaPlus, FaCopy, FaCheckCircle } from "react-icons/fa";
+import { FaCopy, FaPlus, FaCheckCircle } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   MasterOrderInput,
@@ -51,7 +52,6 @@ import {
   OrderTypeOptions,
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
-import { useDisclosure } from "@mantine/hooks";
 
 export default function NewSale() {
   const { supabase, isAuthenticated } = useSupabase();
@@ -72,10 +72,11 @@ export default function NewSale() {
   const [parentBaseSelection, setParentBaseSelection] = useState<string | null>(
     null
   );
+
+  // State for Add Color/Species Modals
   const [speciesSearch, setSpeciesSearch] = useState("");
   const [colorSearch, setColorSearch] = useState("");
-  const [newItemValue, setNewItemValue] = useState(""); // Shared input state for the modal
-
+  const [newItemValue, setNewItemValue] = useState("");
   const [
     speciesModalOpened,
     { open: openSpeciesModal, close: closeSpeciesModal },
@@ -102,6 +103,7 @@ export default function NewSale() {
     },
     enabled: isAuthenticated,
   });
+
   type ClientSelectOption = {
     value: string;
     label: string;
@@ -113,12 +115,11 @@ export default function NewSale() {
     out_job_base_number: number;
     out_job_number: string;
   };
+
   const clientSelectOptions = useMemo(() => {
     const safeClients = clientsData || [];
-
     return safeClients.map((c) => {
       const clientItem = c as ClientType;
-
       return {
         value: String(clientItem.id),
         label: clientItem.lastName,
@@ -126,6 +127,7 @@ export default function NewSale() {
       };
     });
   }, [clientsData]);
+
   // --- Fetch Colors and Species ---
   const { data: colorsData } = useQuery({
     queryKey: ["colors-list"],
@@ -160,6 +162,8 @@ export default function NewSale() {
   const speciesOptions = useMemo(() => {
     return (speciesData || []).map((s: any) => s.Species);
   }, [speciesData]);
+
+  // --- Mutations for Adding Color/Species ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase
@@ -198,7 +202,7 @@ export default function NewSale() {
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["colors-list"] });
-      form.setFieldValue("cabinet.color", newItemValue); // Auto-select the new item
+      form.setFieldValue("cabinet.color", newItemValue);
       closeColorModal();
       setNewItemValue("");
     },
@@ -209,11 +213,11 @@ export default function NewSale() {
         color: "red",
       }),
   });
+
   const form = useForm<MasterOrderInput>({
     initialValues: {
       client_id: 0,
       stage: "QUOTE",
-
       total: 0,
       deposit: 0,
       install: false,
@@ -233,7 +237,6 @@ export default function NewSale() {
         box: "",
         piece_count: "",
         glass_type: "",
-
         hinge_soft_close: false,
         doors_parts_only: false,
         handles_supplied: false,
@@ -271,6 +274,16 @@ export default function NewSale() {
     mutationFn: async (values: MasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
+      // --- [LOGIC UPDATE] Clear dependent fields if unchecked ---
+      const cabinetPayload = { ...values.cabinet };
+      if (!cabinetPayload.glass) {
+        cabinetPayload.glass_type = "";
+      }
+      if (!cabinetPayload.doors_parts_only) {
+        cabinetPayload.piece_count = "";
+      }
+      // ----------------------------------------------------------
+
       const {
         client_id,
         stage,
@@ -280,16 +293,13 @@ export default function NewSale() {
         install,
         order_type,
         delivery_type,
-        cabinet,
         shipping,
         checklist,
       } = values;
 
-      let prefix = "Q";
-
       const { data: cabinetResult, error: cabError } = await supabase
         .from("cabinets")
-        .insert(cabinet)
+        .insert(cabinetPayload) // Use the cleaned payload
         .select("id")
         .single();
 
@@ -386,6 +396,7 @@ export default function NewSale() {
       });
     },
   });
+
   useEffect(() => {
     let timer: any;
     if (successBannerData) {
@@ -399,6 +410,7 @@ export default function NewSale() {
     }
     return () => clearTimeout(timer);
   }, [successBannerData, router, form, queryClient]);
+
   const copyClientToShipping = () => {
     if (!selectedClientData) {
       notifications.show({
@@ -453,6 +465,7 @@ export default function NewSale() {
 
     submitMutation.mutate(values);
   };
+
   return (
     <Container
       size="100%"
@@ -466,14 +479,12 @@ export default function NewSale() {
         background: "linear-gradient(135deg, #DDE6F5 0%, #E7D9F0 100%)",
       }}
     >
-      {/* ... Render structure ... */}
-
       <form
         noValidate
         onSubmit={form.onSubmit(handleSubmit)}
         id="single-order-form"
         style={{
-          flex: 1, // take all remaining height
+          flex: 1,
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
@@ -481,7 +492,6 @@ export default function NewSale() {
       >
         <Stack>
           {/* 1. MASTER DETAILS (Client & Stage) */}
-
           <Paper withBorder p="md" radius="md" shadow="xl">
             <Group align="end" mt="md" style={{ width: "100%" }}>
               <Paper p="xs" px="md" shadow="false">
@@ -635,8 +645,8 @@ export default function NewSale() {
               />
             </Group>
           </Paper>
-          {/* --- CONDITIONAL BILLING INFO SECTION --- */}
 
+          {/* --- CONDITIONAL BILLING INFO SECTION --- */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
@@ -645,12 +655,8 @@ export default function NewSale() {
               p="10px"
             >
               {/* LEFT COLUMN: Read-Only Client Billing Details */}
-
               <Fieldset legend="Billing Details" variant="filled" bg={"gray.2"}>
                 <Stack gap="sm">
-                  {" "}
-                  {/* Increased gap for better vertical separation */}
-                  {/* 1. Client Name */}
                   <Stack gap={0}>
                     <Text size="xs" c="dimmed">
                       Client Name
@@ -659,7 +665,6 @@ export default function NewSale() {
                       {selectedClientData.lastName}
                     </Text>
                   </Stack>
-                  {/* 2. Primary Contact Details (Phone 1 and Email 1) */}
                   <SimpleGrid cols={2} spacing="md">
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">
@@ -678,7 +683,6 @@ export default function NewSale() {
                       </Text>
                     </Stack>
                   </SimpleGrid>
-                  {/* 3. Secondary Contact Details (Phone 2 and Email 2) */}
                   <SimpleGrid cols={2} spacing="md">
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">
@@ -698,16 +702,10 @@ export default function NewSale() {
                     </Stack>
                   </SimpleGrid>
                   <Divider my={2} />
-                  {/* 4. Address Details (Fully Stacked) */}
                   <Stack gap="xs">
-                    {/* Stack for the entire address block */}
-
-                    {/* 1. Address Label (Single instance) */}
                     <Text size="xs" c="dimmed">
                       Billing Address
                     </Text>
-
-                    {/* 2. Full Address Value (Single line) */}
                     <Text fw={500} size="sm" mt={-5}>
                       {`${selectedClientData.street || "—"}, ${
                         selectedClientData.city || "—"
@@ -723,7 +721,6 @@ export default function NewSale() {
                 variant="filled"
                 bg={"gray.2"}
               >
-                {/* Reduced outer gap from 'md' to 'sm' */}
                 <Stack gap="sm">
                   <Group justify="space-between">
                     <Button
@@ -743,8 +740,6 @@ export default function NewSale() {
                     </Button>
                   </Group>
 
-                  {/* 1. Recipient Name & Street Address (Consolidated to one row) */}
-                  {/* Uses SimpleGrid to place inputs side-by-side where possible */}
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Client Name"
@@ -758,7 +753,6 @@ export default function NewSale() {
                     />
                   </SimpleGrid>
 
-                  {/* 2. City, State, Zip (Remains 3 columns, but compact) */}
                   <SimpleGrid cols={3} spacing="sm">
                     <TextInput
                       label="City"
@@ -774,7 +768,6 @@ export default function NewSale() {
                     />
                   </SimpleGrid>
 
-                  {/* 3. Phone 1 & 2 (Consolidated) */}
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Phone 1"
@@ -786,7 +779,6 @@ export default function NewSale() {
                     />
                   </SimpleGrid>
 
-                  {/* 4. Email 1 & 2 (Consolidated) */}
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Email 1"
@@ -819,7 +811,6 @@ export default function NewSale() {
                 >
                   {/* Row 1: Core Aesthetics */}
                   <SimpleGrid cols={3}>
-                    {/* 3. UPDATE: Species Select */}
                     <Select
                       label="Species"
                       placeholder="Select Species"
@@ -844,8 +835,6 @@ export default function NewSale() {
                       }
                       {...form.getInputProps(`cabinet.species`)}
                     />
-
-                    {/* 4. UPDATE: Color Select */}
                     <Select
                       label="Color"
                       placeholder="Select Color"
@@ -944,7 +933,9 @@ export default function NewSale() {
                         style={{
                           display: "inline-flex",
                         }}
-                        {...form.getInputProps(`cabinet.glass`)}
+                        {...form.getInputProps(`cabinet.glass`, {
+                          type: "checkbox",
+                        })}
                       />
                       <TextInput
                         label="Glass Type"
@@ -962,7 +953,9 @@ export default function NewSale() {
                         style={{
                           display: "inline-flex",
                         }}
-                        {...form.getInputProps(`cabinet.doors_parts_only`)}
+                        {...form.getInputProps(`cabinet.doors_parts_only`, {
+                          type: "checkbox",
+                        })}
                       />
                       <TextInput
                         label="Total Piece Count"
@@ -982,19 +975,25 @@ export default function NewSale() {
                         label="Soft Close Hinges"
                         size="md"
                         color="#4a00e0"
-                        {...form.getInputProps(`cabinet.hinge_soft_close`)}
+                        {...form.getInputProps(`cabinet.hinge_soft_close`, {
+                          type: "checkbox",
+                        })}
                       />
                       <Switch
                         label="Handles Supplied"
                         size="md"
                         color="#4a00e0"
-                        {...form.getInputProps(`cabinet.handles_supplied`)}
+                        {...form.getInputProps(`cabinet.handles_supplied`, {
+                          type: "checkbox",
+                        })}
                       />
                       <Switch
                         label="Handles Selected"
                         size="md"
                         color="#4a00e0"
-                        {...form.getInputProps(`cabinet.handles_selected`)}
+                        {...form.getInputProps(`cabinet.handles_selected`, {
+                          type: "checkbox",
+                        })}
                       />
                     </Group>
                   </SimpleGrid>
@@ -1129,7 +1128,7 @@ export default function NewSale() {
                     style={{
                       display: "inline-flex",
                     }}
-                    {...form.getInputProps("install")}
+                    {...form.getInputProps("install", { type: "checkbox" })}
                   />
                 </Fieldset>
               </Stack>
@@ -1290,7 +1289,7 @@ export default function NewSale() {
           </Center>
         ))}
 
-      {/* Add Species Modal */}
+      {/* --- MODALS --- */}
       <Modal
         opened={speciesModalOpened}
         onClose={closeSpeciesModal}
@@ -1318,7 +1317,6 @@ export default function NewSale() {
         </Stack>
       </Modal>
 
-      {/* Add Color Modal */}
       <Modal
         opened={colorModalOpened}
         onClose={closeColorModal}

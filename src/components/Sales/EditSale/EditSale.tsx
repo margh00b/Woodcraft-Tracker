@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Container,
   Button,
@@ -48,7 +49,6 @@ import {
   OrderTypeOptions,
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
-import { useDisclosure } from "@mantine/hooks";
 
 type EditSaleProps = {
   salesOrderId: number;
@@ -64,20 +64,22 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const { user } = useUser();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
+  const [selectedClientData, setSelectedClientData] =
+    useState<ClientType | null>(null);
+
+  // State for Add Color/Species Modals
   const [speciesSearch, setSpeciesSearch] = useState("");
   const [colorSearch, setColorSearch] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
-
   const [
     speciesModalOpened,
     { open: openSpeciesModal, close: closeSpeciesModal },
   ] = useDisclosure(false);
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] =
     useDisclosure(false);
-  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
 
-  const [selectedClientData, setSelectedClientData] =
-    useState<ClientType | null>(null);
   // --- Fetch Colors and Species ---
   const { data: colorsData } = useQuery({
     queryKey: ["colors-list"],
@@ -112,46 +114,8 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const speciesOptions = useMemo(() => {
     return (speciesData || []).map((s: any) => s.Species);
   }, [speciesData]);
-  // Fetch sales order data
-  const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
-    queryKey: ["sales-order", salesOrderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sales_orders")
-        .select(
-          `*, cabinet: cabinets(*), client: client(*), job: jobs(job_number)`
-        )
-        .eq("id", salesOrderId)
-        .single();
 
-      if (error) throw error;
-      return data as any;
-    },
-    enabled: isAuthenticated && !!salesOrderId,
-  });
-
-  // Fetch clients
-  const { data: clientsData, isLoading: clientsLoading } = useQuery({
-    queryKey: ["clients-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("client")
-        .select("*")
-        .order("lastName");
-
-      if (error) throw error;
-      return data as ClientType[];
-    },
-    enabled: isAuthenticated,
-  });
-
-  const clientSelectOptions = useMemo(() => {
-    return (clientsData || []).map((c) => ({
-      value: String(c.id),
-      label: c.lastName,
-      original: c,
-    }));
-  }, [clientsData]);
+  // --- Mutations for Adding Color/Species ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase
@@ -201,6 +165,48 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         color: "red",
       }),
   });
+
+  // Fetch sales order data
+  const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
+    queryKey: ["sales-order", salesOrderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales_orders")
+        .select(
+          `*, cabinet: cabinets(*), client: client(*), job: jobs(job_number)`
+        )
+        .eq("id", salesOrderId)
+        .single();
+
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: isAuthenticated && !!salesOrderId,
+  });
+
+  // Fetch clients
+  const { data: clientsData, isLoading: clientsLoading } = useQuery({
+    queryKey: ["clients-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client")
+        .select("*")
+        .order("lastName");
+
+      if (error) throw error;
+      return data as ClientType[];
+    },
+    enabled: isAuthenticated,
+  });
+
+  const clientSelectOptions = useMemo(() => {
+    return (clientsData || []).map((c) => ({
+      value: String(c.id),
+      label: c.lastName,
+      original: c,
+    }));
+  }, [clientsData]);
+
   // Form initialization
   const form = useForm<MasterOrderInput>({
     initialValues: {
@@ -261,7 +267,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   // Prefill form when data is loaded
   useEffect(() => {
     if (salesOrderData) {
-      console.log("Prefilling form with sales order data:", salesOrderData);
       form.setValues({
         client_id: salesOrderData.client_id,
         stage: salesOrderData.stage,
@@ -319,9 +324,19 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     mutationFn: async (values: MasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
+      // --- Clear dependent fields if unchecked ---
+      const cabinetPayload = { ...values.cabinet };
+      if (!cabinetPayload.glass) {
+        cabinetPayload.glass_type = "";
+      }
+      if (!cabinetPayload.doors_parts_only) {
+        cabinetPayload.piece_count = "";
+      }
+      // ------------------------------------------
+
       await supabase
         .from("cabinets")
-        .update(values.cabinet)
+        .update(cabinetPayload)
         .eq("id", salesOrderData.cabinet.id);
 
       const { error: soError } = await supabase
@@ -702,7 +717,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </Center>
           )}
 
-          {/* CABINET / FINANCIALS / CHECKLIST / DETAILS */}
           <Paper withBorder p="md" radius="md" shadow="xl">
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
               {/* LEFT: Cabinet & Financials */}
@@ -712,6 +726,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   variant="filled"
                   bg={"gray.2"}
                 >
+                  {/* Row 1: Core Aesthetics */}
                   <SimpleGrid cols={3}>
                     <Select
                       label="Species"
@@ -737,8 +752,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       }
                       {...form.getInputProps(`cabinet.species`)}
                     />
-
-                    {/* 4. UPDATE: Color Select */}
                     <Select
                       label="Color"
                       placeholder="Select Color"
@@ -765,7 +778,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                     <Select
                       label="Door Style"
-                      placeholder="Almond, Birch, ..."
+                      placeholder="Select Door Style"
                       data={DoorStyleOptions}
                       searchable
                       nothingFoundMessage="No door style found"
@@ -773,37 +786,43 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                     <Select
                       label="Finish"
-                      placeholder="Almond, Birch, ..."
+                      placeholder="Select Finish"
                       data={FinishOptions}
                       searchable
                       nothingFoundMessage="No finish found"
                       {...form.getInputProps(`cabinet.finish`)}
                     />
-                    <Select
+                    <TextInput
                       label="Glaze"
                       {...form.getInputProps(`cabinet.glaze`)}
                     />
                     <Select
                       label="Top Drawer Front"
-                      placeholder="Almond, Birch, ..."
+                      placeholder="Select Top Drawer Front"
                       data={TopDrawerFrontOptions}
                       searchable
                       nothingFoundMessage="No top drawer front found"
                       {...form.getInputProps(`cabinet.top_drawer_front`)}
                     />
                   </SimpleGrid>
-                  <SimpleGrid cols={3} mt="sm">
+
+                  {/* Row 2: Box, Drawers, and Interior Details */}
+                  <SimpleGrid cols={4} mt="md">
+                    <TextInput
+                      label="Box"
+                      {...form.getInputProps(`cabinet.box`)}
+                    />
                     <Select
-                      label="Interior"
-                      placeholder="Almond, Birch, ..."
+                      label="Interior Material"
+                      placeholder="Select Interior Material"
                       data={InteriorOptions}
                       searchable
-                      nothingFoundMessage="No interior found"
+                      nothingFoundMessage="No interior material found"
                       {...form.getInputProps(`cabinet.interior`)}
                     />
                     <Select
                       label="Drawer Box"
-                      placeholder="Std, Dbl Wall, Metal Box, MPL Dove, Birch F/J..."
+                      placeholder="Select Drawer Box"
                       data={DrawerBoxOptions}
                       searchable
                       nothingFoundMessage="No drawer box found"
@@ -811,82 +830,90 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                     <Select
                       label="Drawer Hardware"
-                      placeholder="Std, Dbl Wall, Metal Box, SC Under, F/X Side..."
+                      placeholder="Select Drawer Hardware"
                       data={DrawerHardwareOptions}
                       searchable
                       nothingFoundMessage="No drawer hardware found"
                       {...form.getInputProps(`cabinet.drawer_hardware`)}
                     />
                   </SimpleGrid>
-                  <SimpleGrid cols={3} mt="sm">
-                    <TextInput
-                      label="Box"
-                      {...form.getInputProps(`cabinet.box`)}
-                    />
-                    <TextInput
-                      label="Piece Count"
-                      {...form.getInputProps(`cabinet.piece_count`)}
-                    />
-                    <TextInput
-                      label="Glass Type"
-                      {...form.getInputProps(`cabinet.glass_type`)}
-                    />
+
+                  <Divider mt="md" />
+
+                  {/* Row 3: CONDITIONAL GROUPS (Glass & Parts Count) */}
+                  <SimpleGrid cols={2} mt="md">
+                    {/* COLUMN 1: GLASS SPECIFICATIONS */}
+                    <Stack gap={5}>
+                      <Switch
+                        label="Glass Doors Required"
+                        color="#4a00e0"
+                        style={{
+                          display: "inline-flex",
+                        }}
+                        {...form.getInputProps(`cabinet.glass`, {
+                          type: "checkbox",
+                        })}
+                      />
+                      <TextInput
+                        label="Glass Type"
+                        placeholder="e.g., Frosted, Clear"
+                        disabled={!form.values.cabinet.glass}
+                        {...form.getInputProps(`cabinet.glass_type`)}
+                      />
+                    </Stack>
+
+                    {/* COLUMN 2: PIECE COUNT SPECIFICATIONS */}
+                    <Stack gap={5}>
+                      <Switch
+                        label="Doors/Parts Only Order"
+                        color="#4a00e0"
+                        style={{
+                          display: "inline-flex",
+                        }}
+                        {...form.getInputProps(`cabinet.doors_parts_only`, {
+                          type: "checkbox",
+                        })}
+                      />
+                      <TextInput
+                        label="Total Piece Count"
+                        placeholder="e.g., 42"
+                        disabled={!form.values.cabinet.doors_parts_only}
+                        {...form.getInputProps(`cabinet.piece_count`)}
+                      />
+                    </Stack>
                   </SimpleGrid>
-                  <SimpleGrid cols={2} mt="sm">
-                    <Switch
-                      label="Hinge Soft Close"
-                      color="green"
-                      style={{
-                        display: "inline-flex",
-                      }}
-                      {...form.getInputProps(`cabinet.hinge_soft_close`, {
-                        type: "checkbox",
-                      })}
-                    />
-                    <Switch
-                      label="Doors / Parts Only"
-                      color="green"
-                      style={{
-                        display: "inline-flex",
-                      }}
-                      {...form.getInputProps(`cabinet.doors_parts_only`, {
-                        type: "checkbox",
-                      })}
-                    />
+
+                  <Divider mt="md" />
+
+                  {/* Row 4: Hardware & General */}
+                  <SimpleGrid cols={2} mt="md">
+                    <Group>
+                      <Switch
+                        label="Soft Close Hinges"
+                        size="md"
+                        color="#4a00e0"
+                        {...form.getInputProps(`cabinet.hinge_soft_close`, {
+                          type: "checkbox",
+                        })}
+                      />
+                      <Switch
+                        label="Handles Supplied"
+                        size="md"
+                        color="#4a00e0"
+                        {...form.getInputProps(`cabinet.handles_supplied`, {
+                          type: "checkbox",
+                        })}
+                      />
+                      <Switch
+                        label="Handles Selected"
+                        size="md"
+                        color="#4a00e0"
+                        {...form.getInputProps(`cabinet.handles_selected`, {
+                          type: "checkbox",
+                        })}
+                      />
+                    </Group>
                   </SimpleGrid>
-                  <SimpleGrid cols={2} mt="sm">
-                    <Switch
-                      label="Handles Supplied"
-                      color="green"
-                      style={{
-                        display: "inline-flex",
-                      }}
-                      {...form.getInputProps(`cabinet.handles_supplied`, {
-                        type: "checkbox",
-                      })}
-                    />
-                    <Switch
-                      label="Handles Selected"
-                      color="green"
-                      style={{
-                        display: "inline-flex",
-                      }}
-                      {...form.getInputProps(`cabinet.handles_selected`, {
-                        type: "checkbox",
-                      })}
-                    />
-                  </SimpleGrid>
-                  <Switch
-                    label="Glass Included"
-                    color="green"
-                    style={{
-                      display: "inline-flex",
-                    }}
-                    mt="sm"
-                    {...form.getInputProps(`cabinet.glass`, {
-                      type: "checkbox",
-                    })}
-                  />
                 </Fieldset>
 
                 <Fieldset
@@ -895,107 +922,135 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   bg={"gray.2"}
                   mt="md"
                 >
-                  <NumberInput label="Total" {...form.getInputProps("total")} />
-                  <NumberInput
-                    label="Deposit"
-                    {...form.getInputProps("deposit")}
-                    mt="sm"
-                  />
-                  <Switch
-                    label="Install Required"
-                    color="green"
-                    style={{
-                      display: "inline-flex",
-                    }}
-                    {...form.getInputProps("install", { type: "checkbox" })}
-                    mt="sm"
-                  />
+                  <SimpleGrid cols={3}>
+                    <NumberInput
+                      label="Total"
+                      {...form.getInputProps("total")}
+                    />
+                    <NumberInput
+                      label="Deposit"
+                      {...form.getInputProps("deposit")}
+                    />
+                    <TextInput
+                      label="Balance"
+                      readOnly
+                      value={`$${
+                        (form.values.total || 0) - (form.values.deposit || 0)
+                      }`}
+                      variant="filled"
+                    />
+                  </SimpleGrid>
                 </Fieldset>
               </Stack>
 
-              {/* RIGHT: Checklist / Dates / Order Type */}
+              {/* RIGHT: Checklist / Dates / Order Type (UPDATED) */}
               <Stack>
                 <Fieldset
-                  legend="Checklist & Dates"
+                  legend="Production Checklist (Dates)"
                   variant="filled"
                   bg={"gray.2"}
                 >
-                  <SimpleGrid cols={2}>
-                    <DateInput
-                      label="Layout Date"
-                      {...form.getInputProps(`checklist.layout_date`)}
-                    />
+                  {/* Row 1 */}
+                  <SimpleGrid cols={3}>
+                    <Box w="100%">
+                      <DateInput
+                        label="Layout"
+                        clearable
+                        {...form.getInputProps(`checklist.layout_date`)}
+                      />
+                    </Box>
                     <DateInput
                       label="Client Meeting"
+                      clearable
                       {...form.getInputProps(`checklist.client_meeting_date`)}
                     />
                     <DateInput
                       label="Follow Up"
+                      clearable
                       {...form.getInputProps(`checklist.follow_up_date`)}
                     />
+                  </SimpleGrid>
+
+                  {/* Row 2 */}
+                  <SimpleGrid cols={3} mt="sm">
                     <DateInput
                       label="Appliance Specs"
+                      clearable
                       {...form.getInputProps(`checklist.appliance_specs_date`)}
                     />
                     <DateInput
                       label="Selections"
+                      clearable
                       {...form.getInputProps(`checklist.selections_date`)}
                     />
                     <DateInput
-                      label="Markout"
+                      label="Measure (Markout)"
+                      clearable
                       {...form.getInputProps(`checklist.markout_date`)}
                     />
+                  </SimpleGrid>
+
+                  {/* Row 3 */}
+                  <SimpleGrid cols={3} mt="sm">
                     <DateInput
                       label="Review"
+                      clearable
                       {...form.getInputProps(`checklist.review_date`)}
                     />
                     <DateInput
                       label="Second Markout"
+                      clearable
                       {...form.getInputProps(`checklist.second_markout_date`)}
                     />
+                    <div></div> {/* Placeholder */}
                   </SimpleGrid>
-
-                  <Autocomplete
-                    label="Flooring Type"
-                    placeholder="Hardwood, Tile, etc."
-                    data={flooringTypeOptions}
-                    {...form.getInputProps(`checklist.flooring_type`)}
-                  />
-                  <Autocomplete
-                    label="Flooring Clearance"
-                    placeholder="3/8, 1/2, etc."
-                    data={flooringClearanceOptions}
-                    {...form.getInputProps(`checklist.flooring_clearance`)}
-                  />
                 </Fieldset>
 
-                <Fieldset
-                  legend="Order Details"
-                  variant="filled"
-                  bg={"gray.2"}
-                  mt="md"
-                >
-                  <Select
-                    label="Order Type"
-                    placeholder="Single Fam, Multi Fam, Reno..."
-                    data={OrderTypeOptions}
-                    searchable
-                    nothingFoundMessage="No order type found"
-                    {...form.getInputProps("order_type")}
-                  />
-                  <Select
-                    label="Delivery Type"
-                    placeholder="Pickup, Delivery..."
-                    data={DeliveryTypeOptions}
-                    searchable
-                    nothingFoundMessage="No delivery type found"
-                    {...form.getInputProps("delivery_type")}
-                    mt="sm"
-                  />
+                <Fieldset legend="Details" variant="filled" bg={"gray.2"}>
                   <TextInput
                     label="Comments"
                     {...form.getInputProps("comments")}
-                    mt="sm"
+                  />
+                  <SimpleGrid cols={2} mt="sm">
+                    <Select
+                      label="Order Type"
+                      placeholder="Single Fam, Multi Fam, Reno..."
+                      data={OrderTypeOptions}
+                      searchable
+                      nothingFoundMessage="No order type found"
+                      {...form.getInputProps("order_type")}
+                    />
+                    <Select
+                      label="Delivery Type"
+                      placeholder="Pickup, Delivery..."
+                      data={DeliveryTypeOptions}
+                      searchable
+                      nothingFoundMessage="No delivery type found"
+                      {...form.getInputProps("delivery_type")}
+                    />
+                  </SimpleGrid>
+                  <SimpleGrid cols={2} mt="sm">
+                    <Autocomplete
+                      label="Flooring Type"
+                      placeholder="Hardwood, Tile, etc."
+                      data={flooringTypeOptions}
+                      {...form.getInputProps(`checklist.flooring_type`)}
+                    />
+                    <Autocomplete
+                      label="Flooring Clearance"
+                      placeholder="3/8, 1/2, etc."
+                      data={flooringClearanceOptions}
+                      {...form.getInputProps(`checklist.flooring_clearance`)}
+                    />
+                  </SimpleGrid>
+                  <Switch
+                    color="#4a00e0"
+                    mt="md"
+                    label="Installation Required"
+                    style={{
+                      display: "inline-flex",
+                    }}
+                    {...form.getInputProps("install", { type: "checkbox" })}
                   />
                 </Fieldset>
               </Stack>
@@ -1041,6 +1096,8 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           </Paper>
         </Stack>
       </form>
+
+      {/* --- MODALS --- */}
       <Modal
         opened={speciesModalOpened}
         onClose={closeSpeciesModal}
