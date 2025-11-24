@@ -46,6 +46,7 @@ const dashboardLinks: {
     path: "/dashboard/production/actuals/37",
   },
   { iconName: "GoTools", label: "Installers", path: "/dashboard/installers" },
+  { iconName: "FaShoppingBag", label: "Purchasing", path: "/dashboard/purchasing" },
 ];
 export default function RootLayout({
   children,
