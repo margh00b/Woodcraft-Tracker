@@ -14,6 +14,8 @@ import {
 import Link from "next/link";
 import { FaHome, FaUsers, FaShippingFast, FaTools } from "react-icons/fa";
 import { FaGears } from "react-icons/fa6";
+import { MdFactory } from "react-icons/md";
+import { GoTools } from "react-icons/go";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 type SidebarLink = {
@@ -32,6 +34,8 @@ const iconMap: Record<string, any> = {
   FaGears,
   FaShippingFast,
   FaTools,
+  MdFactory,
+  GoTools,
 };
 
 type MainLinkProps = SidebarLink & {

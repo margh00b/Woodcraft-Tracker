@@ -14,7 +14,6 @@ import {
   ColumnFiltersState,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  FilterFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -32,7 +31,7 @@ import {
   ActionIcon,
   Button,
   rem,
-  Flex,
+  Badge, // Added Badge
 } from "@mantine/core";
 import {
   FaPencilAlt,
@@ -48,8 +47,6 @@ import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 
-// Define a type for the Service Order data fetched from Supabase
-// This might need to be adjusted based on the actual table structure and joins
 type ServiceOrderRow = {
   service_order_id: number;
   service_order_number: string;
@@ -61,7 +58,6 @@ type ServiceOrderRow = {
   hours_estimated: number | null;
   date_entered: string;
   completed_at: string | null;
-  // Joins
   jobs?: {
     job_number: string;
     sales_orders?: {
@@ -87,6 +83,11 @@ export default function ServiceOrdersTable() {
     pageIndex: 0,
     pageSize: 17,
   });
+
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "OPEN" | "COMPLETED"
+  >("ALL");
+
   const { supabase, isAuthenticated } = useSupabase();
   const router = useRouter();
 
@@ -130,6 +131,36 @@ export default function ServiceOrdersTable() {
     placeholderData: (previousData) => previousData,
   });
 
+  // 2. Filter Data based on status
+  const filteredServiceOrders = useMemo(() => {
+    if (!serviceOrders) return [];
+    if (statusFilter === "ALL") return serviceOrders;
+    if (statusFilter === "OPEN")
+      return serviceOrders.filter((so) => !so.completed_at);
+    if (statusFilter === "COMPLETED")
+      return serviceOrders.filter((so) => so.completed_at);
+    return serviceOrders;
+  }, [serviceOrders, statusFilter]);
+
+  // 3. Define Pill Items configuration
+  const statusItems = [
+    {
+      key: "ALL",
+      label: "All Orders",
+      count: serviceOrders?.length || 0,
+    },
+    {
+      key: "OPEN",
+      label: "Open",
+      count: serviceOrders?.filter((so) => !so.completed_at).length || 0,
+    },
+    {
+      key: "COMPLETED",
+      label: "Completed",
+      count: serviceOrders?.filter((so) => so.completed_at).length || 0,
+    },
+  ] as const;
+
   const columnHelper = createColumnHelper<ServiceOrderRow>();
   const columns = [
     columnHelper.accessor("service_order_number", {
@@ -143,6 +174,7 @@ export default function ServiceOrdersTable() {
       minSize: 100,
       cell: (info) => info.getValue() || "—",
     }),
+    // ... (Keep existing columns: Client Name, Site Address, Date Entered, Date Due)
     columnHelper.accessor("jobs.sales_orders.client.lastName", {
       header: "Client Name",
       size: 150,
@@ -201,10 +233,7 @@ export default function ServiceOrdersTable() {
           return (
             <Group gap={5}>
               <FaCheckCircle color="green" />
-              <Text size="sm">
-                {" "}
-                Completed on {dayjs(date).format("YYYY-MM-DD")}
-              </Text>
+              <Text size="sm"> {dayjs(date).format("YYYY-MM-DD")}</Text>
             </Group>
           );
         }
@@ -231,7 +260,6 @@ export default function ServiceOrdersTable() {
               color="blue"
               onClick={(e) => {
                 e.stopPropagation();
-                // Navigate to edit page or open modal (placeholder for now)
                 console.log("Edit", info.row.original);
               }}
             >
@@ -243,8 +271,9 @@ export default function ServiceOrdersTable() {
     }),
   ];
 
+  // 4. Update Table to use filteredServiceOrders
   const table = useReactTable({
-    data: serviceOrders ?? [],
+    data: filteredServiceOrders, // <--- Changed from serviceOrders
     columns,
     state: {
       columnFilters,
@@ -292,64 +321,70 @@ export default function ServiceOrdersTable() {
         height: "calc(100vh - 45px)",
       }}
     >
-      <Flex align="center" justify="space-between" mb="md">
-        {/* Accordion takes all remaining width */}
-        <Box
-          style={{
-            flex: 1,
-            marginRight: 12,
-            borderRadius: rem(8),
-          }}
-        >
-          <Accordion variant="contained" radius="md" transitionDuration={300}>
-            <Accordion.Item value="search-filters">
-              <Accordion.Control
-                icon={<FaSearch size={16} />}
-                styles={{
-                  label: {
-                    padding: 7,
-                  },
-                }}
-              >
-                Search Filters
-              </Accordion.Control>
-              <Accordion.Panel>
-                <SimpleGrid
-                  cols={{ base: 1, sm: 3, md: 5 }}
-                  mt="sm"
-                  spacing="sm"
-                >
-                  <TextInput
-                    placeholder="SO #..."
-                    onChange={(e) =>
-                      table
-                        .getColumn("service_order_number")
-                        ?.setFilterValue(e.target.value)
-                    }
-                  />
-                  <TextInput
-                    placeholder="Job #..."
-                    onChange={(e) =>
-                      table
-                        .getColumn("jobs_job_number")
-                        ?.setFilterValue(e.target.value)
-                    }
-                  />
-                  <TextInput
-                    placeholder="Client Name..."
-                    onChange={(e) =>
-                      table
-                        .getColumn("jobs_sales_orders_client_lastName")
-                        ?.setFilterValue(e.target.value)
-                    }
-                  />
-                </SimpleGrid>
-              </Accordion.Panel>
-            </Accordion.Item>
-          </Accordion>
-        </Box>
+      {/* 5. NEW HEADER LAYOUT: Pills + Button */}
+      <Group mb="md" align="center" style={{ width: "100%" }}>
+        {/* Pills container */}
+        <Group wrap="wrap">
+          {statusItems.map((item) => {
+            const isActive = statusFilter === item.key;
 
-        {/* Button stays on the right */}
+            // Define gradients matching SalesTable style
+            const gradients: Record<string, string> = {
+              ALL: "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
+              OPEN: "linear-gradient(135deg, #4da0ff 0%, #0066cc 100%)",
+              COMPLETED: "linear-gradient(135deg, #3ac47d 0%, #0f9f4f 100%)",
+            };
+
+            const gradientsLight: Record<string, string> = {
+              ALL: "linear-gradient(135deg, #e4d9ff 0%, #d7caff 100%)",
+              OPEN: "linear-gradient(135deg, #d7e9ff 0%, #c2ddff 100%)",
+              COMPLETED: "linear-gradient(135deg, #d0f2e1 0%, #b9ebd3 100%)",
+            };
+
+            return (
+              <Button
+                key={item.key}
+                variant="filled"
+                radius="xl"
+                size="sm"
+                onClick={() => setStatusFilter(item.key)}
+                style={{
+                  cursor: "pointer",
+                  minWidth: 120,
+                  background: isActive
+                    ? gradients[item.key]
+                    : gradientsLight[item.key],
+                  color: isActive ? "white" : "black",
+                  border: "none",
+                }}
+                px={12}
+              >
+                <Group gap={6}>
+                  <Text fw={600} size="sm">
+                    {item.label}
+                  </Text>
+                  <Badge
+                    autoContrast
+                    variant="filled"
+                    radius="xl"
+                    size="sm"
+                    style={{
+                      cursor: "inherit",
+                      background: "white",
+                      color: "black",
+                    }}
+                  >
+                    {item.count}
+                  </Badge>
+                </Group>
+              </Button>
+            );
+          })}
+        </Group>
+
+        {/* Spacer pushes button to the far right */}
+        <div style={{ flex: 1 }} />
+
         <Button
           size="md"
           onClick={() => router.push("/dashboard/serviceorders/new")}
@@ -363,7 +398,57 @@ export default function ServiceOrdersTable() {
         >
           New Service Order
         </Button>
-      </Flex>
+      </Group>
+
+      {/* 6. SEARCH FILTERS: Moved to full-width Accordion below header */}
+      <Accordion
+        variant="contained"
+        radius="md"
+        mb="md"
+        transitionDuration={300}
+      >
+        <Accordion.Item value="search-filters">
+          <Accordion.Control icon={<FaSearch size={16} />}>
+            Search Filters
+          </Accordion.Control>
+          <Accordion.Panel>
+            <SimpleGrid cols={{ base: 1, sm: 3, md: 5 }} mt="sm" spacing="sm">
+              <TextInput
+                placeholder="SO #..."
+                onChange={(e) =>
+                  table
+                    .getColumn("service_order_number")
+                    ?.setFilterValue(e.target.value)
+                }
+              />
+              <TextInput
+                placeholder="Job #..."
+                onChange={(e) =>
+                  table
+                    .getColumn("jobs_job_number")
+                    ?.setFilterValue(e.target.value)
+                }
+              />
+              <TextInput
+                placeholder="Client Name..."
+                onChange={(e) =>
+                  table
+                    .getColumn("jobs_sales_orders_client_lastName")
+                    ?.setFilterValue(e.target.value)
+                }
+              />
+              <TextInput
+                placeholder="Site Address..."
+                onChange={(e) =>
+                  table
+                    .getColumn("site_address")
+                    ?.setFilterValue(e.target.value)
+                }
+              />
+            </SimpleGrid>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
 
       <ScrollArea
         style={{
@@ -448,31 +533,47 @@ export default function ServiceOrdersTable() {
             ))}
           </Table.Thead>
           <Table.Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Table.Tr
-                key={row.id}
-                onClick={() =>
-                  router.push(
-                    `/dashboard/serviceorders/${row.original.service_order_id}`
-                  )
-                }
-                style={{ cursor: "pointer" }}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <Table.Td
-                    key={cell.id}
-                    style={{
-                      width: cell.column.getSize(),
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Table.Td>
-                ))}
+            {/* 7. Added Empty State Check */}
+            {table.getRowModel().rows.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={columns.length}>
+                  <Center className="py-8">
+                    <Text c="dimmed">
+                      No service orders found matching the filter.
+                    </Text>
+                  </Center>
+                </Table.Td>
               </Table.Tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <Table.Tr
+                  key={row.id}
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/serviceorders/${row.original.service_order_id}`
+                    )
+                  }
+                  style={{ cursor: "pointer" }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.Td
+                      key={cell.id}
+                      style={{
+                        width: cell.column.getSize(),
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </Table.Td>
+                  ))}
+                </Table.Tr>
+              ))
+            )}
           </Table.Tbody>
         </Table>
       </ScrollArea>

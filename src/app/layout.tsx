@@ -40,6 +40,12 @@ const dashboardLinks: {
   },
 
   { iconName: "FaUsers", label: "Clients", path: "/dashboard/clients" },
+  {
+    iconName: "MdFactory",
+    label: "Plant",
+    path: "/dashboard/production/actuals/37",
+  },
+  { iconName: "GoTools", label: "Installers", path: "/dashboard/installers" },
 ];
 export default function RootLayout({
   children,
