@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Container,
   Button,
@@ -27,6 +28,7 @@ import {
   Switch,
   Divider,
   Grid,
+  Modal,
 } from "@mantine/core";
 import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
@@ -37,6 +39,7 @@ import {
   FaSave,
   FaUser,
   FaCheck,
+  FaEye,
 } from "react-icons/fa";
 import { MdOutlineDoorSliding } from "react-icons/md";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -46,6 +49,7 @@ import {
 } from "@/zod/serviceorder.schema";
 import { useJobs } from "@/hooks/useJobs";
 import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
+import PdfPreview from "../PdfPreview/PdfPreview";
 
 interface EditServiceOrderProps {
   serviceOrderId: string;
@@ -59,10 +63,14 @@ export default function EditServiceOrder({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // 1. Fetch Jobs (Reusable Hook)
+  // Modal State for Preview
+  const [previewOpened, { open: openPreview, close: closePreview }] =
+    useDisclosure(false);
+
+  // 1. Fetch Jobs
   const { data: jobOptions, isLoading: jobsLoading } = useJobs(isAuthenticated);
 
-  // 2. Fetch Installers (Local Query)
+  // 2. Fetch Installers
   const { data: installersData, isLoading: installersLoading } = useQuery({
     queryKey: ["installers-list"],
     queryFn: async () => {
@@ -94,10 +102,21 @@ export default function EditServiceOrder({
           `
           *,
           service_order_parts (*),
+          installers:installer_id (
+            first_name,
+            last_name,
+            company_name
+          ),
           jobs:job_id (
             job_number,
             sales_orders:sales_orders (
+              designer,
+              shipping_street,
+              shipping_city,
+              shipping_province,
+              shipping_zip,
               client:client_id (
+                firstName,
                 lastName,
                 phone1,
                 phone2,
@@ -114,6 +133,7 @@ export default function EditServiceOrder({
                 interior,
                 door_style,
                 drawer_box,
+                drawer_hardware,
                 glass_type,
                 piece_count,
                 doors_parts_only,
@@ -154,7 +174,7 @@ export default function EditServiceOrder({
     validate: zodResolver(ServiceOrderSchema),
   });
 
-  // Populate form when data is loaded
+  // Populate form
   useEffect(() => {
     if (serviceOrderData) {
       form.setValues({
@@ -190,7 +210,7 @@ export default function EditServiceOrder({
     mutationFn: async (values: ServiceOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      // A. Update Service Order
+      // Update SO
       const { error: soError } = await supabase
         .from("service_orders")
         .update({
@@ -213,8 +233,7 @@ export default function EditServiceOrder({
 
       if (soError) throw new Error(`Update Order Error: ${soError.message}`);
 
-      // B. Update Parts (Delete all and re-insert)
-      // First, delete existing parts
+      // Update Parts
       const { error: deleteError } = await supabase
         .from("service_order_parts")
         .delete()
@@ -223,7 +242,6 @@ export default function EditServiceOrder({
       if (deleteError)
         throw new Error(`Delete Parts Error: ${deleteError.message}`);
 
-      // Then insert new parts
       if (values.parts && values.parts.length > 0) {
         const partsPayload = values.parts.map((p) => ({
           service_order_id: Number(serviceOrderId),
@@ -265,7 +283,6 @@ export default function EditServiceOrder({
     submitMutation.mutate(values);
   };
 
-  // Helper to add a part row
   const addPart = () => {
     form.insertListItem("parts", { qty: 1, part: "", description: "" });
   };
@@ -319,13 +336,31 @@ export default function EditServiceOrder({
                 <FaTools size={20} style={{ marginRight: 8 }} color="#4A00E0" />
                 Service Order: {serviceOrderData?.service_order_number || "—"}
               </Text>
-              <Text fw={500} size="md" c="dimmed">
-                Job # {serviceOrderData?.jobs?.job_number || "—"}
-              </Text>
+
+              {/* ACTION BUTTONS: PREVIEW & DOWNLOAD */}
+              <Group>
+                {serviceOrderData && (
+                  <>
+                    <Button
+                      variant="light"
+                      color="blue"
+                      rightSection={"PDF"}
+                      onClick={openPreview}
+                    >
+                      <FaEye />
+                    </Button>
+                  </>
+                )}
+                <Divider orientation="vertical" />
+                <Text fw={500} size="md" c="dimmed">
+                  Job # {serviceOrderData?.jobs?.job_number || "—"}
+                </Text>
+              </Group>
             </Group>
             <Divider my="sm" color="violet" />
 
-            {/* CLIENT & CABINET DETAILS */}
+            {/* --- EXISTING DETAILS (Clients, Specs, Form) --- */}
+            {/* ... (Client Info and Cabinet Specs Sections - SAME AS BEFORE) ... */}
             <SimpleGrid cols={2}>
               {/* CLIENT INFO */}
               <Paper
@@ -499,7 +534,7 @@ export default function EditServiceOrder({
             </SimpleGrid>
           </Paper>
 
-          {/* MAIN DETAILS */}
+          {/* MAIN FORM */}
           <Paper p="md" radius="md" shadow="xl">
             <Stack>
               <Fieldset legend="Job & Identifier" variant="filled" bg="gray.1">
@@ -681,7 +716,6 @@ export default function EditServiceOrder({
             )}
           </Paper>
 
-          {/* Padding for sticky footer */}
           <Box h={80} />
         </Stack>
 
@@ -723,6 +757,19 @@ export default function EditServiceOrder({
           </Group>
         </Paper>
       </form>
+
+      {/* --- PREVIEW MODAL --- */}
+      <Modal
+        opened={previewOpened}
+        onClose={closePreview}
+        title="Service Order Preview"
+        fullScreen
+        styles={{
+          body: { height: "80vh" },
+        }}
+      >
+        <PdfPreview data={serviceOrderData} />
+      </Modal>
     </Container>
   );
 }
