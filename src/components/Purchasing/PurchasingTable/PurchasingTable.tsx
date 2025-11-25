@@ -31,6 +31,8 @@ import {
   Textarea,
   Button,
   Stack,
+  ThemeIcon,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -41,6 +43,7 @@ import {
   FaCheck,
   FaTruckLoading,
   FaPencilAlt,
+  FaShoppingBag,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
@@ -340,9 +343,24 @@ export default function PurchasingTable() {
       }}
     >
       <Group justify="space-between" mb="md">
-        <Text fw={700} size="xl">
-          Purchase Tracking
-        </Text>
+        <Group>
+          <ThemeIcon
+            size={50}
+            radius="md"
+            variant="gradient"
+            gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+          >
+            <FaShoppingBag size={26} />
+          </ThemeIcon>
+          <Stack gap={0}>
+            <Title order={2} style={{ color: "#343a40" }}>
+              Purchase Tracking
+            </Title>
+            <Text size="sm" c="dimmed">
+              Track purchase orders
+            </Text>
+          </Stack>
+        </Group>
         <TextInput
           placeholder="Search Jobs..."
           leftSection={<FaSearch size={14} />}

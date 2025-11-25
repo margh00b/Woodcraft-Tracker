@@ -33,14 +33,19 @@ import {
   Button,
   rem,
   Flex,
+  ThemeIcon,
+  Stack,
+  Title,
 } from "@mantine/core";
 import {
   FaPencilAlt,
   FaPlus,
   FaSearch,
+  FaShoppingBag,
   FaSort,
   FaSortDown,
   FaSortUp,
+  FaUsers,
 } from "react-icons/fa";
 import { Tables } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
@@ -247,6 +252,24 @@ export default function ClientsTable() {
         height: "calc(100vh - 45px)",
       }}
     >
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaUsers size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Clients
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track clients
+          </Text>
+        </Stack>
+      </Group>
       <Flex align="center" justify="space-between" mb="md">
         {/* Accordion takes all remaining width */}
         <Box

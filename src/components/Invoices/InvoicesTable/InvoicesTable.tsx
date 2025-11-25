@@ -26,20 +26,21 @@ import {
   Badge,
   ActionIcon,
   Tooltip,
-  Menu,
   Button,
+  Paper,
+  Stack,
+  Title,
+  ThemeIcon,
 } from "@mantine/core";
 import {
   FaSearch,
-  FaCheck,
-  FaDollarSign,
-  FaBan,
-  FaEllipsisV,
   FaCheckCircle,
+  FaDollarSign,
   FaPlus,
-  FaSort, // Added
-  FaSortUp, // Added
-  FaSortDown, // Added
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
@@ -72,7 +73,7 @@ export default function InvoicesTable() {
   const [addModalOpened, { open: openAddModal, close: closeAddModal }] =
     useDisclosure(false);
 
-  // 2. Fetch Invoices with specific fields (Shipping, Client, etc.)
+  // 2. Fetch Invoices with Stable Sorting
   const { data: invoices, isLoading } = useQuery<InvoiceRow[]>({
     queryKey: ["invoices_list"],
     queryFn: async () => {
@@ -93,15 +94,20 @@ export default function InvoicesTable() {
           )
         `
         )
-        .order("date_entered", { ascending: false });
+        // Primary Sort: Date Entered
+        .order("date_entered", { ascending: false })
+        // Secondary Sort: Stable ID (Prevents jumping rows on update)
+        .order("invoice_id", { ascending: false });
 
       if (error) throw error;
       return data as unknown as InvoiceRow[];
     },
     enabled: isAuthenticated,
+    // Keep data visible while refetching to prevent UI flash
+    placeholderData: (previousData) => previousData,
   });
 
-  // 3. Mutation to Mark as Paid (Post to DB)
+  // 3. Mutation to Mark as Paid
   const togglePaidMutation = useMutation({
     mutationFn: async ({ id, isPaid }: { id: number; isPaid: boolean }) => {
       const { error } = await supabase
@@ -114,6 +120,7 @@ export default function InvoicesTable() {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["invoices_list"] });
       notifications.show({
         title: "Success",
@@ -175,7 +182,6 @@ export default function InvoicesTable() {
       cell: (info) => {
         const date = info.getValue();
         if (!date) return "—";
-        // Mark red if overdue and not paid
         const isOverdue =
           dayjs(date).isBefore(dayjs()) && !info.row.original.paid_at;
         return (
@@ -186,7 +192,7 @@ export default function InvoicesTable() {
       },
     }),
 
-    // --- Shipping Address (Concatenated) ---
+    // --- Shipping Address ---
     columnHelper.accessor(
       (row) => {
         const so = row.job?.sales_orders;
@@ -231,7 +237,11 @@ export default function InvoicesTable() {
           );
         if (paidAt)
           return (
-            <Badge color="green" leftSection={<FaCheckCircle size={10} />}>
+            <Badge
+              variant="gradient"
+              gradient={{ from: "teal", to: "lime", deg: 90 }}
+              leftSection={<FaCheckCircle size={10} />}
+            >
               PAID
             </Badge>
           );
@@ -273,7 +283,7 @@ export default function InvoicesTable() {
       ),
     }),
 
-    // --- Actions (Mark as Paid) ---
+    // --- Actions ---
     columnHelper.display({
       id: "actions",
       header: "Actions",
@@ -282,21 +292,23 @@ export default function InvoicesTable() {
         const isPaid = !!info.row.original.paid_at;
         const isNoCharge = info.row.original.no_charge;
 
-        // Don't show toggle for "No Charge" invoices
         if (isNoCharge) return null;
 
         return (
           <Tooltip label={isPaid ? "Mark as Unpaid" : "Mark as Paid"}>
             <ActionIcon
-              variant={isPaid ? "filled" : "default"}
-              color={isPaid ? "green" : "gray"}
+              variant={isPaid ? "gradient" : "default"}
+              gradient={
+                isPaid ? { from: "teal", to: "lime", deg: 90 } : undefined
+              }
+              color={isPaid ? undefined : "gray"}
               size="lg"
               radius="md"
               loading={togglePaidMutation.isPending}
               onClick={() =>
                 togglePaidMutation.mutate({
                   id: info.row.original.invoice_id,
-                  isPaid: !isPaid, // Toggle logic
+                  isPaid: !isPaid,
                 })
               }
             >
@@ -334,30 +346,59 @@ export default function InvoicesTable() {
       display="flex"
       style={{ flexDirection: "column" }}
     >
-      <Group justify="space-between" mb="md">
-        <Text fw={700} size="xl">
-          Invoices
-        </Text>
-        <Group>
-          <TextInput
-            placeholder="Search Job #..."
-            leftSection={<FaSearch size={14} />}
-            onChange={(e) => {
-              table.getColumn("job_number")?.setFilterValue(e.target.value);
-            }}
-          />
-          <Button
-            leftSection={<FaPlus size={14} />}
-            onClick={openAddModal}
-            style={{
-              background: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
-            }}
-          >
-            Add Invoice
-          </Button>
-        </Group>
-      </Group>
+      {/* --- Header Section --- */}
+      <Paper
+        p="xl"
+        radius="lg"
+        mb="md"
+        style={{
+          background: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
+          border: "1px solid #e9ecef",
+        }}
+        shadow="sm"
+      >
+        <Group justify="space-between" align="center">
+          <Group>
+            <ThemeIcon
+              size={50}
+              radius="md"
+              variant="gradient"
+              gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+            >
+              <FaFileInvoiceDollar size={26} />
+            </ThemeIcon>
+            <Stack gap={0}>
+              <Title order={2} style={{ color: "#343a40" }}>
+                Invoices
+              </Title>
+              <Text size="sm" c="dimmed">
+                Track payments and billing status.
+              </Text>
+            </Stack>
+          </Group>
 
+          <Group>
+            <TextInput
+              placeholder="Search Job #..."
+              leftSection={<FaSearch size={14} />}
+              onChange={(e) => {
+                table.getColumn("job_number")?.setFilterValue(e.target.value);
+              }}
+              style={{ minWidth: 250 }}
+            />
+            <Button
+              leftSection={<FaPlus size={14} />}
+              onClick={openAddModal}
+              variant="gradient"
+              gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+            >
+              Add Invoice
+            </Button>
+          </Group>
+        </Group>
+      </Paper>
+
+      {/* --- Table Section --- */}
       <ScrollArea style={{ flex: 1 }}>
         <Table striped highlightOnHover withColumnBorders layout="fixed">
           <Table.Thead>
@@ -378,7 +419,6 @@ export default function InvoicesTable() {
                         header.column.columnDef.header,
                         header.getContext()
                       )}
-                      {/* Sorting Icons */}
                       {header.column.getIsSorted() === "asc" ? (
                         <FaSortUp />
                       ) : header.column.getIsSorted() === "desc" ? (

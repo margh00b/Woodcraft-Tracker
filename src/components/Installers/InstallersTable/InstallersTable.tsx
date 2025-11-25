@@ -33,12 +33,16 @@ import {
   rem,
   Flex,
   Badge,
+  Stack,
+  ThemeIcon,
+  Title,
 } from "@mantine/core";
 import {
   FaEye,
   FaPencilAlt,
   FaPlus,
   FaSearch,
+  FaShoppingBag,
   FaSort,
   FaSortDown,
   FaSortUp,
@@ -48,6 +52,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
 import AddInstaller from "../AddInstaller/AddInstaller";
 import EditInstaller from "../EditInstaller/EditInstaller";
+import { GoTools } from "react-icons/go";
 
 export default function InstallersTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -193,6 +198,24 @@ export default function InstallersTable() {
         height: "calc(100vh - 45px)",
       }}
     >
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <GoTools size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Installers
+          </Title>
+          <Text size="sm" c="dimmed">
+            Manage your installers
+          </Text>
+        </Stack>
+      </Group>
       <Flex align="center" justify="space-between" mb="md">
         <Box style={{ flex: 1, marginRight: 12 }}>
           <Accordion variant="contained" radius="md">

@@ -502,41 +502,19 @@ export default function EditProductionSchedulePage({
                       />
 
                       <Select
-                        w={150}
                         label="Shipping Date Status"
+                        w={"200px"}
                         data={[
                           { value: "unprocessed", label: "Unprocessed" },
                           { value: "tentative", label: "Tentative" },
                           { value: "confirmed", label: "Confirmed" },
                         ]}
                         {...form.getInputProps("ship_status")}
-                        styles={() => {
-                          const v = form.values.ship_status;
-                          let gradient =
-                            "linear-gradient(135deg, #B0BEC5, #78909C)";
-                          if (v === "confirmed")
-                            gradient =
-                              "linear-gradient(135deg, #4A00E0, #8E2DE2)";
-                          else if (v === "tentative")
-                            gradient =
-                              "linear-gradient(135deg, #FF6A00, #FFB347)";
-                          return {
-                            input: {
-                              background: gradient,
-                              color: "white",
-                              fontWeight: 600,
-                              border: "none",
-                              transition: "background 200ms ease",
-                            },
-                            dropdown: { borderRadius: 8 },
-                            item: {
-                              "&[data-selected]": {
-                                background: gradient,
-                                color: "white",
-                              },
-                            },
-                          };
-                        }}
+                        rightSection={
+                          form.values.ship_status === "confirmed" ? (
+                            <FaCheckCircle size={12} color="green" />
+                          ) : null
+                        }
                       />
 
                       <Box

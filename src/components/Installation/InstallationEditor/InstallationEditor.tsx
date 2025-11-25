@@ -539,17 +539,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                   >
                     Installation Job # {jobData.job_number}
                   </Text>
-
-                  <Button
-                    variant="light"
-                    color="violet"
-                    leftSection={<FaExternalLinkAlt size={12} />}
-                    onClick={() =>
-                      router.push(`/dashboard/production/actuals/${jobData.id}`)
-                    }
-                  >
-                    Manage Production Actuals
-                  </Button>
                 </Group>
                 <Divider my="sm" color="violet" />
 
@@ -833,7 +822,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                       {...form.getInputProps("ship_schedule")}
                     />
                     <Select
-                      label="Ship Status"
+                      label="Shipping Date Status"
                       w={"200px"}
                       data={[
                         { value: "unprocessed", label: "Unprocessed" },

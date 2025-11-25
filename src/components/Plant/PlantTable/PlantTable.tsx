@@ -36,6 +36,7 @@ import {
   Title,
   Divider,
   Paper,
+  ThemeIcon,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
@@ -47,6 +48,7 @@ import {
   FaCheck,
   FaCalendarAlt,
   FaBoxOpen,
+  FaShoppingBag,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
@@ -603,10 +605,23 @@ export default function PlantTable() {
       display="flex"
       style={{ flexDirection: "column" }}
     >
-      <Group justify="space-between" mb="md">
-        <Text fw={700} size="xl">
-          Plant Wrap Schedule
-        </Text>
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaCalendarAlt size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Plant Wrap Schedule
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track plant wrap schedule
+          </Text>
+        </Stack>
       </Group>
 
       {/* Search Filters */}

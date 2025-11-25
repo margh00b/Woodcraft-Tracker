@@ -30,6 +30,9 @@ import {
   Accordion,
   SimpleGrid,
   Tooltip,
+  Stack,
+  ThemeIcon,
+  Title,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -40,6 +43,7 @@ import {
   FaRegCircle,
   FaCalendarCheck,
   FaFire,
+  FaShippingFast,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
@@ -306,9 +310,25 @@ export default function InstallationTable() {
         height: "calc(100vh - 45px)",
       }}
     >
-      <Text fw={700} size="xl" mb="md">
-        Installation Schedule
-      </Text>
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaShippingFast size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Installation Schedule
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track installation schedule
+          </Text>
+        </Stack>
+      </Group>
+
       {/* SEARCH/FILTER ACCORDION */}
       <Accordion
         variant="contained"

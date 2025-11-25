@@ -49,7 +49,7 @@ const dashboardLinks: SidebarLink[] = [
       {
         iconName: "FaClipboardCheck",
         label: "Prod Actuals",
-        path: "/dashboard/production/actuals/40",
+        path: "/dashboard/plant/actuals",
       },
     ],
   },

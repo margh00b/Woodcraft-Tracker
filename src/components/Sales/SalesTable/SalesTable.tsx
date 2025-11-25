@@ -34,6 +34,9 @@ import {
   SimpleGrid,
   Badge,
   rem,
+  Stack,
+  ThemeIcon,
+  Title,
 } from "@mantine/core";
 import {
   FaPlus,
@@ -42,6 +45,7 @@ import {
   FaSortDown,
   FaSortUp,
   FaEye,
+  FaHome,
 } from "react-icons/fa";
 import { useDisclosure } from "@mantine/hooks";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -316,6 +320,24 @@ export default function SalesTable() {
         height: "calc(100vh - 40px)",
       }}
     >
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaHome size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Sales
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track sales
+          </Text>
+        </Stack>
+      </Group>
       {/* --- STATUS FILTER PILLS --- */}
 
       <Group mb="md" align="center" style={{ width: "100%" }}>

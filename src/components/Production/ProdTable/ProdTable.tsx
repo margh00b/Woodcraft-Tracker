@@ -34,6 +34,8 @@ import {
   Accordion,
   SimpleGrid,
   Select,
+  ThemeIcon,
+  Title,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -49,6 +51,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { DateInput, DatePicker } from "@mantine/dates";
+import { FaGears } from "react-icons/fa6";
 
 // --- 1. Types ---
 type ProductionJobView = Tables<"jobs"> & {
@@ -394,9 +397,24 @@ export default function ProdTable() {
         height: "calc(100vh - 45px)",
       }}
     >
-      <Text fw={700} size="xl" mb="md">
-        Production Schedule Overview
-      </Text>
+      <Group mb="md">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaGears size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Production Schedule
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track production schedule
+          </Text>
+        </Stack>
+      </Group>
       {/* SEARCH/FILTER ACCORDION */}
       <Accordion
         variant="contained"

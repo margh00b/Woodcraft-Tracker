@@ -31,7 +31,10 @@ import {
   ActionIcon,
   Button,
   rem,
-  Badge, // Added Badge
+  Badge,
+  Stack,
+  ThemeIcon,
+  Title, // Added Badge
 } from "@mantine/core";
 import {
   FaPencilAlt,
@@ -42,6 +45,7 @@ import {
   FaSortUp,
   FaCheckCircle,
   FaTimesCircle,
+  FaTools,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
@@ -314,6 +318,24 @@ export default function ServiceOrdersTable() {
         height: "calc(100vh - 45px)",
       }}
     >
+      <Group mb="lg">
+        <ThemeIcon
+          size={50}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+        >
+          <FaTools size={26} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Title order={2} style={{ color: "#343a40" }}>
+            Service Orders
+          </Title>
+          <Text size="sm" c="dimmed">
+            Track service orders
+          </Text>
+        </Stack>
+      </Group>
       {/* 5. NEW HEADER LAYOUT: Pills + Button */}
       <Group mb="md" align="center" style={{ width: "100%" }}>
         {/* Pills container */}
