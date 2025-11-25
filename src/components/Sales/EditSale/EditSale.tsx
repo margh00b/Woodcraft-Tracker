@@ -50,6 +50,9 @@ import {
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
 
+// --- FEATURE TOGGLE ---
+const FEATURE_MANUAL_JOB_ENTRY = true;
+
 type EditSaleProps = {
   salesOrderId: number;
 };
@@ -58,6 +61,12 @@ type ClientSelectOption = {
   label: string;
   original: Tables<"client">;
 };
+
+// Extend the schema type locally to include manual job fields
+interface ExtendedMasterOrderInput extends MasterOrderInput {
+  manual_job_base?: number;
+  manual_job_suffix?: string;
+}
 
 export default function EditSale({ salesOrderId }: EditSaleProps) {
   const { supabase, isAuthenticated } = useSupabase();
@@ -166,14 +175,14 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       }),
   });
 
-  // Fetch sales order data
+  // Fetch sales order data (Updated to include job base/suffix/id)
   const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
     queryKey: ["sales-order", salesOrderId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sales_orders")
         .select(
-          `*, cabinet: cabinets(*), client: client(*), job: jobs(job_number)`
+          `*, cabinet: cabinets(*), client: client(*), job: jobs(id, job_number, job_base_number, job_suffix)`
         )
         .eq("id", salesOrderId)
         .single();
@@ -208,7 +217,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   }, [clientsData]);
 
   // Form initialization
-  const form = useForm<MasterOrderInput>({
+  const form = useForm<ExtendedMasterOrderInput>({
     initialValues: {
       client_id: 0,
       stage: "QUOTE",
@@ -218,6 +227,8 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       comments: "",
       order_type: "",
       delivery_type: "",
+      manual_job_base: undefined,
+      manual_job_suffix: "",
       cabinet: {
         species: "",
         color: "",
@@ -276,6 +287,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         comments: salesOrderData.comments,
         order_type: salesOrderData.order_type,
         delivery_type: salesOrderData.delivery_type,
+        // Pre-fill job number fields if they exist
+        manual_job_base: salesOrderData.job?.job_base_number,
+        manual_job_suffix: salesOrderData.job?.job_suffix || "",
         cabinet: salesOrderData.cabinet,
         shipping: {
           shipping_client_name: salesOrderData.shipping_client_name || "",
@@ -323,7 +337,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   };
 
   const updateMutation = useMutation({
-    mutationFn: async (values: MasterOrderInput) => {
+    mutationFn: async (values: ExtendedMasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
       // --- Clear dependent fields if unchecked ---
@@ -336,11 +350,13 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       }
       // ------------------------------------------
 
+      // 1. Update Cabinet
       await supabase
         .from("cabinets")
         .update(cabinetPayload)
         .eq("id", salesOrderData.cabinet.id);
 
+      // 2. Update Sales Order
       const { error: soError } = await supabase
         .from("sales_orders")
         .update({
@@ -358,6 +374,73 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         .eq("id", salesOrderId);
 
       if (soError) throw soError;
+
+      // 3. Handle Job Logic if SOLD and Feature Enabled
+      if (values.stage === "SOLD" && FEATURE_MANUAL_JOB_ENTRY) {
+        const { manual_job_base, manual_job_suffix } = values;
+
+        if (!manual_job_base) {
+          throw new Error("Job Base Number is required for sold jobs.");
+        }
+
+        const suffixStr = manual_job_suffix
+          ? manual_job_suffix.trim().toUpperCase()
+          : null;
+
+        // Check for duplicates, excluding current job if it exists
+        let dupQuery = supabase
+          .from("jobs")
+          .select("id")
+          .eq("job_base_number", manual_job_base);
+
+        if (suffixStr) {
+          dupQuery = dupQuery.eq("job_suffix", suffixStr);
+        } else {
+          dupQuery = dupQuery.is("job_suffix", null);
+        }
+
+        // If we are updating an existing job, exclude it from the duplicate check
+        const currentJobId = salesOrderData.job?.id;
+        if (currentJobId) {
+          dupQuery = dupQuery.neq("id", currentJobId);
+        }
+
+        const { data: existingJob } = await dupQuery.maybeSingle();
+
+        if (existingJob) {
+          const errorSuffix = suffixStr ? `-${suffixStr}` : "";
+          throw new Error(
+            `Job ${manual_job_base}${errorSuffix} already exists!`
+          );
+        }
+
+        // Perform Update or Insert
+        if (currentJobId) {
+          // Update existing job
+          const { error: jobUpdateError } = await supabase
+            .from("jobs")
+            .update({
+              job_base_number: manual_job_base,
+              job_suffix: suffixStr,
+              // job_number is generated column, usually we don't update it manually if it's generated stored,
+              // but if your DB relies on manual input for text search or display without regeneration:
+              // job_number: suffixStr ? `${manual_job_base}-${suffixStr}` : `${manual_job_base}`
+            })
+            .eq("id", currentJobId);
+
+          if (jobUpdateError) throw jobUpdateError;
+        } else {
+          // Create new job linked to this sales order (Scenario: Quote -> Sold)
+          const { error: jobInsertError } = await supabase.from("jobs").insert({
+            sales_order_id: salesOrderId,
+            job_base_number: manual_job_base,
+            job_suffix: suffixStr,
+            // job_number: suffixStr ? `${manual_job_base}-${suffixStr}` : `${manual_job_base}`
+          });
+
+          if (jobInsertError) throw jobInsertError;
+        }
+      }
 
       return true;
     },
@@ -390,7 +473,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     );
   }
 
-  const handleSubmit = (values: MasterOrderInput) => {
+  const handleSubmit = (values: ExtendedMasterOrderInput) => {
     if (Object.keys(form.errors).length > 0) {
       notifications.show({
         title: "Validation Failed",
@@ -456,33 +539,49 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Paper>
               )}
 
-              {/* LINK TO JOB SELECT */}
-              {salesOrderData?.stage === "SOLD" && (
-                <Box my="auto">
-                  <Badge
-                    size="lg"
-                    color="green"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #28a745 0%, #218838 100%)",
-                      color: "white",
-                      border: "none",
-                    }}
-                  >
-                    {(() => {
-                      const jobNum = salesOrderData?.job?.job_number;
-                      if (!jobNum) return "—";
-
-                      const parts = jobNum.split("-");
-                      if (parts.length > 1) {
-                        return `Linked to ${parts[0]}`;
-                      }
-
-                      return jobNum;
-                    })()}
-                  </Badge>
-                </Box>
+              {/* JOB NUMBER EDITING (Visible when SOLD) */}
+              {form.values.stage === "SOLD" && FEATURE_MANUAL_JOB_ENTRY && (
+                <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
+                  <NumberInput
+                    label="Job #"
+                    placeholder="40000..."
+                    allowNegative={false}
+                    {...form.getInputProps("manual_job_base")}
+                    style={{ width: 120 }}
+                    withAsterisk
+                  />
+                  <TextInput
+                    label="Variant"
+                    placeholder="A, B..."
+                    {...form.getInputProps("manual_job_suffix")}
+                    style={{ width: 80 }}
+                    maxLength={5}
+                  />
+                </Group>
               )}
+
+              {/* Show Badge ONLY if feature toggle is off OR if viewing quote */}
+              {!FEATURE_MANUAL_JOB_ENTRY &&
+                salesOrderData?.stage === "SOLD" && (
+                  <Box my="auto">
+                    <Badge
+                      size="lg"
+                      color="green"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #28a745 0%, #218838 100%)",
+                        color: "white",
+                        border: "none",
+                      }}
+                    >
+                      {(() => {
+                        const jobNum = salesOrderData?.job?.job_number;
+                        if (!jobNum) return "—";
+                        return jobNum;
+                      })()}
+                    </Badge>
+                  </Box>
+                )}
 
               {/* CLIENT SELECT */}
               <Select

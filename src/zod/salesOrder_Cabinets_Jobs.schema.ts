@@ -62,6 +62,8 @@ export const MasterOrderSchema = z.object({
   shipping: ShippingSchema,
   checklist: ChecklistSchema,
   parent_job_number_input: z.string().optional().nullable(),
+  manual_job_base: z.number().optional(),
+  manual_job_suffix: z.string().optional(),
 });
 
 export type MasterOrderInput = z.infer<typeof MasterOrderSchema>;
