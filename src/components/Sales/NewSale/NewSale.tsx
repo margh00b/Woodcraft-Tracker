@@ -47,7 +47,6 @@ import AddClient from "@/components/Clients/AddClient/AddClient";
 import { useJobBaseNumbers } from "@/hooks/useJobBaseNumbers";
 import {
   DeliveryTypeOptions,
-  DoorStyleOptions,
   DrawerBoxOptions,
   DrawerHardwareOptions,
   FinishOptions,
@@ -114,12 +113,6 @@ export default function NewSale() {
     label: string;
     original: Tables<"client">;
   };
-  type JobResult = {
-    out_job_id: number;
-    out_job_suffix: string | null;
-    out_job_base_number: number;
-    out_job_number: string;
-  };
 
   const clientSelectOptions = useMemo(() => {
     const safeClients = clientsData || [];
@@ -158,7 +151,18 @@ export default function NewSale() {
     },
     enabled: isAuthenticated,
   });
-
+  const { data: doorStylesData } = useQuery({
+    queryKey: ["door-styles-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("door_styles")
+        .select("name")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAuthenticated,
+  });
   const colorOptions = useMemo(() => {
     return (colorsData || []).map((c: any) => c.Name);
   }, [colorsData]);
@@ -166,6 +170,9 @@ export default function NewSale() {
   const speciesOptions = useMemo(() => {
     return (speciesData || []).map((s: any) => s.Species);
   }, [speciesData]);
+  const doorStylesOptions = useMemo(() => {
+    return (doorStylesData || []).map((s: any) => s.name);
+  }, [doorStylesData]);
 
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -879,7 +886,7 @@ export default function NewSale() {
                     <Select
                       label="Door Style"
                       placeholder="Select Door Style"
-                      data={DoorStyleOptions}
+                      data={doorStylesOptions}
                       searchable
                       nothingFoundMessage="No door style found"
                       {...form.getInputProps(`cabinet.door_style`)}
