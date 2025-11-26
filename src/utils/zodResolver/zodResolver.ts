@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications";
 import { ZodType } from "zod";
 
 export function zodResolver(schema: ZodType<any, any, any>) {
@@ -9,10 +10,11 @@ export function zodResolver(schema: ZodType<any, any, any>) {
     const errors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
       console.log("Zod issue:", issue);
-      const field = issue.path[0];
-      if (typeof field === "string") {
-        errors[field] = issue.message;
-      }
+      notifications.show({
+        title: "Error",
+        message: issue.message,
+        color: "red",
+      });
     }
 
     return errors;

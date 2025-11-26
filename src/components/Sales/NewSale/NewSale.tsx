@@ -58,9 +58,6 @@ import {
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
 
-// --- FEATURE TOGGLE ---
-const FEATURE_MANUAL_JOB_ENTRY = true;
-
 export default function NewSale() {
   const { supabase, isAuthenticated } = useSupabase();
   const { user } = useUser();
@@ -82,7 +79,6 @@ export default function NewSale() {
     null
   );
 
-  // State for Add Color/Species Modals
   const [speciesSearch, setSpeciesSearch] = useState("");
   const [colorSearch, setColorSearch] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
@@ -137,7 +133,6 @@ export default function NewSale() {
     });
   }, [clientsData]);
 
-  // --- Fetch Colors and Species ---
   const { data: colorsData } = useQuery({
     queryKey: ["colors-list"],
     queryFn: async () => {
@@ -172,7 +167,6 @@ export default function NewSale() {
     return (speciesData || []).map((s: any) => s.Species);
   }, [speciesData]);
 
-  // --- Mutations for Adding Color/Species ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase
@@ -223,7 +217,6 @@ export default function NewSale() {
       }),
   });
 
-  // --- EXTENDED FORM TYPE TO INCLUDE MANUAL JOBS ---
   interface ExtendedMasterOrderInput extends MasterOrderInput {
     manual_job_base?: number;
     manual_job_suffix?: string;
@@ -239,7 +232,6 @@ export default function NewSale() {
       comments: "",
       order_type: "",
       delivery_type: "",
-      // New manual fields
       manual_job_base: undefined,
       manual_job_suffix: "",
       cabinet: {
@@ -288,18 +280,23 @@ export default function NewSale() {
     validate: zodResolver(MasterOrderSchema),
   });
 
-  // Effect: Sync parent selection to manual base field if linked
   useEffect(() => {
-    if (parentBaseSelection && FEATURE_MANUAL_JOB_ENTRY) {
-      form.setFieldValue("manual_job_base", Number(parentBaseSelection));
+    if (parentBaseSelection) {
+      const baseNumber = Number(parentBaseSelection);
+      if (!isNaN(baseNumber) && baseNumber > 0) {
+        form.setFieldValue("manual_job_base", baseNumber);
+        form.setFieldValue("manual_job_suffix", "");
+      }
+    } else if (form.values.stage !== "SOLD") {
+      form.setFieldValue("manual_job_base", undefined);
+      form.setFieldValue("manual_job_suffix", "");
     }
-  }, [parentBaseSelection]);
+  }, [parentBaseSelection, form.values.stage]);
 
   const submitMutation = useMutation({
     mutationFn: async (values: ExtendedMasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      // --- [LOGIC UPDATE] Clear dependent fields if unchecked ---
       const cabinetPayload = { ...values.cabinet };
       if (!cabinetPayload.glass) {
         cabinetPayload.glass_type = "";
@@ -307,7 +304,6 @@ export default function NewSale() {
       if (!cabinetPayload.doors_parts_only) {
         cabinetPayload.piece_count = "";
       }
-      // ----------------------------------------------------------
 
       const {
         client_id,
@@ -324,130 +320,46 @@ export default function NewSale() {
         manual_job_suffix,
       } = values;
 
-      // --- 1. Create Cabinet Record ---
-      const { data: cabinetResult, error: cabError } = await supabase
-        .from("cabinets")
-        .insert(cabinetPayload)
-        .select("id")
-        .single();
-
-      if (cabError) throw new Error(`Cabinet Error: ${cabError.message}`);
-      const cabinetId = cabinetResult.id;
-
-      // --- 2. Create Sales Order Record ---
-      const { data: soData, error: soError } = await supabase
-        .from("sales_orders")
-        .insert({
-          client_id: client_id,
-          cabinet_id: cabinetId,
-          stage: stage,
-          total: total,
-          deposit: deposit,
-          designer: user?.username || "Staff",
-          comments: comments,
-          install: install,
-          order_type: order_type,
-          delivery_type: delivery_type,
-          ...shipping,
-          ...checklist,
-        })
-        .select("id,sales_order_number")
-        .single();
-
-      if (soError) throw new Error(`Sales Order Error: ${soError.message}`);
-      const salesOrderId = soData.id;
-      const salesOrderNum = soData.sales_order_number;
-
-      let jobDataForReturn: JobResult | null = null;
-      let finalJobNumber: string | null = null;
-
-      // --- 3. Job Creation Logic ---
-      if (stage === "SOLD") {
-        // >> FEATURE TOGGLE: MANUAL ENTRY <<
-        if (FEATURE_MANUAL_JOB_ENTRY) {
-          // A. Validation
-          if (!manual_job_base)
-            throw new Error("Job Base Number is required for sold jobs.");
-
-          // B. Prepare Suffix
-          const suffixStr = manual_job_suffix
-            ? manual_job_suffix.trim().toUpperCase()
-            : "";
-          const suffixForDb = suffixStr || null;
-
-          // C. DUPLICATE CHECK
-          // Check against base and suffix explicitly
-          let dupQuery = supabase
-            .from("jobs")
-            .select("id")
-            .eq("job_base_number", manual_job_base);
-
-          if (suffixForDb) {
-            dupQuery = dupQuery.eq("job_suffix", suffixForDb);
-          } else {
-            dupQuery = dupQuery.is("job_suffix", null);
-          }
-
-          const { data: existingJob } = await dupQuery.maybeSingle();
-
-          if (existingJob) {
-            const errorSuffix = suffixForDb ? `-${suffixForDb}` : "";
-            throw new Error(
-              `Job ${manual_job_base}${errorSuffix} already exists!`
-            );
-          }
-
-          // D. Manual Insert
-          // We insert base and suffix. job_number is generated by DB.
-          const { data: newJob, error: jobError } = await supabase
-            .from("jobs")
-            .insert({
-              sales_order_id: salesOrderId,
-              job_base_number: manual_job_base,
-              job_suffix: suffixForDb,
-              // job_number is omitted; DB handles generation
-            })
-            .select()
-            .single();
-
-          if (jobError)
-            throw new Error(`Job Insert Error: ${jobError.message}`);
-
-          finalJobNumber = newJob.job_number;
-        } else {
-          // >> LEGACY: RPC AUTO-GENERATION <<
-          let baseNumberToReuse: number | null = null;
-          if (parentBaseSelection) {
-            const base = Number(parentBaseSelection);
-            if (!isNaN(base) && base > 0) {
-              baseNumberToReuse = base;
-            } else {
-              throw new Error("Invalid job base number selected.");
-            }
-          }
-
-          const { data: jobResult, error: rpcError } = await supabase.rpc(
-            "create_job_and_link_so",
-            {
-              p_sales_order_id: salesOrderId,
-              p_existing_base_number: baseNumberToReuse,
-            }
-          );
-
-          if (rpcError)
-            throw new Error(`Job Creation Failed: ${rpcError.message}`);
-          if (!jobResult || jobResult.length === 0)
-            throw new Error("No job data returned from RPC.");
-
-          jobDataForReturn = jobResult[0] as JobResult;
-          finalJobNumber = jobDataForReturn.out_job_number;
-        }
+      if (stage === "SOLD" && !manual_job_base) {
+        throw new Error("Job Base Number is required for Sold jobs.");
       }
+      const transactionPayload = {
+        client_id: client_id,
+        stage: stage,
+        total: total,
+        deposit: deposit,
+        comments: comments,
+        install: install,
+        order_type: order_type,
+        delivery_type: delivery_type,
+        cabinet: cabinetPayload,
+        designer: user?.username || "Staff",
+        shipping: shipping,
+        checklist: checklist,
+        manual_job_base: manual_job_base,
+        manual_job_suffix: manual_job_suffix
+          ? manual_job_suffix.trim().toUpperCase()
+          : null,
+      };
+
+      const { data: transactionResult, error: rpcError } = await supabase.rpc(
+        "create_master_order_transaction",
+        {
+          p_payload: transactionPayload,
+        }
+      );
+
+      if (rpcError) throw new Error(`Transaction Failed: ${rpcError.message}`);
+
+      if (!transactionResult || transactionResult.length === 0)
+        throw new Error("No order data returned from transaction.");
+
+      const { out_job_number, out_sales_order_number } = transactionResult[0];
 
       return {
         success: true,
-        salesOrderNum: salesOrderNum,
-        finalJobNum: finalJobNumber,
+        salesOrderNum: out_sales_order_number,
+        finalJobNum: out_job_number,
         jobStage: stage,
       };
     },
@@ -464,12 +376,11 @@ export default function NewSale() {
           jobNum: data.finalJobNum || "N/A",
           type: data.jobStage,
         });
-      } else {
-        form.reset();
-        setSelectedClientData(null);
-        queryClient.refetchQueries({ queryKey: ["sales_orders"] });
-        router.push("/dashboard/");
       }
+      form.reset();
+      setSelectedClientData(null);
+      queryClient.refetchQueries({ queryKey: ["sales_orders"] });
+      router.push("/dashboard/");
     },
 
     onError: (err) => {
@@ -608,13 +519,14 @@ export default function NewSale() {
                 />
               </Paper>
 
+              {/* RESTORED: Link to Existing Job Select for SUGGESTION only */}
               <Select
-                label="Link to Existing Job"
-                placeholder="Select parent job..."
+                label="Suggest Job Base #"
+                placeholder="Search existing jobs..."
                 data={jobBaseOptions || []}
                 searchable
                 clearable
-                disabled={jobsLoading || form.values.stage != "SOLD"}
+                disabled={form.values.stage != "SOLD"}
                 style={{ flex: 1 }}
                 styles={{
                   dropdown: {
@@ -637,14 +549,13 @@ export default function NewSale() {
                 }}
               />
 
-              {/* FEATURE TOGGLE: MANUAL INPUTS */}
-              {FEATURE_MANUAL_JOB_ENTRY && form.values.stage === "SOLD" && (
+              {form.values.stage === "SOLD" && (
                 <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
                   <NumberInput
                     label="Base Job #"
                     placeholder="40000..."
                     allowNegative={false}
-                    disabled={!!parentBaseSelection} 
+                    disabled={!!parentBaseSelection}
                     {...form.getInputProps("manual_job_base")}
                     style={{ width: 120 }}
                     withAsterisk
@@ -753,9 +664,6 @@ export default function NewSale() {
             </Group>
           </Paper>
 
-          {/* ... (Rest of the Component remains unchanged: Billing, Shipping, Cabinet Specs, etc.) ... */}
-
-          {/* --- CONDITIONAL BILLING INFO SECTION --- */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
