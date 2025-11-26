@@ -72,7 +72,7 @@ export default function ShippingReport() {
             shipping_street,
             shipping_city,
             shipping_zip,
-            client:client_id (lastName),
+            shipping_client_name,
             cabinet:cabinets (box, species, color, door_style)
           ),
           production_schedule!inner (*)

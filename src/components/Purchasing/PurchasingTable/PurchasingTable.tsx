@@ -167,7 +167,7 @@ export default function PurchasingTable() {
               ship_schedule
             ),
             sales_orders (
-              client (lastName)
+              shipping_client_name
             )
           )
         `
@@ -259,7 +259,7 @@ export default function PurchasingTable() {
       size: 120,
       filterFn: genericFilter,
     }),
-    columnHelper.accessor("job.sales_orders.client.lastName", {
+    columnHelper.accessor("job.sales_orders.shipping_client_name", {
       header: "Client",
       size: 150,
       filterFn: genericFilter,

@@ -117,14 +117,11 @@ export default function EditServiceOrder({
               shipping_city,
               shipping_province,
               shipping_zip,
-              client:client_id (
-                firstName,
-                lastName,
-                phone1,
-                phone2,
-                email1,
-                email2
-              ),
+              shipping_client_name,
+              shipping_phone_1,
+              shipping_phone_2,
+              shipping_email_1,
+              shipping_email_2,
               cabinet:cabinets (
                 box,
                 color,
@@ -297,7 +294,6 @@ export default function EditServiceOrder({
       </Center>
     );
   }
-  const client = serviceOrderData?.jobs?.sales_orders?.client;
   const cabinet = serviceOrderData?.jobs?.sales_orders?.cabinet;
   const shipping = serviceOrderData?.jobs?.sales_orders;
 
@@ -368,7 +364,7 @@ export default function EditServiceOrder({
             {/* ... (Client Info and Cabinet Specs Sections - SAME AS BEFORE) ... */}
             <SimpleGrid cols={2}>
               {/* CLIENT INFO */}
-              {client && <ClientInfo client={client} shipping={shipping} />}
+              {shipping && <ClientInfo shipping={shipping} />}
 
               {cabinet && <CabinetSpecs cabinet={cabinet} />}
             </SimpleGrid>

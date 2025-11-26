@@ -6,7 +6,6 @@ import { Tables } from "@/types/db";
 // Define specific types for the joined data
 export type ShippingReportJob = Tables<"jobs"> & {
   sales_orders: Tables<"sales_orders"> & {
-    client: Tables<"client"> | null;
     cabinet: Tables<"cabinets"> | null;
   };
   production_schedule: Tables<"production_schedule">;
@@ -235,7 +234,7 @@ export const ShippingReportPdf = ({
                       {job.job_number}
                     </Text>
                     <Text style={[styles.colCust, { fontSize: 8 }]}>
-                      {so.client?.lastName || "Unknown"}
+                      {so.shipping_client_name || "Unknown"}
                     </Text>
                     <Text style={[styles.colAddr, { fontSize: 8 }]}>
                       {[so.shipping_street, so.shipping_zip, so.shipping_city]

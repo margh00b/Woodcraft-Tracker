@@ -93,17 +93,19 @@ export default function ServiceOrdersTable() {
           `
           *,
           jobs (
-            job_number,
-            sales_orders (
-              shipping_street,
-              shipping_city,
-              shipping_province,
-              shipping_zip,
-              client (
-                lastName
-              )
-            )
-          ),
+        job_number,
+        sales_orders (
+          shipping_street,
+          shipping_city,
+          shipping_province,
+          shipping_zip,
+          shipping_client_name,
+          shipping_phone_1,
+          shipping_phone_2,
+          shipping_email_1,
+          shipping_email_2
+        )
+      ),
           installers (company_name, first_name, last_name)
         `
         )
@@ -172,7 +174,7 @@ export default function ServiceOrdersTable() {
       ),
     }),
     // ... (Keep existing columns: Client Name, Site Address, Date Entered, Date Due)
-    columnHelper.accessor("jobs.sales_orders.client.lastName", {
+    columnHelper.accessor("jobs.sales_orders.shipping_client_name", {
       header: "Client Name",
       size: 150,
       minSize: 100,

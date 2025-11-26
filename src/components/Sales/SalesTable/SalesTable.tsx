@@ -50,16 +50,26 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
+import { Tables } from "@/types/db";
 
-interface SalesOrderView {
-  id: number;
-  sales_order_number: string;
-  stage: "QUOTE" | "SOLD";
-  invoice_balance: number;
-  designer: string;
-  created_at: string;
-  client: { lastName: string; street: string; city: string };
-  job_ref: { job_number: string | null; job_base_number: number | null } | null;
+interface SalesOrderView
+  extends Pick<
+    Tables<"sales_orders">,
+    | "id"
+    | "sales_order_number"
+    | "stage"
+    | "invoice_balance"
+    | "designer"
+    | "created_at"
+    | "shipping_client_name"
+    | "shipping_street"
+    | "shipping_city"
+    | "shipping_province"
+    | "shipping_zip"
+    | "shipping_phone_1"
+    | "shipping_email_1"
+  > {
+  job_ref: Pick<Tables<"jobs">, "job_number" | "job_base_number"> | null;
 }
 
 const genericFilter: FilterFn<SalesOrderView> = (
@@ -117,7 +127,7 @@ export default function SalesTable() {
         .select(
           `
             id, sales_order_number, stage, total, deposit, invoice_balance, designer, created_at,
-            client:client_id (lastName, street, city),
+            shipping_client_name, shipping_street, shipping_city, shipping_province, shipping_zip,
             job_ref:jobs (job_number, job_base_number) 
         `
         )
@@ -190,7 +200,7 @@ export default function SalesTable() {
         minSize: 30,
         filterFn: "includesString" as any,
       }),
-      columnHelper.accessor("client.lastName", {
+      columnHelper.accessor("shipping_client_name", {
         id: "clientlastName",
         header: "Client Name",
         size: 150,
@@ -199,16 +209,32 @@ export default function SalesTable() {
         filterFn: genericFilter as any,
         cell: (info) => info.getValue(),
       }),
-      columnHelper.accessor("client.street", {
-        header: "Address",
-        size: 80,
-        minSize: 30,
-      }),
-      columnHelper.accessor("client.city", {
-        header: "City",
-        size: 40,
-        minSize: 30,
-      }),
+      columnHelper.accessor(
+        (row) =>
+          [
+            row.shipping_street,
+            row.shipping_city,
+            row.shipping_province,
+            row.shipping_zip,
+          ]
+            .filter(Boolean)
+            .join(", ") || "—",
+        {
+          id: "shippingAddress",
+          header: "Shipping Address",
+          size: 200,
+          minSize: 80,
+          enableColumnFilter: true,
+          filterFn: genericFilter as any,
+          cell: (info) => (
+            <Tooltip label={info.getValue()}>
+              <Text size="sm" truncate>
+                {info.getValue()}
+              </Text>
+            </Tooltip>
+          ),
+        }
+      ),
       columnHelper.accessor("invoice_balance", {
         header: "Balance",
         size: 100,
@@ -227,8 +253,8 @@ export default function SalesTable() {
       columnHelper.display({
         id: "actions",
         header: "Actions",
-        size: 90,
-        minSize: 60,
+        size: 40,
+        minSize: 40,
         cell: (info) => (
           <Group justify="center">
             <Tooltip label="View Details / Edit">

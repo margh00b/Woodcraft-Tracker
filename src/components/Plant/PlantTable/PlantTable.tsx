@@ -85,7 +85,7 @@ const JobDetailModal = ({
   onClose: () => void;
 }) => {
   const install = job.installation;
-  const client = job.sales_orders?.client;
+  const client = job.sales_orders;
   const cabinet = job.sales_orders?.cabinet;
   const prod = job.production_schedule;
   const jobNum = job.job_number;
@@ -111,7 +111,7 @@ const JobDetailModal = ({
               CLIENT
             </Text>
             <Text size="sm" fw={700}>
-              {client?.lastName || "Unknown"}
+              {client?.shipping_client_name || "Unknown"}
             </Text>
           </Group>
           <Divider mb={5} />
@@ -276,7 +276,9 @@ export default function PlantTable() {
       const { data, error: dbError } = await supabase
         .from("jobs")
         .select(
-          `id,job_number,sales_orders:sales_orders(shipping_street,shipping_city,shipping_province,shipping_zip,client:client_id(lastName),cabinet:cabinets(box,door_style,species,color)),installation!inner(installation_id,wrap_date,wrap_completed,installation_notes),production_schedule:production_schedule(*)`
+          `id,job_number,sales_orders:sales_orders(shipping_street,shipping_city,shipping_province,shipping_zip,
+          shipping_client_name
+          ,cabinet:cabinets(box,door_style,species,color)),installation!inner(installation_id,wrap_date,wrap_completed,installation_notes),production_schedule:production_schedule(*)`
         )
         .not("installation.wrap_date", "is", null)
         .order("wrap_date", {
@@ -399,7 +401,7 @@ export default function PlantTable() {
       filterFn: genericFilter,
     }),
 
-    columnHelper.accessor("sales_orders.client.lastName", {
+    columnHelper.accessor("sales_orders.shipping_client_name", {
       id: "client",
       header: "Client",
       size: 140,

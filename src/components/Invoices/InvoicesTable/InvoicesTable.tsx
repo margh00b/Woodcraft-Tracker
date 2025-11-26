@@ -59,11 +59,7 @@ import AddInvoice from "../AddInvoice/AddInvoice";
 type InvoiceRow = Tables<"invoices"> & {
   job:
     | (Tables<"jobs"> & {
-        sales_orders:
-          | (Tables<"sales_orders"> & {
-              client: Tables<"client"> | null;
-            })
-          | null;
+        sales_orders: (Tables<"sales_orders"> & {}) | null;
       })
     | null;
 };
@@ -106,7 +102,7 @@ export default function InvoicesTable() {
               shipping_city,
               shipping_province,
               shipping_zip,
-              client (lastName)
+              shipping_client_name
             )
           )
         `
@@ -224,7 +220,7 @@ export default function InvoicesTable() {
     }),
 
     // --- Client Name ---
-    columnHelper.accessor("job.sales_orders.client.lastName", {
+    columnHelper.accessor("job.sales_orders.shipping_client_name", {
       id: "client",
       header: "Client",
       size: 130,

@@ -104,7 +104,7 @@ export default function InstallationTable() {
             job_number,
             job_base_number,
             sales_orders:sales_orders (
-              client:client_id (lastName)
+              shipping_client_name
             ),
             installation:installation_id (
               installation_id, installation_date, installation_completed,
@@ -150,7 +150,7 @@ export default function InstallationTable() {
       filterFn: genericFilter as any,
     }),
 
-    columnHelper.accessor("sales_orders.client.lastName", {
+    columnHelper.accessor("sales_orders.shipping_client_name", {
       id: "clientlastName",
       header: "Client",
       size: 150,

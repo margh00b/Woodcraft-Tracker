@@ -96,7 +96,11 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           production_schedule:production_schedule (*),
           sales_orders:sales_orders (
             shipping_street, shipping_city, shipping_province, shipping_zip,
-            client:client_id (lastName, phone1, phone2, email1, email2),
+            shipping_client_name,
+            shipping_phone_1,
+            shipping_phone_2,
+            shipping_email_1,
+            shipping_email_2,
             cabinet:cabinets (
               id,
               box,
@@ -347,7 +351,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       </Center>
     );
 
-  const client = jobData.sales_orders?.client;
   const cabinet = jobData.sales_orders?.cabinet;
   const shipping = jobData.sales_orders;
   const prodSchedule = jobData.production_schedule;
@@ -476,7 +479,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                 {/* DETAILED INFO: CLIENT, SHIPPING, CABINET */}
                 <SimpleGrid cols={3}>
                   {/* CLIENT & CONTACTS */}
-                  <ClientInfo client={client} shipping={shipping} />
+                  <ClientInfo shipping={shipping} />
 
                   {/* CABINET SPECS */}
                   <CabinetSpecs cabinet={cabinet} />

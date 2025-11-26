@@ -58,7 +58,6 @@ type ProductionJobView = Tables<"jobs"> & {
   production_schedule: Tables<"production_schedule"> | null;
   sales_orders:
     | (Tables<"sales_orders"> & {
-        client: Tables<"client"> | null;
         cabinet: Tables<"cabinets"> | null;
       })
     | null;
@@ -111,7 +110,7 @@ export default function ProdTable() {
         production_schedule:production_schedule(*),
         sales_orders:sales_orders (
         shipping_street, shipping_city, shipping_province, shipping_zip,
-          client:client (lastName),
+         shipping_client_name,
           cabinet:cabinets (species, color, door_style)
         )
       `
@@ -228,7 +227,7 @@ export default function ProdTable() {
       },
     }),
 
-    columnHelper.accessor("sales_orders.client.lastName", {
+    columnHelper.accessor("sales_orders.shipping_client_name", {
       id: "clientlastName",
       header: "Client",
       size: 150,
@@ -550,7 +549,7 @@ export default function ProdTable() {
           striped
           highlightOnHover
           withColumnBorders
-          style={{ minWidth: "2400px" }}
+          style={{ minWidth: "2800px" }}
         >
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (

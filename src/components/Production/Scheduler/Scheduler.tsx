@@ -48,7 +48,6 @@ import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
 // ---------- Types ----------
 
 type SalesOrderType = Tables<"sales_orders"> & {
-  client: Tables<"client">;
   cabinet: Tables<"cabinets">;
 };
 
@@ -86,7 +85,11 @@ export default function EditProductionSchedulePage({
             shipping_city,
             shipping_province,
             shipping_zip,
-            client:client (*),
+            shipping_client_name,
+            shipping_phone_1,
+            shipping_email_1,
+            shipping_phone_2,
+            shipping_email_2,
             cabinet:cabinets (
         id,
         box,
@@ -248,7 +251,6 @@ export default function EditProductionSchedulePage({
       </Center>
     );
 
-  const client = data.sales_orders?.client;
   const cabinet = data.sales_orders?.cabinet;
 
   const handleSubmit = (values: SchedulingFormValues) =>
@@ -301,9 +303,7 @@ export default function EditProductionSchedulePage({
 
                 {/* CLIENT & CABINET */}
                 <SimpleGrid cols={2}>
-                  {client && (
-                    <ClientInfo client={client} shipping={data.sales_orders} />
-                  )}
+                  <ClientInfo shipping={data.sales_orders} />
 
                   {cabinet && <CabinetSpecs cabinet={cabinet} />}
                 </SimpleGrid>
