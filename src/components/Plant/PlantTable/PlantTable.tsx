@@ -63,7 +63,13 @@ type PlantJobView = Tables<"jobs"> & {
   sales_orders:
     | (Tables<"sales_orders"> & {
         client: Tables<"client"> | null;
-        cabinet: Tables<"cabinets"> | null;
+        cabinet:
+          | (Tables<"cabinets"> & {
+              species: Tables<"species"> | null;
+              colors: Tables<"colors"> | null;
+              door_styles: Tables<"door_styles"> | null;
+            })
+          | null;
       })
     | null;
   installation: Tables<"installation"> | null;
@@ -144,7 +150,7 @@ const JobDetailModal = ({
                 Species
               </Text>
               <Text size="sm" fw={500}>
-                {cabinet?.species || "—"}
+                {cabinet?.species?.Species || "—"}
               </Text>
             </Paper>
             <Paper withBorder p="xs">
@@ -152,7 +158,7 @@ const JobDetailModal = ({
                 Door Style
               </Text>
               <Text size="sm" fw={500}>
-                {cabinet?.door_style || "—"}
+                {cabinet?.door_styles?.name || "—"}
               </Text>
             </Paper>
             <Paper withBorder p="xs">
@@ -160,7 +166,7 @@ const JobDetailModal = ({
                 Color
               </Text>
               <Text size="sm" fw={500}>
-                {cabinet?.color || "—"}
+                {cabinet?.colors?.Name || "—"}
               </Text>
             </Paper>
           </SimpleGrid>
@@ -277,13 +283,18 @@ export default function PlantTable() {
         .from("jobs")
         .select(
           `id,job_number,sales_orders:sales_orders(shipping_street,shipping_city,shipping_province,shipping_zip,
-          shipping_client_name
-          ,cabinet:cabinets(box,door_style,species,color)),installation!inner(installation_id,wrap_date,wrap_completed,installation_notes),production_schedule:production_schedule(*)`
+          shipping_client_name,cabinet:cabinets(
+          box,
+          door_styles(name),
+          species(Species),
+          colors(Name))
+        ),
+        installation!inner(installation_id,wrap_date,wrap_completed,installation_notes),production_schedule:production_schedule(*)`
         )
         .not("installation.wrap_date", "is", null)
         .order("wrap_date", {
-          foreignTable: "installation",
-          ascending: false, // Farthest in future first
+          referencedTable: "installation",
+          ascending: false,
         });
 
       if (dbError) throw new Error(dbError.message);
@@ -440,7 +451,7 @@ export default function PlantTable() {
       header: "Box",
       size: 90,
     }),
-    columnHelper.accessor("sales_orders.cabinet.door_style", {
+    columnHelper.accessor("sales_orders.cabinet.door_styles.name", {
       header: "Door Style",
       size: 140,
       cell: (info) => (
@@ -451,11 +462,11 @@ export default function PlantTable() {
         </Tooltip>
       ),
     }),
-    columnHelper.accessor("sales_orders.cabinet.species", {
+    columnHelper.accessor("sales_orders.cabinet.species.Species", {
       header: "Species",
       size: 110,
     }),
-    columnHelper.accessor("sales_orders.cabinet.color", {
+    columnHelper.accessor("sales_orders.cabinet.colors.Name", {
       header: "Color",
       size: 110,
       cell: (info) => (

@@ -58,7 +58,13 @@ type ProductionJobView = Tables<"jobs"> & {
   production_schedule: Tables<"production_schedule"> | null;
   sales_orders:
     | (Tables<"sales_orders"> & {
-        cabinet: Tables<"cabinets"> | null;
+        cabinet:
+          | (Tables<"cabinets"> & {
+              species: Tables<"species"> | null;
+              colors: Tables<"colors"> | null;
+              door_styles: Tables<"door_styles"> | null;
+            })
+          | null;
       })
     | null;
 };
@@ -111,7 +117,12 @@ export default function ProdTable() {
         sales_orders:sales_orders (
         shipping_street, shipping_city, shipping_province, shipping_zip,
          shipping_client_name,
-          cabinet:cabinets (species, color, door_style)
+          cabinet:cabinets(
+          box,
+          door_styles(name),
+          species(Species),
+          colors(Name))
+        )
         )
       `
         )
@@ -244,9 +255,9 @@ export default function ProdTable() {
         const cabinet = info.row.original.sales_orders?.cabinet;
         if (!cabinet) return <Text c="dimmed">—</Text>;
         const parts = [
-          cabinet.species,
-          cabinet.color,
-          cabinet.door_style,
+          cabinet.species?.Species,
+          cabinet.colors?.Name,
+          cabinet.door_styles?.name,
         ].filter(Boolean);
 
         return (

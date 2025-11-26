@@ -67,12 +67,18 @@ type CombinedInstallFormValues = Omit<
 
 type InstallerLookup = Tables<"installers">;
 
+type JoinedCabinet = Tables<"cabinets"> & {
+  door_styles: { name: string } | null;
+  species: { Species: string } | null;
+  colors: { Name: string } | null;
+};
+
 type JobData = Tables<"jobs"> & {
   installation: InstallationType | null;
   production_schedule: ProductionScheduleType | null;
   sales_orders: Tables<"sales_orders"> & {
     client: Tables<"client"> | null;
-    cabinet: Tables<"cabinets"> | null;
+    cabinet: JoinedCabinet | null;
   };
 };
 
@@ -82,7 +88,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
-  // --- 1. Fetch Job and Installation Data ---
+  // --- 1. Fetch Job and Installation Data (UPDATED QUERY) ---
   const { data: jobData, isLoading: isJobLoading } = useQuery<JobData>({
     queryKey: ["installation-editor", jobId],
     queryFn: async () => {
@@ -104,13 +110,10 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
             cabinet:cabinets (
               id,
               box,
-              color,
               glass,
               glaze,
               finish,
-              species,
               interior,
-              door_style,
               drawer_box,
               glass_type,
               piece_count,
@@ -118,7 +121,10 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
               handles_selected,
               handles_supplied,
               hinge_soft_close,
-              top_drawer_front
+              top_drawer_front,
+              door_styles(name),
+              species(Species),
+              colors(Name)
             )
           )
         `
@@ -131,7 +137,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
     enabled: isAuthenticated && !!jobId,
   });
 
-  // --- 2. Fetch Installers Lookup Data ---
   const { data: installers, isLoading: isInstallersLoading } = useQuery<
     InstallerLookup[]
   >({
@@ -211,7 +216,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       }
     }
   }, [jobData]);
-  // ---------- Timeline / Progress Logic ----------
+
   const actualSteps = useMemo(() => {
     const schedule = jobData?.production_schedule;
     if (!schedule) return [];

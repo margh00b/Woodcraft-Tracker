@@ -1,3 +1,4 @@
+// src.zip/components/serviceOrders/EditServiceOrder/EditServiceOrder.tsx
 "use client";
 
 import { useEffect, useMemo } from "react";
@@ -52,10 +53,31 @@ import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
 import PdfPreview from "../PdfPreview/PdfPreview";
 import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
 import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
+import { Tables } from "@/types/db"; // Added Tables import
 
 interface EditServiceOrderProps {
   serviceOrderId: string;
 }
+
+// UPDATED: Define the Cabinet structure with joins for display purposes
+type JoinedCabinet = Tables<"cabinets"> & {
+  door_styles: { name: string } | null;
+  species: { Species: string } | null;
+  colors: { Name: string } | null;
+};
+
+// UPDATED: Define the full fetch result type
+type ServiceOrderData = Tables<"service_orders"> & {
+  service_order_parts: Tables<"service_order_parts">[];
+  installers: Tables<"installers"> | null;
+  jobs:
+    | (Tables<"jobs"> & {
+        sales_orders: Tables<"sales_orders"> & {
+          cabinet: JoinedCabinet | null;
+        };
+      })
+    | null;
+};
 
 export default function EditServiceOrder({
   serviceOrderId,
@@ -94,14 +116,15 @@ export default function EditServiceOrder({
     }));
   }, [installersData]);
 
-  // 3. Fetch Service Order Details
-  const { data: serviceOrderData, isLoading: soLoading } = useQuery({
-    queryKey: ["service_order", serviceOrderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_orders")
-        .select(
-          `
+  // 3. Fetch Service Order Details (UPDATED QUERY)
+  const { data: serviceOrderData, isLoading: soLoading } =
+    useQuery<ServiceOrderData>({
+      queryKey: ["service_order", serviceOrderId],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("service_orders")
+          .select(
+            `
           *,
           service_order_parts (*),
           installers:installer_id (
@@ -124,13 +147,10 @@ export default function EditServiceOrder({
               shipping_email_2,
               cabinet:cabinets (
                 box,
-                color,
                 glass,
                 glaze,
                 finish,
-                species,
                 interior,
-                door_style,
                 drawer_box,
                 drawer_hardware,
                 glass_type,
@@ -139,20 +159,23 @@ export default function EditServiceOrder({
                 handles_selected,
                 handles_supplied,
                 hinge_soft_close,
-                top_drawer_front
+                top_drawer_front,
+                door_styles(name),
+                species(Species),
+                colors(Name)
               )
             )
           )
         `
-        )
-        .eq("service_order_id", serviceOrderId)
-        .single();
+          )
+          .eq("service_order_id", serviceOrderId)
+          .single();
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAuthenticated,
-  });
+        if (error) throw error;
+        return data as unknown as ServiceOrderData;
+      },
+      enabled: isAuthenticated,
+    });
 
   // 4. Form Setup
   const form = useForm<ServiceOrderFormValues>({
@@ -361,7 +384,6 @@ export default function EditServiceOrder({
             <Divider my="sm" color="violet" />
 
             {/* --- EXISTING DETAILS (Clients, Specs, Form) --- */}
-            {/* ... (Client Info and Cabinet Specs Sections - SAME AS BEFORE) ... */}
             <SimpleGrid cols={2}>
               {/* CLIENT INFO */}
               {shipping && <ClientInfo shipping={shipping} />}

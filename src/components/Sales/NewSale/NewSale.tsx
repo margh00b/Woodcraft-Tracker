@@ -57,6 +57,18 @@ import {
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
 
+// --- NEW TYPES FOR RELATIONAL DATA ---
+type DoorStyleOptionData = Pick<Tables<"door_styles">, "id" | "name">;
+type ReferenceOption = {
+  value: string; // ID as string for Select component
+  label: string; // Name for display
+};
+
+interface ExtendedMasterOrderInput extends MasterOrderInput {
+  manual_job_base?: number;
+  manual_job_suffix?: string;
+}
+
 export default function NewSale() {
   const { supabase, isAuthenticated } = useSupabase();
   const { user } = useUser();
@@ -126,12 +138,15 @@ export default function NewSale() {
     });
   }, [clientsData]);
 
-  const { data: colorsData } = useQuery({
+  // --- FETCH REFERENCE DATA (now fetching IDs) ---
+  const { data: colorsData, isLoading: colorsLoading } = useQuery<
+    { Id: number; Name: string }[]
+  >({
     queryKey: ["colors-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("colors")
-        .select("Name")
+        .select("Id, Name")
         .order("Name");
       if (error) throw error;
       return data;
@@ -139,56 +154,77 @@ export default function NewSale() {
     enabled: isAuthenticated,
   });
 
-  const { data: speciesData } = useQuery({
+  const { data: speciesData, isLoading: speciesLoading } = useQuery<
+    { Id: number; Species: string }[]
+  >({
     queryKey: ["species-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("species")
-        .select("Species")
+        .select("Id, Species")
         .order("Species");
       if (error) throw error;
       return data;
     },
     enabled: isAuthenticated,
   });
-  const { data: doorStylesData } = useQuery({
+
+  const { data: doorStylesData, isLoading: doorStylesLoading } = useQuery<
+    DoorStyleOptionData[]
+  >({
     queryKey: ["door-styles-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("door_styles")
-        .select("name")
+        .select("id, name")
         .order("name");
       if (error) throw error;
-      return data;
+      return data as DoorStyleOptionData[];
     },
     enabled: isAuthenticated,
   });
-  const colorOptions = useMemo(() => {
-    return (colorsData || []).map((c: any) => c.Name);
+
+  // --- CREATE OPTIONS (useMemo) ---
+  const colorOptions = useMemo<ReferenceOption[]>(() => {
+    return (colorsData || []).map((c) => ({
+      value: String(c.Id),
+      label: c.Name,
+    }));
   }, [colorsData]);
 
-  const speciesOptions = useMemo(() => {
-    return (speciesData || []).map((s: any) => s.Species);
+  const speciesOptions = useMemo<ReferenceOption[]>(() => {
+    return (speciesData || []).map((s) => ({
+      value: String(s.Id),
+      label: s.Species,
+    }));
   }, [speciesData]);
-  const doorStylesOptions = useMemo(() => {
-    return (doorStylesData || []).map((s: any) => s.name);
+
+  const doorStylesOptions = useMemo<ReferenceOption[]>(() => {
+    return (doorStylesData || []).map((d) => ({
+      value: String(d.id),
+      label: d.name,
+    }));
   }, [doorStylesData]);
 
+  // --- Mutations for Adding Color/Species (Updated to set ID) ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("species")
-        .insert({ Species: name });
+        .insert({ Species: name })
+        .select("Id")
+        .single();
       if (error) throw error;
+      return data.Id;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       notifications.show({
         title: "Success",
         message: "Species added",
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["species-list"] });
-      form.setFieldValue("cabinet.species", newItemValue);
+      form.setFieldValue("cabinet.species", String(newId));
       closeSpeciesModal();
       setNewItemValue("");
     },
@@ -202,17 +238,22 @@ export default function NewSale() {
 
   const addColorMutation = useMutation({
     mutationFn: async (name: string) => {
-      const { error } = await supabase.from("colors").insert({ Name: name });
+      const { data, error } = await supabase
+        .from("colors")
+        .insert({ Name: name })
+        .select("Id")
+        .single();
       if (error) throw error;
+      return data.Id;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       notifications.show({
         title: "Success",
         message: "Color added",
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["colors-list"] });
-      form.setFieldValue("cabinet.color", newItemValue);
+      form.setFieldValue("cabinet.color", String(newId));
       closeColorModal();
       setNewItemValue("");
     },
@@ -223,11 +264,6 @@ export default function NewSale() {
         color: "red",
       }),
   });
-
-  interface ExtendedMasterOrderInput extends MasterOrderInput {
-    manual_job_base?: number;
-    manual_job_suffix?: string;
-  }
 
   const form = useForm<ExtendedMasterOrderInput>({
     initialValues: {
@@ -242,9 +278,9 @@ export default function NewSale() {
       manual_job_base: undefined,
       manual_job_suffix: "",
       cabinet: {
-        species: "",
-        color: "",
-        door_style: "",
+        species: "", // Now stores ID as string
+        color: "", // Now stores ID as string
+        door_style: "", // Now stores ID as string
         finish: "",
         glaze: "",
         top_drawer_front: "",
@@ -304,14 +340,6 @@ export default function NewSale() {
     mutationFn: async (values: ExtendedMasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      const cabinetPayload = { ...values.cabinet };
-      if (!cabinetPayload.glass) {
-        cabinetPayload.glass_type = "";
-      }
-      if (!cabinetPayload.doors_parts_only) {
-        cabinetPayload.piece_count = "";
-      }
-
       const {
         client_id,
         stage,
@@ -330,6 +358,39 @@ export default function NewSale() {
       if (stage === "SOLD" && !manual_job_base) {
         throw new Error("Job Base Number is required for Sold jobs.");
       }
+
+      // --- FIX: Construct Cabinet Payload with new FKs (Converting string IDs to Number/null) ---
+      const cabinetPayload = {
+        // NEW FKs (Converting string IDs to Number/null)
+        species_id: values.cabinet.species
+          ? Number(values.cabinet.species)
+          : null,
+        color_id: values.cabinet.color ? Number(values.cabinet.color) : null,
+        door_style_id: values.cabinet.door_style
+          ? Number(values.cabinet.door_style)
+          : null,
+
+        // Existing fields
+        box: values.cabinet.box,
+        finish: values.cabinet.finish,
+        glaze: values.cabinet.glaze,
+        top_drawer_front: values.cabinet.top_drawer_front,
+        interior: values.cabinet.interior,
+        drawer_box: values.cabinet.drawer_box,
+        drawer_hardware: values.cabinet.drawer_hardware,
+        hinge_soft_close: values.cabinet.hinge_soft_close,
+        handles_supplied: values.cabinet.handles_supplied,
+        handles_selected: values.cabinet.handles_selected,
+        glass: values.cabinet.glass,
+
+        // Conditional text fields
+        glass_type: values.cabinet.glass ? values.cabinet.glass_type : "",
+        piece_count: values.cabinet.doors_parts_only
+          ? values.cabinet.piece_count
+          : "",
+      };
+      // --- END FIX ---
+
       const transactionPayload = {
         client_id: client_id,
         stage: stage,
@@ -339,7 +400,7 @@ export default function NewSale() {
         install: install,
         order_type: order_type,
         delivery_type: delivery_type,
-        cabinet: cabinetPayload,
+        cabinet: cabinetPayload, // Use the new FK payload
         designer: user?.username || "Staff",
         shipping: shipping,
         checklist: checklist,
@@ -378,24 +439,19 @@ export default function NewSale() {
         color: "green",
       });
 
-      if (data.finalJobNum) {
-        setSuccessBannerData({
-          jobNum: data.finalJobNum || "N/A",
-          type: data.jobStage,
-        });
-      }
-      form.reset();
-      setSelectedClientData(null);
-      queryClient.refetchQueries({ queryKey: ["sales_orders"] });
-      router.push("/dashboard/");
+      setSuccessBannerData({
+        jobNum: data.finalJobNum || data.salesOrderNum,
+        type: data.jobStage,
+      });
     },
 
     onError: (err) => {
       notifications.show({
-        title: "Error",
-        message: err.message,
+        title: "CRITICAL Error: Submission Failed",
+        message: `${err.message}. The form state must be reset. Redirecting...`,
         color: "red",
       });
+      router.push("/dashboard");
     },
   });
 
@@ -437,7 +493,13 @@ export default function NewSale() {
     });
   };
 
-  if (!isAuthenticated || clientsLoading) {
+  if (
+    !isAuthenticated ||
+    clientsLoading ||
+    colorsLoading ||
+    speciesLoading ||
+    doorStylesLoading
+  ) {
     return (
       <Center style={{ height: "100vh", width: "100%" }}>
         <Loader />
@@ -526,7 +588,6 @@ export default function NewSale() {
                 />
               </Paper>
 
-              {/* RESTORED: Link to Existing Job Select for SUGGESTION only */}
               <Select
                 label="Suggest Job Base #"
                 placeholder="Search existing jobs..."
@@ -671,6 +732,7 @@ export default function NewSale() {
             </Group>
           </Paper>
 
+          {/* CONDITIONAL BILLING / SHIPPING */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
@@ -678,7 +740,7 @@ export default function NewSale() {
               bg={"white"}
               p="10px"
             >
-              {/* LEFT COLUMN: Read-Only Client Billing Details */}
+              {/* BILLING */}
               <Fieldset legend="Billing Details" variant="filled" bg={"gray.2"}>
                 <Stack gap="sm">
                   <Stack gap={0}>
@@ -740,6 +802,8 @@ export default function NewSale() {
                   </Stack>
                 </Stack>
               </Fieldset>
+
+              {/* SHIPPING */}
               <Fieldset
                 legend="Shipping Details"
                 variant="filled"
@@ -751,7 +815,7 @@ export default function NewSale() {
                       size="xs"
                       variant="light"
                       leftSection={<FaCopy />}
-                      onClick={() => copyClientToShipping()}
+                      onClick={copyClientToShipping}
                       disabled={!selectedClientData}
                       style={{
                         background:
@@ -763,7 +827,6 @@ export default function NewSale() {
                       Copy from Billing
                     </Button>
                   </Group>
-
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Client Name"
@@ -776,7 +839,6 @@ export default function NewSale() {
                       {...form.getInputProps(`shipping.shipping_street`)}
                     />
                   </SimpleGrid>
-
                   <SimpleGrid cols={3} spacing="sm">
                     <TextInput
                       label="City"
@@ -791,7 +853,6 @@ export default function NewSale() {
                       {...form.getInputProps(`shipping.shipping_zip`)}
                     />
                   </SimpleGrid>
-
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Phone 1"
@@ -802,7 +863,6 @@ export default function NewSale() {
                       {...form.getInputProps(`shipping.shipping_phone_2`)}
                     />
                   </SimpleGrid>
-
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Email 1"
@@ -1104,7 +1164,7 @@ export default function NewSale() {
                       clearable
                       {...form.getInputProps(`checklist.second_markout_date`)}
                     />
-                    <div></div> {/* Placeholder */}
+                    <div></div>
                   </SimpleGrid>
                 </Fieldset>
 
@@ -1236,10 +1296,7 @@ export default function NewSale() {
               }}
             >
               <Stack align="center" gap="md">
-                {/* Visual Checkmark Icon */}
                 <FaCheckCircle size={56} color="var(--mantine-color-green-6)" />
-
-                {/* Main Title: JOB CREATED */}
                 <Title
                   order={3}
                   c="dark"
@@ -1259,8 +1316,6 @@ export default function NewSale() {
                     {successBannerData.jobNum}
                   </Text>
                 </Badge>
-
-                {/* Auto-Dismiss Message */}
                 <Text size="sm" c="dimmed" mt="lg">
                   Redirecting to dashboard...
                 </Text>
@@ -1293,9 +1348,7 @@ export default function NewSale() {
               }}
             >
               <Stack align="center" gap="md">
-                {/* Visual Checkmark Icon */}
                 <FaCheckCircle size={56} color="var(--mantine-color-blue-6)" />
-                {/* Main Title: QUOTE SAVED */}
                 <Title
                   order={3}
                   c="dark"
@@ -1304,7 +1357,6 @@ export default function NewSale() {
                 >
                   Quote Saved Successfully
                 </Title>
-                {/* Auto-Dismiss Message */}
                 <Text size="sm" c="dimmed" mt="lg">
                   Redirecting to dashboard...
                 </Text>

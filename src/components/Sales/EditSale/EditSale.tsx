@@ -39,7 +39,6 @@ import {
 import { Tables } from "@/types/db";
 import {
   DeliveryTypeOptions,
-  DoorStyleOptions,
   DrawerBoxOptions,
   DrawerHardwareOptions,
   FinishOptions,
@@ -60,6 +59,10 @@ type ClientSelectOption = {
   value: string;
   label: string;
   original: Tables<"client">;
+};
+type ReferenceOption = {
+  value: string; // ID as string for Select component
+  label: string; // Name for display
 };
 
 // Extend the schema type locally to include manual job fields
@@ -89,13 +92,15 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] =
     useDisclosure(false);
 
-  // --- Fetch Colors and Species ---
-  const { data: colorsData } = useQuery({
+  // --- 1. FETCH REFERENCE DATA (IDs + Name/Species) ---
+  const { data: colorsData, isLoading: colorsLoading } = useQuery<
+    { Id: number; Name: string }[]
+  >({
     queryKey: ["colors-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("colors")
-        .select("Name")
+        .select("Id, Name")
         .order("Name");
       if (error) throw error;
       return data;
@@ -103,43 +108,77 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     enabled: isAuthenticated,
   });
 
-  const { data: speciesData } = useQuery({
+  const { data: speciesData, isLoading: speciesLoading } = useQuery<
+    { Id: number; Species: string }[]
+  >({
     queryKey: ["species-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("species")
-        .select("Species")
+        .select("Id, Species")
         .order("Species");
       if (error) throw error;
       return data;
     },
     enabled: isAuthenticated,
   });
+  type DoorStyleOptionData = Pick<Tables<"door_styles">, "id" | "name">;
+  const { data: doorStylesData, isLoading: doorStylesLoading } = useQuery<
+    DoorStyleOptionData[]
+  >({
+    queryKey: ["door-styles-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("door_styles")
+        .select("id, name")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAuthenticated,
+  });
 
-  const colorOptions = useMemo(() => {
-    return (colorsData || []).map((c: any) => c.Name);
+  // --- 2. CREATE OPTIONS (useMemo) ---
+  const colorOptions = useMemo<ReferenceOption[]>(() => {
+    return (colorsData || []).map((c) => ({
+      value: String(c.Id),
+      label: c.Name,
+    }));
   }, [colorsData]);
 
-  const speciesOptions = useMemo(() => {
-    return (speciesData || []).map((s: any) => s.Species);
+  const speciesOptions = useMemo<ReferenceOption[]>(() => {
+    return (speciesData || []).map((s) => ({
+      value: String(s.Id),
+      label: s.Species,
+    }));
   }, [speciesData]);
 
-  // --- Mutations for Adding Color/Species ---
+  const doorStyleOptions = useMemo<ReferenceOption[]>(() => {
+    return (doorStylesData || []).map((d) => ({
+      value: String(d.id),
+      label: d.name,
+    }));
+  }, [doorStylesData]);
+
+  // --- Mutations for Adding Color/Species (Updated to set ID) ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("species")
-        .insert({ Species: name });
+        .insert({ Species: name })
+        .select("Id")
+        .single();
       if (error) throw error;
+      return data.Id;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       notifications.show({
         title: "Success",
         message: "Species added",
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["species-list"] });
-      form.setFieldValue("cabinet.species", newItemValue);
+      form.setFieldValue("cabinet.species", String(newId)); // Set ID as string
       closeSpeciesModal();
       setNewItemValue("");
     },
@@ -153,17 +192,22 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   const addColorMutation = useMutation({
     mutationFn: async (name: string) => {
-      const { error } = await supabase.from("colors").insert({ Name: name });
+      const { data, error } = await supabase
+        .from("colors")
+        .insert({ Name: name })
+        .select("Id")
+        .single();
       if (error) throw error;
+      return data.Id;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       notifications.show({
         title: "Success",
         message: "Color added",
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["colors-list"] });
-      form.setFieldValue("cabinet.color", newItemValue);
+      form.setFieldValue("cabinet.color", String(newId)); // Set ID as string
       closeColorModal();
       setNewItemValue("");
     },
@@ -175,25 +219,53 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       }),
   });
 
-  // Fetch sales order data (Updated to include job base/suffix/id)
+  // Fetch sales order data (Updated to select new FK fields)
   const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
     queryKey: ["sales-order", salesOrderId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sales_orders")
         .select(
-          `*, cabinet: cabinets(*), client: client(*), job: jobs(id, job_number, job_base_number, job_suffix)`
+          `
+            *, 
+            client: client(*), 
+            job: jobs(id, job_number, job_base_number, job_suffix),
+            cabinet: cabinets(
+                *, 
+                species_name:species(Species), 
+                color_name:colors(Name), 
+                door_style_name:door_styles(name)
+            )
+          `
         )
         .eq("id", salesOrderId)
         .single();
 
       if (error) throw error;
-      return data as any;
+      // Transform the data to ensure the cabinet object is correctly structured
+      // by moving the nested array/object results up a level.
+      const transformedData = {
+        ...data,
+        cabinet: {
+          ...data.cabinet,
+          // Flatten the joined relational data for simpler access
+          species_name:
+            data.cabinet.species_name?.[0]?.Species ||
+            data.cabinet.species_name, // Handle array or single object if DB is up to date
+          color_name:
+            data.cabinet.color_name?.[0]?.Name || data.cabinet.color_name,
+          door_style_name:
+            data.cabinet.door_style_name?.[0]?.name ||
+            data.cabinet.door_style_name,
+        },
+      };
+
+      return transformedData as any;
     },
     enabled: isAuthenticated && !!salesOrderId,
   });
 
-  // Fetch clients
+  // Fetch clients (Unchanged)
   const { data: clientsData, isLoading: clientsLoading } = useQuery({
     queryKey: ["clients-list"],
     queryFn: async () => {
@@ -230,9 +302,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       manual_job_base: undefined,
       manual_job_suffix: "",
       cabinet: {
-        species: "",
-        color: "",
-        door_style: "",
+        species: "", // Now holds species_id as string
+        color: "", // Now holds color_id as string
+        door_style: "", // Now holds door_style_id as string
         finish: "",
         glaze: "",
         top_drawer_front: "",
@@ -275,9 +347,10 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     validate: zodResolver(MasterOrderSchema),
   });
 
-  // Prefill form when data is loaded
+  // Prefill form when data is loaded (Updated to use FK IDs)
   useEffect(() => {
     if (salesOrderData) {
+      const cabinet = salesOrderData.cabinet;
       form.setValues({
         client_id: salesOrderData.client_id,
         stage: salesOrderData.stage,
@@ -290,7 +363,28 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         // Pre-fill job number fields if they exist
         manual_job_base: salesOrderData.job?.job_base_number,
         manual_job_suffix: salesOrderData.job?.job_suffix || "",
-        cabinet: salesOrderData.cabinet,
+        cabinet: {
+          // FIX: Coerce all nullable boolean fields to false (e.g., cabinet.hinge_soft_close ?? false)
+          species: String(cabinet.species_id || ""),
+          color: String(cabinet.color_id || ""),
+          door_style: String(cabinet.door_style_id || ""),
+          // Retain all existing cabinet fields
+          finish: cabinet.finish,
+          glaze: cabinet.glaze,
+          top_drawer_front: cabinet.top_drawer_front,
+          interior: cabinet.interior,
+          drawer_box: cabinet.drawer_box,
+          drawer_hardware: cabinet.drawer_hardware,
+          box: cabinet.box,
+          piece_count: cabinet.piece_count,
+          glass_type: cabinet.glass_type,
+
+          hinge_soft_close: cabinet.hinge_soft_close ?? false,
+          doors_parts_only: cabinet.doors_parts_only ?? false,
+          handles_supplied: cabinet.handles_supplied ?? false,
+          handles_selected: cabinet.handles_selected ?? false,
+          glass: cabinet.glass ?? false,
+        },
         shipping: {
           shipping_client_name: salesOrderData.shipping_client_name || "",
           shipping_street: salesOrderData.shipping_street || "",
@@ -340,15 +434,35 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     mutationFn: async (values: ExtendedMasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      // --- Clear dependent fields if unchecked ---
-      const cabinetPayload = { ...values.cabinet };
-      if (!cabinetPayload.glass) {
-        cabinetPayload.glass_type = "";
-      }
-      if (!cabinetPayload.doors_parts_only) {
-        cabinetPayload.piece_count = "";
-      }
-      // ------------------------------------------
+      // --- 1. Construct Cabinet Payload with new FKs (Converting string IDs to Number) ---
+      const cabinetPayload = {
+        // Existing fields
+        box: values.cabinet.box,
+        finish: values.cabinet.finish,
+        glaze: values.cabinet.glaze,
+        top_drawer_front: values.cabinet.top_drawer_front,
+        interior: values.cabinet.interior,
+        drawer_box: values.cabinet.drawer_box,
+        drawer_hardware: values.cabinet.drawer_hardware,
+        hinge_soft_close: values.cabinet.hinge_soft_close,
+        doors_parts_only: values.cabinet.doors_parts_only,
+        handles_supplied: values.cabinet.handles_supplied,
+        handles_selected: values.cabinet.handles_selected,
+        glass: values.cabinet.glass,
+        glass_type: values.cabinet.glass ? values.cabinet.glass_type : "",
+        piece_count: values.cabinet.doors_parts_only
+          ? values.cabinet.piece_count
+          : "",
+
+        // NEW FKs (Converting string IDs to Number/null)
+        species_id: values.cabinet.species
+          ? Number(values.cabinet.species)
+          : null,
+        color_id: values.cabinet.color ? Number(values.cabinet.color) : null,
+        door_style_id: values.cabinet.door_style
+          ? Number(values.cabinet.door_style)
+          : null,
+      };
 
       // 1. Update Cabinet
       await supabase
@@ -399,7 +513,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           dupQuery = dupQuery.is("job_suffix", null);
         }
 
-        // If we are updating an existing job, exclude it from the duplicate check
         const currentJobId = salesOrderData.job?.id;
         if (currentJobId) {
           dupQuery = dupQuery.neq("id", currentJobId);
@@ -422,9 +535,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             .update({
               job_base_number: manual_job_base,
               job_suffix: suffixStr,
-              // job_number is generated column, usually we don't update it manually if it's generated stored,
-              // but if your DB relies on manual input for text search or display without regeneration:
-              // job_number: suffixStr ? `${manual_job_base}-${suffixStr}` : `${manual_job_base}`
             })
             .eq("id", currentJobId);
 
@@ -435,7 +545,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             sales_order_id: salesOrderId,
             job_base_number: manual_job_base,
             job_suffix: suffixStr,
-            // job_number: suffixStr ? `${manual_job_base}-${suffixStr}` : `${manual_job_base}`
           });
 
           if (jobInsertError) throw jobInsertError;
@@ -464,7 +573,13 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     },
   });
 
-  if (salesOrderLoading || clientsLoading) {
+  if (
+    salesOrderLoading ||
+    clientsLoading ||
+    colorsLoading ||
+    speciesLoading ||
+    doorStylesLoading
+  ) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader />
@@ -560,7 +675,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Group>
               )}
 
-              {/* Show Badge ONLY if feature toggle is off OR if viewing quote */}
+              {/* Show Badge if feature toggle is off OR if viewing quote (Legacy display for reference) */}
               {!FEATURE_MANUAL_JOB_ENTRY &&
                 salesOrderData?.stage === "SOLD" && (
                   <Box my="auto">
@@ -666,7 +781,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </Group>
           </Paper>
 
-          {/* CONDITIONAL BILLING / SHIPPING */}
+          {/* CONDITIONAL BILLING / SHIPPING (Unchanged) */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
@@ -880,7 +995,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     <Select
                       label="Door Style"
                       placeholder="Select Door Style"
-                      data={DoorStyleOptions}
+                      data={doorStyleOptions}
                       searchable
                       nothingFoundMessage="No door style found"
                       {...form.getInputProps(`cabinet.door_style`)}
@@ -1184,12 +1299,16 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 type="submit"
                 size="md"
                 color="blue"
+                loading={updateMutation.isPending}
+                disabled={!form.isDirty() || updateMutation.isPending}
                 style={{
-                  background:
-                    "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+                  background: !form.isDirty()
+                    ? "linear-gradient(135deg, #c6c6c6 0%, #9e9e9e 100%)"
+                    : "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
                   color: "white",
                   border: "none",
                 }}
+                onClick={() => form.onSubmit(handleSubmit)()}
               >
                 Update Sale
               </Button>

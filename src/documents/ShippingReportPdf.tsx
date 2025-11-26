@@ -1,12 +1,20 @@
+// src.zip/documents/ShippingReportPdf.tsx
 import React from "react";
 import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import { Tables } from "@/types/db";
 
-// Define specific types for the joined data
+// NEW: Define the Cabinet structure with joins for display purposes
+export type JoinedCabinet = Tables<"cabinets"> & {
+  door_styles: { name: string } | null;
+  species: { Species: string } | null;
+  colors: { Name: string } | null;
+};
+
+// Define specific types for the joined data, using the new JoinedCabinet
 export type ShippingReportJob = Tables<"jobs"> & {
   sales_orders: Tables<"sales_orders"> & {
-    cabinet: Tables<"cabinets"> | null;
+    cabinet: JoinedCabinet | null;
   };
   production_schedule: Tables<"production_schedule">;
 };
@@ -247,16 +255,18 @@ export const ShippingReportPdf = ({
                         {cab?.box || "0"}
                       </Text>
                     </View>
-                    {/* Using new colDoor style */}
-                    <View style={styles.colDoor}>
-                      <Text>{cab?.door_style || ""}</Text>
+                    {/* UPDATED: Use joined door style name */}
+                    <View style={[styles.colDoor, { fontSize: 8 }]}>
+                      <Text>{cab?.door_styles?.name || ""}</Text>
                     </View>
 
+                    {/* UPDATED: Use joined species name */}
                     <Text style={[styles.colSpec, { fontSize: 8 }]}>
-                      {cab?.species || "—"}
+                      {cab?.species?.Species || "—"}
                     </Text>
+                    {/* UPDATED: Use joined color name */}
                     <Text style={[styles.colColor, { fontSize: 8 }]}>
-                      {cab?.color || "—"}
+                      {cab?.colors?.Name || "—"}
                     </Text>
 
                     {/* Checkboxes */}

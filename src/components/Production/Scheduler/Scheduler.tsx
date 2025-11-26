@@ -46,9 +46,14 @@ import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
 import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
 
 // ---------- Types ----------
-
+type CabinetSpecsJoined = Tables<"cabinets"> & {
+  // FIX: Define the expected structure from the joined tables (single object for each)
+  door_styles: { name: string } | null;
+  species: { Species: string } | null;
+  colors: { Name: string } | null;
+};
 type SalesOrderType = Tables<"sales_orders"> & {
-  cabinet: Tables<"cabinets">;
+  cabinet: CabinetSpecsJoined;
 };
 
 type SchedulingFormValues = TablesUpdate<"production_schedule">;
@@ -93,13 +98,10 @@ export default function EditProductionSchedulePage({
             cabinet:cabinets (
         id,
         box,
-        color,
         glass,
         glaze,
         finish,
-        species,
         interior,
-        door_style,
         drawer_box,
         glass_type,
         piece_count,
@@ -107,7 +109,10 @@ export default function EditProductionSchedulePage({
         handles_selected,
         handles_supplied,
         hinge_soft_close,
-        top_drawer_front
+        top_drawer_front,
+        door_styles(name),
+        species(Species),
+        colors(Name)
       )
           )
         `
