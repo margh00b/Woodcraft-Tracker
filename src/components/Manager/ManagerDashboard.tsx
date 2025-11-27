@@ -370,7 +370,7 @@ export default function ManagerDashboardClient() {
       : 0;
 
   return (
-    <Container size="xl" p="lg">
+    <Container size={"100%"} p="xl">
       <Stack gap="xl">
         {/* Header */}
         <Group justify="space-between">
