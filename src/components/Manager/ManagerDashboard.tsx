@@ -552,37 +552,39 @@ export default function ManagerDashboardClient() {
             <Paper p="md" shadow="sm" radius="md" withBorder>
               <Group justify="space-between" mb="md">
                 <Title order={5} c="dimmed">
-                  Next Scheduled Shipments
+                  Upcoming Shipments
                 </Title>
                 <FaShippingFast color="gray" />
               </Group>
               <Stack gap="xs">
                 {metrics.upcomingShipments.length > 0 ? (
-                  metrics.upcomingShipments.map((job: any, idx: number) => (
-                    <Paper
-                      key={idx}
-                      withBorder
-                      p="xs"
-                      bg="var(--mantine-color-gray-0)"
-                    >
-                      <Group justify="space-between">
-                        <Group gap="xs">
-                          <FaClock color="gray" size={12} />
-                          <Text size="sm" fw={600}>
-                            {dayjs(job.ship_schedule).format("ddd, MMM D")}
+                  metrics.upcomingShipments
+                    .slice(0, 3)
+                    .map((job: any, idx: number) => (
+                      <Paper
+                        key={idx}
+                        withBorder
+                        p="xs"
+                        bg="var(--mantine-color-gray-0)"
+                      >
+                        <Group justify="space-between">
+                          <Group gap="xs">
+                            <FaClock color="gray" size={12} />
+                            <Text size="sm" fw={600}>
+                              {dayjs(job.ship_schedule).format("ddd, MMM D")}
+                            </Text>
+                          </Group>
+                          <Text
+                            size="sm"
+                            fw={700}
+                            variant="gradient"
+                            gradient={GRADIENTS.purple}
+                          >
+                            Job #{job.job_number}
                           </Text>
                         </Group>
-                        <Text
-                          size="sm"
-                          fw={700}
-                          variant="gradient"
-                          gradient={GRADIENTS.purple}
-                        >
-                          Job #{job.job_number}
-                        </Text>
-                      </Group>
-                    </Paper>
-                  ))
+                      </Paper>
+                    ))
                 ) : (
                   <Group justify="center" p="lg" gap="xs">
                     <FaExclamationCircle color="gray" />
