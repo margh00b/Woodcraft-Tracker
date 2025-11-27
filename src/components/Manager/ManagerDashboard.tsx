@@ -1,4 +1,3 @@
-// src.zip/components/ManagerDashboard/ManagerDashboardClient.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
@@ -41,31 +40,16 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
 // --- 1. Type Definitions ---
-type SalesOrderRow = Pick<
-  Tables<"sales_orders">,
-  "id" | "stage" | "designer" | "created_at"
->;
-type ServiceOrderRow = Pick<Tables<"service_orders">, "completed_at">;
+// We only fetch specific fields now
+type SalesTrendData = Pick<Tables<"sales_orders">, "designer" | "created_at">;
 
-// Relaxed type to handle potential array/object return from Supabase
-type ProductionJobRow = {
-  job_number: string;
-  production_schedule:
-    | Pick<
-        Tables<"production_schedule">,
-        "prod_id" | "assembly_completed_actual" | "ship_schedule"
-      >
-    | Pick<
-        Tables<"production_schedule">,
-        "prod_id" | "assembly_completed_actual" | "ship_schedule"
-      >[]
-    | null;
-};
-
-type UpcomingShipment = {
-  job_number: string;
-  ship_schedule: string;
-  prod_id: number;
+// Gradient Palette
+const GRADIENTS = {
+  blue: { from: "#4facfe", to: "#3700ffff", deg: 45 },
+  teal: { from: "#43e97b", to: "#004105ff", deg: 45 },
+  orange: { from: "#fa709a", to: "#ff6600ff", deg: 45 },
+  red: { from: "#ff0844", to: "#ffb199", deg: 45 },
+  purple: { from: "#8E2DE2", to: "#4A00E0", deg: 45 },
 };
 
 // --- 2. UI Components ---
@@ -80,36 +64,45 @@ const StatCard = ({
   title: string;
   value: string | number;
   icon: any;
-  color: string;
+  color: keyof typeof GRADIENTS;
   subtext?: string;
-}) => (
-  <Paper p="md" shadow="sm" radius="md" withBorder style={{ height: "100%" }}>
-    <Group justify="space-between" align="flex-start">
-      <Stack gap={4}>
-        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
-          {title}
-        </Text>
-        <Text fw={700} size={rem(28)} style={{ color, lineHeight: 1 }}>
-          {value}
-        </Text>
-        {subtext && (
-          <Text size="xs" c="dimmed" mt={4}>
-            {subtext}
+}) => {
+  const gradient = GRADIENTS[color];
+  return (
+    <Paper p="md" shadow="sm" radius="md" withBorder style={{ height: "100%" }}>
+      <Group justify="space-between" align="flex-start">
+        <Stack gap={4}>
+          <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+            {title}
           </Text>
-        )}
-      </Stack>
-      <ThemeIcon
-        size="lg"
-        radius="md"
-        variant="light"
-        color={color}
-        style={{ opacity: 0.8 }}
-      >
-        <Icon size={18} />
-      </ThemeIcon>
-    </Group>
-  </Paper>
-);
+          <Text
+            fw={700}
+            size={rem(28)}
+            variant="gradient"
+            gradient={gradient}
+            style={{ lineHeight: 1 }}
+          >
+            {value}
+          </Text>
+          {subtext && (
+            <Text size="xs" c="dimmed" mt={4}>
+              {subtext}
+            </Text>
+          )}
+        </Stack>
+        <ThemeIcon
+          size="lg"
+          radius="md"
+          variant="gradient"
+          gradient={gradient}
+          style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
+        >
+          <Icon size={18} color="white" />
+        </ThemeIcon>
+      </Group>
+    </Paper>
+  );
+};
 
 const SalesSpikeChart = ({
   data,
@@ -131,7 +124,7 @@ const SalesSpikeChart = ({
         align="flex-end"
         justify="space-between"
         style={{ height: rem(180), width: "100%" }}
-        gap="xs"
+        gap={4}
       >
         {data.map((item) => {
           const count = item.count || 0;
@@ -142,17 +135,18 @@ const SalesSpikeChart = ({
               key={item.label}
               gap={4}
               align="center"
-              style={{ flex: 1, height: "100%" }}
               justify="flex-end"
+              style={{ flex: 1, height: "100%" }}
             >
-              <Tooltip label={`${count} Sales in ${item.label}`} withArrow>
+              <Tooltip label={`${count} Sales`} withArrow>
                 <Box
                   style={{
                     width: "80%",
                     height: `${heightPercent}%`,
-                    backgroundColor: "#4A00E0",
+                    background:
+                      "linear-gradient(180deg, #8E2DE2 0%, #4A00E0 100%)",
                     borderRadius: "4px 4px 0 0",
-                    opacity: count === 0 ? 0.1 : 0.8,
+                    opacity: count === 0 ? 0.1 : 1,
                     minHeight: rem(4),
                     transition: "height 0.3s ease",
                   }}
@@ -173,173 +167,219 @@ const SalesSpikeChart = ({
   );
 };
 
-// --- 3. Main Component with Logic ---
+// --- 3. Optimized Data Fetching ---
 export default function ManagerDashboardClient() {
   const { supabase, isAuthenticated } = useSupabase();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manager-dashboard-data"],
+    queryKey: ["manager-dashboard-optimized"],
     enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     queryFn: async () => {
-      // Fetch everything in parallel
-      const [salesRes, serviceRes, prodRes] = await Promise.all([
-        supabase.from("sales_orders").select("id, stage, designer, created_at"),
+      const todayISO = dayjs().startOf("day").toISOString();
+      const oneYearAgoISO = dayjs()
+        .subtract(11, "month")
+        .startOf("month")
+        .toISOString();
 
-        supabase.from("service_orders").select("completed_at"),
-
-        // Fetch jobs that have a production schedule linked
+      // Execute all optimized queries in parallel
+      const [
+        quotesRes,
+        soldRes,
+        serviceRes,
+        prodTotalRes,
+        prodIncompleteRes,
+        salesTrendRes,
+        shipmentsRes,
+      ] = await Promise.all([
+        // 1. Count Active Quotes
         supabase
-          .from("jobs")
-          .select(
-            "job_number, production_schedule(prod_id, assembly_completed_actual, ship_schedule)"
-          )
-          .not("prod_id", "is", null),
+          .from("sales_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("stage", "QUOTE"),
+
+        // 2. Count Total Sold Jobs (Lifetime)
+        supabase
+          .from("sales_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("stage", "SOLD"),
+
+        // 3. Count Open Service Orders
+        supabase
+          .from("service_orders")
+          .select("*", { count: "exact", head: true })
+          .is("completed_at", null),
+
+        // 4. Count Total Production Jobs
+        supabase
+          .from("production_schedule")
+          .select("*", { count: "exact", head: true }),
+
+        // 5. Count Incomplete Production Jobs (Assembly not done)
+        supabase
+          .from("production_schedule")
+          .select("*", { count: "exact", head: true })
+          .is("assembly_completed_actual", null),
+
+        // 6. Fetch Sales Trend Data (Last 12 Months Only)
+        // Optimized: Only fetching designer & date, filtered by date
+        supabase
+          .from("sales_orders")
+          .select("designer, created_at")
+          .eq("stage", "SOLD")
+          .gte("created_at", oneYearAgoISO),
+
+        // 7. Fetch Upcoming Shipments (Limit 5)
+        // Optimized: Uses DB ordering and limiting
+        supabase
+          .from("production_schedule")
+          .select("prod_id, ship_schedule, jobs(job_number)")
+          .gte("ship_schedule", todayISO)
+          .order("ship_schedule", { ascending: true })
+          .limit(5),
       ]);
 
-      if (salesRes.error) throw salesRes.error;
+      // Error Handling
+      if (quotesRes.error) throw quotesRes.error;
+      if (soldRes.error) throw soldRes.error;
       if (serviceRes.error) throw serviceRes.error;
-      if (prodRes.error) throw prodRes.error;
+      if (prodTotalRes.error) throw prodTotalRes.error;
+      if (prodIncompleteRes.error) throw prodIncompleteRes.error;
+      if (salesTrendRes.error) throw salesTrendRes.error;
+      if (shipmentsRes.error) throw shipmentsRes.error;
 
       return {
-        sales: salesRes.data as SalesOrderRow[],
-        service: serviceRes.data as ServiceOrderRow[],
-        production: prodRes.data as unknown as ProductionJobRow[],
+        countQuotes: quotesRes.count || 0,
+        countSold: soldRes.count || 0,
+        countOpenService: serviceRes.count || 0,
+        countProdTotal: prodTotalRes.count || 0,
+        countProdIncomplete: prodIncompleteRes.count || 0,
+        salesTrend: salesTrendRes.data as SalesTrendData[],
+        upcomingShipments: shipmentsRes.data || [],
       };
     },
   });
 
-  // --- PROCESSING LOGIC ---
+  // --- 4. Logic & Transformation (Fast) ---
   const metrics = useMemo(() => {
     if (!data) return null;
 
-    let totalQuotes = 0;
-    let totalSold = 0;
-    let totalUncompleteJobs = 0;
-    const designerCounts: Record<string, number> = {};
+    // A. Chart Data Preparation
     const monthlyCounts: Record<string, number> = {};
-    const upcomingShippings: UpcomingShipment[] = [];
-
-    const today = dayjs().startOf("day");
-    const oneYearAgo = today.subtract(11, "month").startOf("month");
+    const designerCounts: Record<string, number> = {};
 
     // Initialize 12 buckets
-    const chartData: { key: string; label: string; count: number }[] = [];
-    let loopDate = oneYearAgo.clone();
+    const chartData: { label: string; count: number }[] = [];
+    const today = dayjs();
+    let loopDate = today.subtract(11, "month").startOf("month");
+
     for (let i = 0; i < 12; i++) {
       const key = loopDate.format("YYYY-MM");
       monthlyCounts[key] = 0;
-      chartData.push({ key, label: loopDate.format("MMM YY"), count: 0 });
+      chartData.push({
+        label: loopDate.format("MMM YY"), // Label for display
+        count: 0, // Placeholder
+      });
       loopDate = loopDate.add(1, "month");
     }
 
-    // 1. Process Sales
-    data.sales.forEach((order) => {
-      if (order.stage === "QUOTE") totalQuotes++;
-      if (order.stage === "SOLD") {
-        totalSold++;
-        const designer = order.designer || "Unknown";
-        designerCounts[designer] = (designerCounts[designer] || 0) + 1;
+    // B. Process Sales Trend Data (Client-side aggregation of the small filtered dataset)
+    data.salesTrend.forEach((sale) => {
+      // 1. Designer Stats
+      const designer = sale.designer || "Unknown";
+      designerCounts[designer] = (designerCounts[designer] || 0) + 1;
 
-        if (order.created_at) {
-          const cDate = dayjs(order.created_at);
-          if (cDate.isSameOrAfter(oneYearAgo)) {
-            const mKey = cDate.format("YYYY-MM");
-            if (monthlyCounts[mKey] !== undefined) monthlyCounts[mKey]++;
-          }
+      // 2. Chart Stats
+      if (sale.created_at) {
+        const mKey = dayjs(sale.created_at).format("YYYY-MM");
+        if (monthlyCounts[mKey] !== undefined) {
+          monthlyCounts[mKey]++;
         }
       }
     });
 
-    const finalChartData = chartData.map((d) => ({
-      ...d,
-      count: monthlyCounts[d.key] || 0,
-    }));
-
-    // 2. Process Production
-    data.production.forEach((row) => {
-      // Handle potential array return from 1:N relationship
-      const rawSchedule = row.production_schedule;
-      const schedule = Array.isArray(rawSchedule)
-        ? rawSchedule[0]
-        : rawSchedule;
-
-      if (!schedule) return;
-
-      // Incomplete = Assembly NOT completed
-      if (!schedule.assembly_completed_actual) {
-        totalUncompleteJobs++;
-      }
-
-      // Upcoming Shipments (Today or Future)
-      if (schedule.ship_schedule) {
-        const shipDate = dayjs(schedule.ship_schedule);
-        if (shipDate.isSameOrAfter(today)) {
-          upcomingShippings.push({
-            job_number: row.job_number,
-            ship_schedule: schedule.ship_schedule,
-            prod_id: schedule.prod_id,
-          });
-        }
-      }
+    // Map counts to chart data array (preserving order)
+    const finalChartData = chartData.map((d, index) => {
+      // Re-calculate key from start date to match the map
+      const key = today
+        .subtract(11, "month")
+        .startOf("month")
+        .add(index, "month")
+        .format("YYYY-MM");
+      return {
+        ...d,
+        count: monthlyCounts[key] || 0,
+      };
     });
 
-    // 3. Service Orders
-    const openServiceOrders = data.service.filter(
-      (so) => !so.completed_at
-    ).length;
-
-    // Sort & Slice
+    // C. Sort Top Designers
     const topDesigners = Object.entries(designerCounts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
 
-    const nextShipments = upcomingShippings
-      .sort((a, b) => dayjs(a.ship_schedule).diff(dayjs(b.ship_schedule)))
-      .slice(0, 5);
+    // D. Flatten Shipments
+    const flatShipments = data.upcomingShipments.map((s: any) => ({
+      prod_id: s.prod_id,
+      ship_schedule: s.ship_schedule,
+      // Handle array or object return from 'jobs' relation
+      job_number: Array.isArray(s.jobs)
+        ? s.jobs[0]?.job_number
+        : s.jobs?.job_number || "—",
+    }));
 
     return {
-      totalQuotes,
-      totalSold,
-      openServiceOrders,
-      totalUncompleteJobs,
-      totalJobsInProduction: data.production.length,
+      totalQuotes: data.countQuotes,
+      totalSold: data.countSold,
+      openServiceOrders: data.countOpenService,
+      totalUncompleteJobs: data.countProdIncomplete,
+      totalJobsInProduction: data.countProdTotal,
       topDesigners,
-      upcomingShippings: nextShipments,
+      upcomingShipments: flatShipments,
       monthlyChartData: finalChartData,
     };
   }, [data]);
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <Center h="100vh">
-        <Loader size="xl" />
+        <Stack align="center" gap="xs">
+          <Loader size="lg" color="violet" />
+          <Text c="dimmed">Loading Dashboard...</Text>
+        </Stack>
       </Center>
     );
-  if (isError || !metrics)
-    return (
-      <Center h="100vh">
-        <Text c="red">Error loading data.</Text>
-      </Center>
-    );
+  }
 
-  // Calculate Rate
-  const totalJobs = metrics.totalJobsInProduction;
-  const unfinished = metrics.totalUncompleteJobs;
-  const finished = totalJobs - unfinished;
+  if (isError || !metrics) {
+    return (
+      <Center h="100vh">
+        <Text c="red" fw={500}>
+          Unable to load dashboard data. Please reload.
+        </Text>
+      </Center>
+    );
+  }
+
+  // Calculate Completion Rate
+  const { totalJobsInProduction, totalUncompleteJobs } = metrics;
+  const finishedJobs = totalJobsInProduction - totalUncompleteJobs;
   const completionRate =
-    totalJobs > 0 ? Math.round((finished / totalJobs) * 100) : 0;
+    totalJobsInProduction > 0
+      ? Math.round((finishedJobs / totalJobsInProduction) * 100)
+      : 0;
 
   return (
-    <Container size="100%" p="lg">
+    <Container size="xl" p="lg">
       <Stack gap="xl">
+        {/* Header */}
         <Group justify="space-between">
           <Group>
             <ThemeIcon
               size={48}
               radius="md"
               variant="gradient"
-              gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+              gradient={GRADIENTS.purple}
             >
               <FaUsers size={24} />
             </ThemeIcon>
@@ -348,7 +388,7 @@ export default function ManagerDashboardClient() {
                 Manager Dashboard
               </Title>
               <Text size="sm" c="dimmed">
-                Operational Overview
+                Operational Overview & Sales Performance
               </Text>
             </Stack>
           </Group>
@@ -359,6 +399,7 @@ export default function ManagerDashboardClient() {
 
         <Divider />
 
+        {/* 1. KPI CARDS */}
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <StatCard
@@ -398,7 +439,9 @@ export default function ManagerDashboardClient() {
           </Grid.Col>
         </Grid>
 
+        {/* 2. CHARTS */}
         <Grid>
+          {/* Production Progress Ring */}
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Paper
               p="md"
@@ -425,12 +468,12 @@ export default function ManagerDashboardClient() {
                     {
                       value: completionRate,
                       color: "teal",
-                      tooltip: `${finished} Jobs Finished`,
+                      tooltip: `${finishedJobs} Jobs Finished`,
                     },
                     {
                       value: 100 - completionRate,
                       color: "orange",
-                      tooltip: `${unfinished} Jobs Incomplete`,
+                      tooltip: `${totalUncompleteJobs} Jobs Incomplete`,
                     },
                   ]}
                 />
@@ -443,34 +486,40 @@ export default function ManagerDashboardClient() {
                     bg="orange"
                     style={{ borderRadius: "50%" }}
                   />
-                  <Text size="xs">{unfinished} Incomplete</Text>
+                  <Text size="xs">{totalUncompleteJobs} Incomplete</Text>
                 </Group>
                 <Group gap={4}>
                   <Box w={8} h={8} bg="teal" style={{ borderRadius: "50%" }} />
-                  <Text size="xs">{finished} Finished</Text>
+                  <Text size="xs">{finishedJobs} Finished</Text>
                 </Group>
               </Group>
             </Paper>
           </Grid.Col>
 
+          {/* Monthly Spike Chart */}
           <Grid.Col span={{ base: 12, md: 8 }}>
             <SalesSpikeChart data={metrics.monthlyChartData} />
           </Grid.Col>
         </Grid>
 
+        {/* 3. LISTS */}
         <Grid>
+          {/* Top Designers */}
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Paper p="md" shadow="sm" radius="md" withBorder>
-              <Title order={5} mb="md" c="dimmed">
-                Top Designers (by Sales Count)
-              </Title>
+              <Group justify="space-between" mb="md">
+                <Title order={5} c="dimmed">
+                  Top Designers (Last 12 Mo)
+                </Title>
+                <FaUsers color="gray" />
+              </Group>
               <Stack gap="sm">
                 {metrics.topDesigners.map((d, index) => (
                   <Group key={d.name} justify="space-between">
                     <Group gap="sm">
                       <ThemeIcon
-                        variant="light"
-                        color="gray"
+                        variant="gradient"
+                        gradient={GRADIENTS.purple}
                         size="sm"
                         radius="xl"
                       >
@@ -480,28 +529,36 @@ export default function ManagerDashboardClient() {
                         {d.name}
                       </Text>
                     </Group>
-                    <Badge variant="light" color="blue">
+                    <Badge
+                      variant="gradient"
+                      gradient={GRADIENTS.blue}
+                      radius="sm"
+                    >
                       {d.count} Sales
                     </Badge>
                   </Group>
                 ))}
                 {metrics.topDesigners.length === 0 && (
-                  <Text c="dimmed" fs="italic">
-                    No data.
+                  <Text c="dimmed" size="sm" fs="italic">
+                    No sales data available.
                   </Text>
                 )}
               </Stack>
             </Paper>
           </Grid.Col>
 
+          {/* Upcoming Shipments */}
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Paper p="md" shadow="sm" radius="md" withBorder>
-              <Title order={5} mb="md" c="dimmed">
-                Next Scheduled Shipments
-              </Title>
+              <Group justify="space-between" mb="md">
+                <Title order={5} c="dimmed">
+                  Next Scheduled Shipments
+                </Title>
+                <FaShippingFast color="gray" />
+              </Group>
               <Stack gap="xs">
-                {metrics.upcomingShippings.length > 0 ? (
-                  metrics.upcomingShippings.map((job, idx) => (
+                {metrics.upcomingShipments.length > 0 ? (
+                  metrics.upcomingShipments.map((job: any, idx: number) => (
                     <Paper
                       key={idx}
                       withBorder
@@ -515,7 +572,12 @@ export default function ManagerDashboardClient() {
                             {dayjs(job.ship_schedule).format("ddd, MMM D")}
                           </Text>
                         </Group>
-                        <Text size="sm" c="blue" fw={700}>
+                        <Text
+                          size="sm"
+                          fw={700}
+                          variant="gradient"
+                          gradient={GRADIENTS.purple}
+                        >
                           Job #{job.job_number}
                         </Text>
                       </Group>
