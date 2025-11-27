@@ -1,8 +1,0 @@
-CREATE TABLE public.door_styles (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    model TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    is_pre_manufactured BOOLEAN NOT NULL DEFAULT FALSE,
-    is_made_in_house BOOLEAN NOT NULL DEFAULT FALSE,
-    factor NUMERIC
-);
