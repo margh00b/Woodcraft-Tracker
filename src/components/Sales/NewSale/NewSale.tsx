@@ -86,10 +86,6 @@ export default function NewSale() {
     type: string;
   } | null>(null);
 
-  const [parentBaseSelection, setParentBaseSelection] = useState<string | null>(
-    null
-  );
-
   const [speciesSearch, setSpeciesSearch] = useState("");
   const [colorSearch, setColorSearch] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
@@ -324,17 +320,11 @@ export default function NewSale() {
   });
 
   useEffect(() => {
-    if (parentBaseSelection) {
-      const baseNumber = Number(parentBaseSelection);
-      if (!isNaN(baseNumber) && baseNumber > 0) {
-        form.setFieldValue("manual_job_base", baseNumber);
-        form.setFieldValue("manual_job_suffix", "");
-      }
-    } else if (form.values.stage !== "SOLD") {
+    if (form.values.stage !== "SOLD") {
       form.setFieldValue("manual_job_base", undefined);
       form.setFieldValue("manual_job_suffix", "");
     }
-  }, [parentBaseSelection, form.values.stage]);
+  }, [form.values.stage]);
 
   const submitMutation = useMutation({
     mutationFn: async (values: ExtendedMasterOrderInput) => {
@@ -611,9 +601,17 @@ export default function NewSale() {
                   middlewares: { flip: false, shift: false },
                   offset: 0,
                 }}
-                value={parentBaseSelection}
+                value={
+                  form.values.manual_job_base
+                    ? String(form.values.manual_job_base)
+                    : null
+                }
                 onChange={(val) => {
-                  setParentBaseSelection(val);
+                  if (val) {
+                    form.setFieldValue("manual_job_base", Number(val));
+                  } else {
+                    form.setFieldValue("manual_job_base", undefined);
+                  }
                 }}
               />
 
@@ -623,7 +621,6 @@ export default function NewSale() {
                     label="Base Job #"
                     placeholder="40000..."
                     allowNegative={false}
-                    disabled={!!parentBaseSelection}
                     {...form.getInputProps("manual_job_base")}
                     style={{ width: 120 }}
                     withAsterisk

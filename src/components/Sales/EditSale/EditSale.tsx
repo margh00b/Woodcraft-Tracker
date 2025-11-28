@@ -48,8 +48,8 @@ import {
   OrderTypeOptions,
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
+import { useJobBaseNumbers } from "@/hooks/useJobBaseNumbers";
 
-// --- FEATURE TOGGLE ---
 const FEATURE_MANUAL_JOB_ENTRY = true;
 
 type EditSaleProps = {
@@ -61,11 +61,10 @@ type ClientSelectOption = {
   original: Tables<"client">;
 };
 type ReferenceOption = {
-  value: string; // ID as string for Select component
-  label: string; // Name for display
+  value: string;
+  label: string;
 };
 
-// Extend the schema type locally to include manual job fields
 interface ExtendedMasterOrderInput extends MasterOrderInput {
   manual_job_base?: number;
   manual_job_suffix?: string;
@@ -81,7 +80,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const [selectedClientData, setSelectedClientData] =
     useState<Tables<"client"> | null>(null);
 
-  // State for Add Color/Species Modals
   const [speciesSearch, setSpeciesSearch] = useState("");
   const [colorSearch, setColorSearch] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
@@ -91,8 +89,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   ] = useDisclosure(false);
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] =
     useDisclosure(false);
+  const { data: jobBaseOptions, isLoading: jobsLoading } =
+    useJobBaseNumbers(isAuthenticated);
 
-  // --- 1. FETCH REFERENCE DATA (IDs + Name/Species) ---
   const { data: colorsData, isLoading: colorsLoading } = useQuery<
     { Id: number; Name: string }[]
   >({
@@ -138,7 +137,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     enabled: isAuthenticated,
   });
 
-  // --- 2. CREATE OPTIONS (useMemo) ---
   const colorOptions = useMemo<ReferenceOption[]>(() => {
     return (colorsData || []).map((c) => ({
       value: String(c.Id),
@@ -160,7 +158,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     }));
   }, [doorStylesData]);
 
-  // --- Mutations for Adding Color/Species (Updated to set ID) ---
   const addSpeciesMutation = useMutation({
     mutationFn: async (name: string) => {
       const { data, error } = await supabase
@@ -178,7 +175,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["species-list"] });
-      form.setFieldValue("cabinet.species", String(newId)); // Set ID as string
+      form.setFieldValue("cabinet.species", String(newId));
       closeSpeciesModal();
       setNewItemValue("");
     },
@@ -207,7 +204,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["colors-list"] });
-      form.setFieldValue("cabinet.color", String(newId)); // Set ID as string
+      form.setFieldValue("cabinet.color", String(newId));
       closeColorModal();
       setNewItemValue("");
     },
@@ -219,7 +216,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       }),
   });
 
-  // Fetch sales order data (Updated to select new FK fields)
   const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
     queryKey: ["sales-order", salesOrderId],
     queryFn: async () => {
@@ -242,16 +238,13 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         .single();
 
       if (error) throw error;
-      // Transform the data to ensure the cabinet object is correctly structured
-      // by moving the nested array/object results up a level.
       const transformedData = {
         ...data,
         cabinet: {
           ...data.cabinet,
-          // Flatten the joined relational data for simpler access
           species_name:
             data.cabinet.species_name?.[0]?.Species ||
-            data.cabinet.species_name, // Handle array or single object if DB is up to date
+            data.cabinet.species_name,
           color_name:
             data.cabinet.color_name?.[0]?.Name || data.cabinet.color_name,
           door_style_name:
@@ -265,7 +258,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     enabled: isAuthenticated && !!salesOrderId,
   });
 
-  // Fetch clients (Unchanged)
   const { data: clientsData, isLoading: clientsLoading } = useQuery({
     queryKey: ["clients-list"],
     queryFn: async () => {
@@ -288,7 +280,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     }));
   }, [clientsData]);
 
-  // Form initialization
   const form = useForm<ExtendedMasterOrderInput>({
     initialValues: {
       client_id: 0,
@@ -302,9 +293,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       manual_job_base: undefined,
       manual_job_suffix: "",
       cabinet: {
-        species: "", // Now holds species_id as string
-        color: "", // Now holds color_id as string
-        door_style: "", // Now holds door_style_id as string
+        species: "",
+        color: "",
+        door_style: "",
         finish: "",
         glaze: "",
         top_drawer_front: "",
@@ -347,7 +338,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     validate: zodResolver(MasterOrderSchema),
   });
 
-  // Prefill form when data is loaded (Updated to use FK IDs)
   useEffect(() => {
     if (salesOrderData) {
       const cabinet = salesOrderData.cabinet;
@@ -360,15 +350,12 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         comments: salesOrderData.comments,
         order_type: salesOrderData.order_type,
         delivery_type: salesOrderData.delivery_type,
-        // Pre-fill job number fields if they exist
         manual_job_base: salesOrderData.job?.job_base_number,
         manual_job_suffix: salesOrderData.job?.job_suffix || "",
         cabinet: {
-          // FIX: Coerce all nullable boolean fields to false (e.g., cabinet.hinge_soft_close ?? false)
           species: String(cabinet.species_id || ""),
           color: String(cabinet.color_id || ""),
           door_style: String(cabinet.door_style_id || ""),
-          // Retain all existing cabinet fields
           finish: cabinet.finish,
           glaze: cabinet.glaze,
           top_drawer_front: cabinet.top_drawer_front,
@@ -378,7 +365,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           box: cabinet.box,
           piece_count: cabinet.piece_count,
           glass_type: cabinet.glass_type,
-
           hinge_soft_close: cabinet.hinge_soft_close ?? false,
           doors_parts_only: cabinet.doors_parts_only ?? false,
           handles_supplied: cabinet.handles_supplied ?? false,
@@ -434,9 +420,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     mutationFn: async (values: ExtendedMasterOrderInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      // --- 1. Construct Cabinet Payload with new FKs (Converting string IDs to Number) ---
       const cabinetPayload = {
-        // Existing fields
         box: values.cabinet.box,
         finish: values.cabinet.finish,
         glaze: values.cabinet.glaze,
@@ -453,8 +437,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         piece_count: values.cabinet.doors_parts_only
           ? values.cabinet.piece_count
           : "",
-
-        // NEW FKs (Converting string IDs to Number/null)
         species_id: values.cabinet.species
           ? Number(values.cabinet.species)
           : null,
@@ -464,13 +446,11 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           : null,
       };
 
-      // 1. Update Cabinet
       await supabase
         .from("cabinets")
         .update(cabinetPayload)
         .eq("id", salesOrderData.cabinet.id);
 
-      // 2. Update Sales Order
       const { error: soError } = await supabase
         .from("sales_orders")
         .update({
@@ -489,7 +469,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
       if (soError) throw soError;
 
-      // 3. Handle Job Logic if SOLD and Feature Enabled
       if (values.stage === "SOLD" && FEATURE_MANUAL_JOB_ENTRY) {
         const { manual_job_base, manual_job_suffix } = values;
 
@@ -501,7 +480,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           ? manual_job_suffix.trim().toUpperCase()
           : null;
 
-        // Check for duplicates, excluding current job if it exists
         let dupQuery = supabase
           .from("jobs")
           .select("id")
@@ -527,9 +505,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           );
         }
 
-        // Perform Update or Insert
         if (currentJobId) {
-          // Update existing job
           const { error: jobUpdateError } = await supabase
             .from("jobs")
             .update({
@@ -540,7 +516,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
           if (jobUpdateError) throw jobUpdateError;
         } else {
-          // Create new job linked to this sales order (Scenario: Quote -> Sold)
           const { error: jobInsertError } = await supabase.from("jobs").insert({
             sales_order_id: salesOrderId,
             job_base_number: manual_job_base,
@@ -626,14 +601,13 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         noValidate
         onSubmit={form.onSubmit(handleSubmit)}
         style={{
-          flex: 1, // take all remaining height
+          flex: 1,
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
         }}
       >
         <Stack>
-          {/* MASTER DETAILS */}
           <Paper p="md" radius="md" shadow="xl">
             <Group align="end" mt="md" style={{ width: "100%" }}>
               {salesOrderData?.stage !== "SOLD" && (
@@ -653,8 +627,42 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   />
                 </Paper>
               )}
-
-              {/* JOB NUMBER EDITING (Visible when SOLD) */}
+              <Select
+                label="Suggest Job Base #"
+                placeholder="Search existing jobs..."
+                data={jobBaseOptions || []}
+                searchable
+                clearable
+                disabled={form.values.stage != "SOLD"}
+                style={{ flex: 1 }}
+                styles={{
+                  dropdown: {
+                    boxShadow: "var(--mantine-shadow-xl)",
+                    borderColor: "var(--mantine-color-gray-4)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    backgroundColor: "var(--mantine-color-gray-2)",
+                  },
+                  root: { maxWidth: "200px" },
+                }}
+                comboboxProps={{
+                  position: "bottom",
+                  middlewares: { flip: false, shift: false },
+                  offset: 0,
+                }}
+                value={
+                  form.values.manual_job_base
+                    ? String(form.values.manual_job_base)
+                    : null
+                }
+                onChange={(val) => {
+                  if (val) {
+                    form.setFieldValue("manual_job_base", Number(val));
+                  } else {
+                    form.setFieldValue("manual_job_base", undefined);
+                  }
+                }}
+              />
               {form.values.stage === "SOLD" && FEATURE_MANUAL_JOB_ENTRY && (
                 <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
                   <NumberInput
@@ -675,7 +683,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Group>
               )}
 
-              {/* Show Badge if feature toggle is off OR if viewing quote (Legacy display for reference) */}
               {!FEATURE_MANUAL_JOB_ENTRY &&
                 salesOrderData?.stage === "SOLD" && (
                   <Box my="auto">
@@ -698,7 +705,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   </Box>
                 )}
 
-              {/* CLIENT SELECT */}
               <Select
                 label="Switch Client"
                 placeholder="Search clients..."
@@ -781,7 +787,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </Group>
           </Paper>
 
-          {/* CONDITIONAL BILLING / SHIPPING (Unchanged) */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
@@ -789,7 +794,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
               bg={"white"}
               p="10px"
             >
-              {/* BILLING */}
               <Fieldset legend="Billing Details" variant="filled" bg={"gray.2"}>
                 <Stack gap="sm">
                   <Stack gap={0}>
@@ -852,7 +856,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Stack>
               </Fieldset>
 
-              {/* SHIPPING */}
               <Fieldset
                 legend="Shipping Details"
                 variant="filled"
@@ -935,14 +938,12 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
           <Paper withBorder p="md" radius="md" shadow="xl">
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
-              {/* LEFT: Cabinet & Financials */}
               <Stack>
                 <Fieldset
                   legend="Cabinet Specifications"
                   variant="filled"
                   bg={"gray.2"}
                 >
-                  {/* Row 1: Core Aesthetics */}
                   <SimpleGrid cols={3}>
                     <Select
                       label="Species"
@@ -1022,7 +1023,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                   </SimpleGrid>
 
-                  {/* Row 2: Box, Drawers, and Interior Details */}
                   <SimpleGrid cols={4} mt="md">
                     <TextInput
                       label="Box"
@@ -1056,9 +1056,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
                   <Divider mt="md" />
 
-                  {/* Row 3: CONDITIONAL GROUPS (Glass & Parts Count) */}
                   <SimpleGrid cols={2} mt="md">
-                    {/* COLUMN 1: GLASS SPECIFICATIONS */}
                     <Stack gap={5}>
                       <Switch
                         label="Glass Doors Required"
@@ -1078,7 +1076,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       />
                     </Stack>
 
-                    {/* COLUMN 2: PIECE COUNT SPECIFICATIONS */}
                     <Stack gap={5}>
                       <Switch
                         label="Doors/Parts Only Order"
@@ -1101,7 +1098,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
                   <Divider mt="md" />
 
-                  {/* Row 4: Hardware & General */}
                   <SimpleGrid cols={2} mt="md">
                     <Group>
                       <Switch
@@ -1159,14 +1155,12 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Fieldset>
               </Stack>
 
-              {/* RIGHT: Checklist / Dates / Order Type (UPDATED) */}
               <Stack>
                 <Fieldset
                   legend="Production Checklist (Dates)"
                   variant="filled"
                   bg={"gray.2"}
                 >
-                  {/* Row 1 */}
                   <SimpleGrid cols={3}>
                     <Box w="100%">
                       <DateInput
@@ -1187,7 +1181,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                   </SimpleGrid>
 
-                  {/* Row 2 */}
                   <SimpleGrid cols={3} mt="sm">
                     <DateInput
                       label="Appliance Specs"
@@ -1206,7 +1199,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                     />
                   </SimpleGrid>
 
-                  {/* Row 3 */}
                   <SimpleGrid cols={3} mt="sm">
                     <DateInput
                       label="Review"
@@ -1218,7 +1210,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       clearable
                       {...form.getInputProps(`checklist.second_markout_date`)}
                     />
-                    <div></div> {/* Placeholder */}
                   </SimpleGrid>
                 </Fieldset>
 
@@ -1273,7 +1264,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </SimpleGrid>
           </Paper>
 
-          {/* SUBMIT */}
           <Paper
             withBorder
             p="md"
@@ -1317,7 +1307,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         </Stack>
       </form>
 
-      {/* --- MODALS --- */}
       <Modal
         opened={speciesModalOpened}
         onClose={closeSpeciesModal}
