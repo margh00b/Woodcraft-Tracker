@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
   useReactTable,
   flexRender,
   PaginationState,
   ColumnFiltersState,
-  FilterFn,
-  getPaginationRowModel,
+  SortingState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -33,6 +29,7 @@ import {
   Stack,
   ThemeIcon,
   Title,
+  Button,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -45,86 +42,59 @@ import {
   FaFire,
   FaShippingFast,
 } from "react-icons/fa";
-import { useSupabase } from "@/hooks/useSupabase";
-import { Tables } from "@/types/db";
 import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
+import { useInstallationTable } from "@/hooks/useInstallationTable";
+import { Views } from "@/types/db";
 
-type InstallationJobView = Tables<"jobs"> & {
-  sales_orders:
-    | (Tables<"sales_orders"> & {
-        client: Tables<"client"> | null;
-      })
-    | null;
-  installation:
-    | (Tables<"installation"> & {
-        installer: Tables<"installers"> | null;
-      })
-    | null;
-  production_schedule: Pick<Tables<"production_schedule">, "rush"> | null;
-};
-
-const genericFilter: FilterFn<InstallationJobView> = (
-  row,
-  columnId,
-  filterValue
-) => {
-  const val = String(row.getValue(columnId) ?? "").toLowerCase();
-  return val.includes(String(filterValue).toLowerCase());
-};
+type InstallationJobView = Views<"installation_table_view">;
 
 export default function InstallationTable() {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const router = useRouter();
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 20,
   });
-  const { supabase, isAuthenticated } = useSupabase();
-  const router = useRouter();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [inputFilters, setInputFilters] = useState<ColumnFiltersState>([]);
+  const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
 
-  const getFilterValue = (id: string): string => {
-    const filter = columnFilters.find((f) => f.id === id);
-    const value = filter?.value;
-    return String(value ?? "");
+  const setInputFilterValue = (
+    id: string,
+    value: string | undefined | null
+  ) => {
+    setInputFilters((prev) => {
+      const existing = prev.filter((f) => f.id !== id);
+      if (!value) return existing;
+      return [...existing, { id, value }];
+    });
   };
 
-  const {
-    data: installationJobs,
-    isLoading,
-    isError,
-    error,
-  } = useQuery<InstallationJobView[]>({
-    queryKey: ["installation_schedule_list"],
-    queryFn: async () => {
-      const { data, error: dbError } = await supabase
-        .from("jobs")
-        .select(
-          `
-            id,
-            job_number,
-            sales_orders:sales_orders (
-              shipping_client_name
-            ),
-            installation:installation_id (
-              installation_id, installation_date, installation_completed,
-              wrap_date, has_shipped, inspection_date, inspection_completed,
-              installer:installer_id (company_name, first_name, last_name, phone_number)
-            ),
-            production_schedule:production_schedule (rush)
-          `
-        )
-        .not("installation_id", "is", null)
-        .order("installation_date", {
-          ascending: false,
-          foreignTable: "installation",
-        });
+  const getInputFilterValue = (id: string) => {
+    return (inputFilters.find((f) => f.id === id)?.value as string) || "";
+  };
 
-      if (dbError)
-        throw new Error(dbError.message || "Failed to fetch installation jobs");
-      return data as unknown as InstallationJobView[];
-    },
-    enabled: isAuthenticated,
+  const handleApplyFilters = () => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setActiveFilters(inputFilters);
+  };
+
+  const handleClearFilters = () => {
+    setInputFilters([]);
+    setActiveFilters([]);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const { data, isLoading, isError, error } = useInstallationTable({
+    pagination,
+    columnFilters: activeFilters,
+    sorting,
   });
+
+  const tableData = data?.data || [];
+  const totalCount = data?.count || 0;
+  const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
   const columnHelper = createColumnHelper<InstallationJobView>();
 
@@ -138,54 +108,48 @@ export default function InstallationTable() {
           <Text fw={600} size="sm">
             {info.getValue()}
           </Text>
-          {info.row.original.production_schedule?.rush && (
+          {info.row.original.rush && (
             <Tooltip label="RUSH JOB">
               <FaFire size={12} color="red" />
             </Tooltip>
           )}
         </Group>
       ),
-      enableColumnFilter: true,
-      filterFn: genericFilter as any,
     }),
 
-    columnHelper.accessor("sales_orders.shipping_client_name", {
-      id: "clientlastName",
+    columnHelper.accessor("shipping_client_name", {
+      id: "client",
       header: "Client",
       size: 150,
       minSize: 120,
       cell: (info) => info.getValue() ?? "—",
-      enableColumnFilter: true,
-      filterFn: genericFilter as any,
     }),
 
-    columnHelper.accessor("installation.installer.company_name", {
-      id: "installerCompany",
+    columnHelper.accessor("installer_company", {
+      id: "installer",
       header: "Installer",
       size: 200,
       minSize: 150,
       cell: (info) => {
-        const installer = info.row.original.installation?.installer;
-        if (!installer) return <Text c="orange">TBD</Text>;
+        const row = info.row.original;
+        if (!row.installer_id && !row.installer_first_name)
+          return <Text c="orange">TBD</Text>;
 
         return (
           <Group gap={4} wrap="nowrap">
             <Text size="sm" lineClamp={1}>
-              {installer.first_name}
+              {row.installer_first_name}
             </Text>
             <Text size="xs" c="dimmed">
-              ({installer.company_name})
+              ({row.installer_company || "—"})
             </Text>
           </Group>
         );
       },
-      enableColumnFilter: true,
-      filterFn: genericFilter as any,
     }),
 
-    columnHelper.accessor("installation.installation_date", {
-      id: "installation_date",
-      header: "Scheduled Inst. Date",
+    columnHelper.accessor("installation_date", {
+      header: "Installation Date",
       size: 150,
       minSize: 120,
       cell: (info) => {
@@ -195,8 +159,7 @@ export default function InstallationTable() {
       },
     }),
 
-    columnHelper.accessor("installation.wrap_date", {
-      id: "wrap_date",
+    columnHelper.accessor("wrap_date", {
       header: "Wrap Date",
       size: 150,
       minSize: 120,
@@ -206,9 +169,18 @@ export default function InstallationTable() {
         return dayjs(date).format("YYYY-MM-DD");
       },
     }),
+    columnHelper.accessor("ship_schedule", {
+      header: "Shipping Date",
+      size: 150,
+      minSize: 120,
+      cell: (info) => {
+        const date = info.getValue();
+        if (!date) return <Text c="orange">TBD</Text>;
+        return dayjs(date).format("YYYY-MM-DD");
+      },
+    }),
 
-    columnHelper.accessor("installation.has_shipped", {
-      id: "has_shipped",
+    columnHelper.accessor("has_shipped", {
       header: "Shipped",
       size: 120,
       minSize: 100,
@@ -227,19 +199,16 @@ export default function InstallationTable() {
           </Badge>
         );
       },
-      enableColumnFilter: false,
     }),
 
-    columnHelper.accessor("installation.installation_completed", {
+    columnHelper.accessor("installation_completed", {
       id: "installation_status",
       header: "Completion Status",
       size: 200,
       minSize: 180,
       cell: (info) => {
-        const installCompleted =
-          info.row.original.installation?.installation_completed;
-        const inspectionCompleted =
-          info.row.original.installation?.inspection_completed;
+        const installCompleted = info.row.original.installation_completed;
+        const inspectionCompleted = info.row.original.inspection_completed;
 
         const isInstallDone = !!installCompleted;
         const isInspectionDone = !!inspectionCompleted;
@@ -271,34 +240,41 @@ export default function InstallationTable() {
           </Group>
         );
       },
-      enableColumnFilter: false,
     }),
   ];
 
   const table = useReactTable({
-    data: installationJobs || [],
+    data: tableData,
     columns,
-    state: { columnFilters, pagination },
-    onColumnFiltersChange: setColumnFilters,
+    pageCount: pageCount,
+    state: {
+      pagination,
+      sorting,
+      columnFilters: activeFilters,
+    },
+    manualPagination: true,
+    manualFiltering: true,
+    manualSorting: true,
     onPaginationChange: setPagination,
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
-  if (!isAuthenticated || isLoading)
+  if (isLoading) {
     return (
       <Center style={{ height: "300px" }}>
         <Loader />
       </Center>
     );
-  if (isError)
+  }
+
+  if (isError) {
     return (
       <Center style={{ height: "300px" }}>
         <Text c="red">{(error as any)?.message}</Text>
       </Center>
     );
+  }
 
   return (
     <Box
@@ -328,7 +304,6 @@ export default function InstallationTable() {
         </Stack>
       </Group>
 
-      {/* SEARCH/FILTER ACCORDION */}
       <Accordion variant="contained" radius="md" mb="md">
         <Accordion.Item value="search-filters">
           <Accordion.Control icon={<FaSearch size={16} />}>
@@ -336,62 +311,92 @@ export default function InstallationTable() {
           </Accordion.Control>
           <Accordion.Panel>
             <SimpleGrid cols={{ base: 1, sm: 3, md: 4 }} mt="sm" spacing="md">
-              {/* Filter 1: Job Number */}
               <TextInput
                 label="Job Number"
                 placeholder="e.g., 202401"
-                value={getFilterValue("job_number")}
+                value={getInputFilterValue("job_number")}
                 onChange={(e) =>
-                  table.getColumn("job_number")?.setFilterValue(e.target.value)
+                  setInputFilterValue("job_number", e.target.value)
                 }
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              {/* Filter 2: Client Name */}
               <TextInput
                 label="Client"
                 placeholder="e.g., Smith"
-                value={getFilterValue("clientlastName")}
-                onChange={(e) =>
-                  table
-                    .getColumn("clientlastName")
-                    ?.setFilterValue(e.target.value)
-                }
+                value={getInputFilterValue("client")}
+                onChange={(e) => setInputFilterValue("client", e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              {/* Filter 3: Installer Company */}
               <TextInput
                 label="Installer"
                 placeholder="Company or Name"
-                value={getFilterValue("installerCompany")}
+                value={getInputFilterValue("installer")}
                 onChange={(e) =>
-                  table
-                    .getColumn("installerCompany")
-                    ?.setFilterValue(e.target.value)
+                  setInputFilterValue("installer", e.target.value)
                 }
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              {/* Filter 4: Scheduled Date */}
               <DateInput
                 label="Scheduled Inst. Date"
                 placeholder="Filter by Date"
                 clearable
                 value={
-                  getFilterValue("installation_date")
-                    ? dayjs(getFilterValue("installation_date")).toDate()
+                  getInputFilterValue("installation_date")
+                    ? dayjs(getInputFilterValue("installation_date")).toDate()
                     : null
                 }
                 onChange={(date) => {
                   const formattedDate = date
                     ? dayjs(date).format("YYYY-MM-DD")
                     : undefined;
-
-                  table
-                    .getColumn("installation_date")
-                    ?.setFilterValue(formattedDate);
+                  setInputFilterValue("installation_date", formattedDate);
+                }}
+                valueFormat="YYYY-MM-DD"
+              />
+              <DateInput
+                label="Shipping Date"
+                placeholder="Filter by shipping date"
+                clearable
+                value={
+                  getInputFilterValue("ship_schedule")
+                    ? dayjs(getInputFilterValue("ship_schedule")).toDate()
+                    : null
+                }
+                onChange={(date) => {
+                  const formattedDate = date
+                    ? dayjs(date).format("YYYY-MM-DD")
+                    : undefined;
+                  setInputFilterValue("ship_schedule", formattedDate);
                 }}
                 valueFormat="YYYY-MM-DD"
               />
             </SimpleGrid>
+
+            <Group justify="flex-end" mt="md">
+              <Button
+                variant="default"
+                color="gray"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                leftSection={<FaSearch size={14} />}
+                onClick={handleApplyFilters}
+                style={{
+                  background:
+                    "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+                }}
+              >
+                Apply Filters
+              </Button>
+            </Group>
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
+
       <ScrollArea
         style={{
           flex: 1,
@@ -456,7 +461,9 @@ export default function InstallationTable() {
                 <Table.Tr
                   key={row.id}
                   onClick={() =>
-                    router.push(`/dashboard/installation/${row.original.id}`)
+                    router.push(
+                      `/dashboard/installation/${row.original.job_id}`
+                    )
                   }
                   style={{ cursor: "pointer" }}
                 >
@@ -483,7 +490,6 @@ export default function InstallationTable() {
         </Table>
       </ScrollArea>
 
-      {/* PAGINATION */}
       <Box
         style={{
           position: "fixed",

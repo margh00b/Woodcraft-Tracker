@@ -284,8 +284,8 @@ export default function SalesTable() {
       }}
     >
       {/* Header */}
-      <Group mb="md">
-        <ThemeIcon
+      <Group mb="md" justify="space-between">
+        <Group><ThemeIcon
           size={50}
           radius="md"
           variant="gradient"
@@ -300,7 +300,19 @@ export default function SalesTable() {
           <Text size="sm" c="dimmed">
             Track sales
           </Text>
-        </Stack>
+        </Stack></Group>
+        
+        <Button
+          onClick={() => router.push("/dashboard/sales/newsale")}
+          leftSection={<FaPlus size={14} />}
+          style={{
+            background: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+            color: "white",
+            border: "none",
+          }}
+        >
+          New Order
+        </Button>
       </Group>
 
       {/* Filter Section */}
@@ -430,18 +442,6 @@ export default function SalesTable() {
         </Group>
 
         <div style={{ flex: 1 }} />
-
-        <Button
-          onClick={() => router.push("/dashboard/sales/newsale")}
-          leftSection={<FaPlus size={14} />}
-          style={{
-            background: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
-            color: "white",
-            border: "none",
-          }}
-        >
-          New Order
-        </Button>
       </Group>
 
       {/* Data Table */}
