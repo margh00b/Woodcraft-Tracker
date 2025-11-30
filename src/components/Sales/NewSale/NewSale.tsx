@@ -29,6 +29,7 @@ import {
   Title,
   Autocomplete,
   Modal,
+  Collapse,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
@@ -438,10 +439,9 @@ export default function NewSale() {
     onError: (err) => {
       notifications.show({
         title: "CRITICAL Error: Submission Failed",
-        message: `${err.message}. The form state must be reset. Redirecting...`,
+        message: `${err.message}. Please try again.`,
         color: "red",
       });
-      router.push("/dashboard");
     },
   });
 
@@ -544,11 +544,16 @@ export default function NewSale() {
           overflowY: "auto",
         }}
       >
-        <Stack>
+        <Stack gap={5}>
           {/* 1. MASTER DETAILS (Client & Stage) */}
           <Paper withBorder p="md" radius="md" shadow="xl">
-            <Group align="end" mt="md" style={{ width: "100%" }}>
-              <Paper p="xs" px="md" shadow="false">
+            <Group
+              align="end"
+              mt="md"
+              style={{ width: "100%" }}
+              justify="space-between"
+            >
+              <Group align="end">
                 <Switch
                   offLabel="Quote"
                   onLabel="Sold"
@@ -556,6 +561,7 @@ export default function NewSale() {
                   thumbIcon={<FaCheckCircle />}
                   styles={{
                     track: {
+                      cursor: "pointer",
                       background:
                         form.values.stage === "SOLD"
                           ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
@@ -576,64 +582,62 @@ export default function NewSale() {
                     )
                   }
                 />
-              </Paper>
 
-              <Select
-                label="Suggest Job Base #"
-                placeholder="Search existing jobs..."
-                data={jobBaseOptions || []}
-                searchable
-                clearable
-                disabled={form.values.stage != "SOLD"}
-                style={{ flex: 1 }}
-                styles={{
-                  dropdown: {
-                    boxShadow: "var(--mantine-shadow-xl)",
-                    borderColor: "var(--mantine-color-gray-4)",
-                    borderWidth: "1px",
-                    borderStyle: "solid",
-                    backgroundColor: "var(--mantine-color-gray-2)",
-                  },
-                  root: { maxWidth: "200px" },
-                }}
-                comboboxProps={{
-                  position: "bottom",
-                  middlewares: { flip: false, shift: false },
-                  offset: 0,
-                }}
-                value={
-                  form.values.manual_job_base
-                    ? String(form.values.manual_job_base)
-                    : null
-                }
-                onChange={(val) => {
-                  if (val) {
-                    form.setFieldValue("manual_job_base", Number(val));
-                  } else {
-                    form.setFieldValue("manual_job_base", undefined);
-                  }
-                }}
-              />
-
-              {form.values.stage === "SOLD" && (
-                <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
-                  <NumberInput
-                    label="Base Job #"
-                    placeholder="40000..."
-                    allowNegative={false}
-                    {...form.getInputProps("manual_job_base")}
-                    style={{ width: 120 }}
-                    withAsterisk
-                  />
-                  <TextInput
-                    label="Variant"
-                    placeholder="A, B..."
-                    {...form.getInputProps("manual_job_suffix")}
-                    style={{ width: 80 }}
-                    maxLength={5}
-                  />
-                </Group>
-              )}
+                <Collapse in={form.values.stage === "SOLD"}>
+                  <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
+                    <Select
+                      label="Suggest Job Base #"
+                      placeholder="Search existing jobs..."
+                      data={jobBaseOptions || []}
+                      searchable
+                      clearable
+                      disabled={form.values.stage != "SOLD"}
+                      style={{ flex: 1 }}
+                      styles={{
+                        dropdown: {
+                          boxShadow: "var(--mantine-shadow-xl)",
+                          borderColor: "var(--mantine-color-gray-4)",
+                          borderWidth: "1px",
+                          borderStyle: "solid",
+                        },
+                        root: { maxWidth: "200px" },
+                      }}
+                      comboboxProps={{
+                        position: "bottom",
+                        middlewares: { flip: false, shift: false },
+                        offset: 0,
+                      }}
+                      value={
+                        form.values.manual_job_base
+                          ? String(form.values.manual_job_base)
+                          : null
+                      }
+                      onChange={(val) => {
+                        if (val) {
+                          form.setFieldValue("manual_job_base", Number(val));
+                        } else {
+                          form.setFieldValue("manual_job_base", undefined);
+                        }
+                      }}
+                    />
+                    <NumberInput
+                      label="Base Job #"
+                      placeholder="40000..."
+                      allowNegative={false}
+                      {...form.getInputProps("manual_job_base")}
+                      style={{ width: 120 }}
+                      withAsterisk
+                    />
+                    <TextInput
+                      label="Variant"
+                      placeholder="A, B..."
+                      {...form.getInputProps("manual_job_suffix")}
+                      style={{ width: 80 }}
+                      maxLength={5}
+                    />
+                  </Group>
+                </Collapse>
+              </Group>
 
               <Select
                 label="Client"
@@ -677,7 +681,6 @@ export default function NewSale() {
                     borderColor: "var(--mantine-color-gray-4)",
                     borderWidth: "1px",
                     borderStyle: "solid",
-                    backgroundColor: "var(--mantine-color-gray-2)",
                   },
                   root: { maxWidth: "40%" },
                 }}
@@ -734,11 +737,11 @@ export default function NewSale() {
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
               spacing="md"
-              bg={"white"}
+              bg={"gray.1"}
               p="10px"
             >
               {/* BILLING */}
-              <Fieldset legend="Billing Details" variant="filled" bg={"gray.2"}>
+              <Fieldset legend="Billing Details" variant="filled" bg={"white"}>
                 <Stack gap="sm">
                   <Stack gap={0}>
                     <Text size="xs" c="dimmed">
@@ -801,11 +804,7 @@ export default function NewSale() {
               </Fieldset>
 
               {/* SHIPPING */}
-              <Fieldset
-                legend="Shipping Details"
-                variant="filled"
-                bg={"gray.2"}
-              >
+              <Fieldset legend="Shipping Details" variant="filled" bg={"white"}>
                 <Stack gap="sm">
                   <Group justify="space-between">
                     <Button
@@ -881,14 +880,14 @@ export default function NewSale() {
             </Center>
           )}
 
-          <Paper withBorder p="md" radius="md" shadow="xl">
+          <Paper withBorder p="md" bg={"gray.1"}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
               {/* LEFT COLUMN: Cabinet & Financials */}
               <Stack>
                 <Fieldset
                   legend="Cabinet Specifications"
                   variant="filled"
-                  bg={"gray.2"}
+                  bg={"white"}
                 >
                   {/* Row 1: Core Aesthetics */}
                   <SimpleGrid cols={3}>
@@ -1080,7 +1079,7 @@ export default function NewSale() {
                   </SimpleGrid>
                 </Fieldset>
 
-                <Fieldset legend="Financials" variant="filled" bg={"gray.2"}>
+                <Fieldset legend="Financials" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
                     <NumberInput
                       label="Total Amount"
@@ -1108,11 +1107,7 @@ export default function NewSale() {
 
               {/* RIGHT COLUMN: Production Checklist & Details */}
               <Stack>
-                <Fieldset
-                  legend="Production Checklist (Dates)"
-                  variant="filled"
-                  bg={"gray.2"}
-                >
+                <Fieldset legend="Checklist" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
                     <Box w="100%">
                       <DateInput
@@ -1165,7 +1160,7 @@ export default function NewSale() {
                   </SimpleGrid>
                 </Fieldset>
 
-                <Fieldset legend="Details" variant="filled" bg={"gray.2"}>
+                <Fieldset legend="Details" variant="filled" bg={"white"}>
                   <TextInput
                     label="Comments"
                     {...form.getInputProps(`comments`)}

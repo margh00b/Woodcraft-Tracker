@@ -101,7 +101,7 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
         noValidate
       >
         <Stack>
-          <Fieldset legend="Client Details">
+          <Fieldset legend="Client Details" >
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <TextInput
                 label="Client Name"

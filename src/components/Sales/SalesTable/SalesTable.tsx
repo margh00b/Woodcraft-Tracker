@@ -140,6 +140,18 @@ export default function SalesTable() {
 
   const columns = useMemo(
     () => [
+      columnHelper.accessor("sales_order_number", {
+        header: "Id",
+        size: 80,
+        cell: (info) => (
+          <Text
+            size="sm"
+            c={info.row.original.stage === "SOLD" ? "green.8" : "blue.8"}
+          >
+            {info.getValue()}
+          </Text>
+        ),
+      }),
       columnHelper.accessor("job_number", {
         header: "Job Number",
         size: 100,

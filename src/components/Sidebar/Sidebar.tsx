@@ -185,7 +185,7 @@ export default function Sidebar({ links }: SidebarProps) {
         width: rem(220),
         height: "100vh",
         overflowY: "auto",
-        background: "linear-gradient(180deg, #7b2ff7, #2b86c5)",
+        background: "linear-gradient(0deg, #7b2de2ff 20%, #4A00E0 80%)",
         borderRight: `1px solid ${theme.colors.gray[3]}`,
         display: "flex",
         flexDirection: "column",

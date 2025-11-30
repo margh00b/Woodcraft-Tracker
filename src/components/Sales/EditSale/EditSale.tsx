@@ -588,15 +588,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         background: "linear-gradient(135deg, #DDE6F5 0%, #E7D9F0 100%)",
       }}
     >
-      <Center py="md">
-        <Text fw={600} size="lg">
-          {salesOrderData
-            ? salesOrderData.stage === "SOLD"
-              ? `Editing Job # ${salesOrderData.job?.job_number || "—"}`
-              : `Editing Quote #${salesOrderData.sales_order_number || "—"}`
-            : "Loading..."}
-        </Text>
-      </Center>
       <form
         noValidate
         onSubmit={form.onSubmit(handleSubmit)}
@@ -609,9 +600,16 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       >
         <Stack>
           <Paper p="md" radius="md" shadow="xl">
+            <Text fw={600} size="md" c="#4c00ffff">
+              {salesOrderData
+                ? salesOrderData.stage === "SOLD"
+                  ? `Editing Job # ${salesOrderData.job?.job_number || "—"}`
+                  : `Editing Quote #${salesOrderData.sales_order_number || "—"}`
+                : "Loading..."}
+            </Text>
             <Group align="end" mt="md" style={{ width: "100%" }}>
               {salesOrderData?.stage !== "SOLD" && (
-                <Paper p="xs" px="md">
+                <Paper p="xs" px="md" shadow="0">
                   <Switch
                     offLabel="Quote"
                     onLabel="Sold"
@@ -739,6 +737,15 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 }
                 disabled={clientsLoading || clientSelectOptions.length === 0}
                 style={{ flex: 1 }}
+                styles={{
+                  dropdown: {
+                    boxShadow: "var(--mantine-shadow-xl)",
+                    borderColor: "var(--mantine-color-gray-4)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                  },
+                  root: { maxWidth: "40%" },
+                }}
                 {...form.getInputProps("client_id")}
                 renderOption={({ option }) => {
                   const clientOption = option as ClientSelectOption;
@@ -791,10 +798,10 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
               spacing="md"
-              bg={"white"}
+              bg={"gray.1"}
               p="10px"
             >
-              <Fieldset legend="Billing Details" variant="filled" bg={"gray.2"}>
+              <Fieldset legend="Billing Details" variant="filled" bg={"white"}>
                 <Stack gap="sm">
                   <Stack gap={0}>
                     <Text size="xs" c="dimmed">
@@ -856,11 +863,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Stack>
               </Fieldset>
 
-              <Fieldset
-                legend="Shipping Details"
-                variant="filled"
-                bg={"gray.2"}
-              >
+              <Fieldset legend="Shipping Details" variant="filled" bg={"white"}>
                 <Stack gap="sm">
                   <Group justify="space-between">
                     <Button
@@ -936,13 +939,13 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </Center>
           )}
 
-          <Paper withBorder p="md" radius="md" shadow="xl">
+          <Paper p="md" bg={"gray.1"}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
               <Stack>
                 <Fieldset
                   legend="Cabinet Specifications"
                   variant="filled"
-                  bg={"gray.2"}
+                  bg={"white"}
                 >
                   <SimpleGrid cols={3}>
                     <Select
@@ -1131,7 +1134,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 <Fieldset
                   legend="Financials"
                   variant="filled"
-                  bg={"gray.2"}
+                  bg={"white"}
                   mt="md"
                 >
                   <SimpleGrid cols={3}>
@@ -1156,11 +1159,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
               </Stack>
 
               <Stack>
-                <Fieldset
-                  legend="Production Checklist (Dates)"
-                  variant="filled"
-                  bg={"gray.2"}
-                >
+                <Fieldset legend="Checklist" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
                     <Box w="100%">
                       <DateInput
@@ -1213,7 +1212,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   </SimpleGrid>
                 </Fieldset>
 
-                <Fieldset legend="Details" variant="filled" bg={"gray.2"}>
+                <Fieldset legend="Details" variant="filled" bg={"white"}>
                   <TextInput
                     label="Comments"
                     {...form.getInputProps("comments")}
