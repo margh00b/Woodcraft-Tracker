@@ -253,9 +253,9 @@ export default function NewServiceOrder() {
           </Paper>
 
           {/* MAIN DETAILS */}
-          <Paper p="md" radius="md" shadow="xl">
+          <Paper p="md" radius="md" shadow="xl" bg="gray.1">
             <Stack>
-              <Fieldset legend="Job & Identifier" variant="filled" bg="gray.1">
+              <Fieldset legend="Job & Identifier" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                   <Select
                     label="Select Job"
@@ -285,7 +285,7 @@ export default function NewServiceOrder() {
                 </SimpleGrid>
               </Fieldset>
 
-              <Fieldset legend="Logistics" variant="filled" bg="gray.1">
+              <Fieldset legend="Logistics" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 3 }}>
                   <Select
                     label="Assign Installer"
@@ -333,14 +333,6 @@ export default function NewServiceOrder() {
                   </Stack>
                 </SimpleGrid>
 
-                <Group mt="md">
-                  <Switch
-                    color="violet"
-                    label="Chargeable"
-                    {...form.getInputProps("chargeable", { type: "checkbox" })}
-                  />
-                </Group>
-
                 <Box mt="md">
                   <CustomRichTextEditor
                     label="Comments"
@@ -348,6 +340,13 @@ export default function NewServiceOrder() {
                     onChange={(html) => form.setFieldValue("comments", html)}
                   />
                 </Box>
+                <Switch
+                  size="md"
+                  color="violet"
+                  mt="md"
+                  label="Chargeable"
+                  {...form.getInputProps("chargeable", { type: "checkbox" })}
+                />
               </Fieldset>
             </Stack>
           </Paper>
@@ -361,7 +360,8 @@ export default function NewServiceOrder() {
                 size="xs"
                 leftSection={<FaPlus />}
                 onClick={addPart}
-                color="blue"
+                color="white"
+                bg="linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%"
               >
                 Add Part
               </Button>

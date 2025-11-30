@@ -76,7 +76,7 @@ export default function CabinetSpecs({ cabinet }: CabinetSpecsProps) {
   }
 
   return (
-    <Paper p="md" radius="md" shadow="sm" style={{ background: "#f5f5f5" }}>
+    <Paper p="md" radius="md" shadow="sm" style={{ background: "#ffffffff" }}>
       <Text
         fw={600}
         size="lg"

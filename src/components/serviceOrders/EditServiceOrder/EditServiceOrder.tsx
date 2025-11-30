@@ -30,6 +30,7 @@ import {
   Divider,
   Grid,
   Modal,
+  Collapse,
 } from "@mantine/core";
 import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
@@ -345,13 +346,14 @@ export default function EditServiceOrder({
       >
         <Stack gap="md">
           {/* HEADER */}
-          <Paper
-            p="md"
-            radius="md"
-            shadow="sm"
-            style={{ background: "#f0f0f0ff" }}
-          >
-            <Group justify="space-between" align="center">
+          <Paper p="md" radius="md" shadow="sm" bg="gray.1">
+            <Group
+              justify="space-between"
+              align="center"
+              bg="white"
+              p="md"
+              style={{ borderRadius: "6px" }}
+            >
               <Text
                 fw={600}
                 size="lg"
@@ -367,7 +369,8 @@ export default function EditServiceOrder({
                   <>
                     <Button
                       variant="light"
-                      color="blue"
+                      color="white"
+                      bg="linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%"
                       rightSection={"PDF"}
                       onClick={openPreview}
                     >
@@ -376,7 +379,7 @@ export default function EditServiceOrder({
                   </>
                 )}
                 <Divider orientation="vertical" />
-                <Text fw={500} size="md" c="dimmed">
+                <Text fw={600} size="md">
                   Job # {serviceOrderData?.jobs?.job_number || "—"}
                 </Text>
               </Group>
@@ -393,9 +396,9 @@ export default function EditServiceOrder({
           </Paper>
 
           {/* MAIN FORM */}
-          <Paper p="md" radius="md" shadow="xl">
+          <Paper p="md" radius="md" shadow="xl" bg="gray.1">
             <Stack>
-              <Fieldset legend="Job & Identifier" variant="filled" bg="gray.1">
+              <Fieldset legend="Job & Identifier" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                   <Select
                     label="Select Job"
@@ -414,7 +417,7 @@ export default function EditServiceOrder({
                 </SimpleGrid>
               </Fieldset>
 
-              <Fieldset legend="Logistics" variant="filled" bg="gray.1">
+              <Fieldset legend="Logistics" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 3 }}>
                   <Select
                     label="Assign Installer"
@@ -462,14 +465,6 @@ export default function EditServiceOrder({
                   </Stack>
                 </SimpleGrid>
 
-                <Group mt="md">
-                  <Switch
-                    color="violet"
-                    label="Chargeable"
-                    {...form.getInputProps("chargeable", { type: "checkbox" })}
-                  />
-                </Group>
-
                 <Box mt="md">
                   <CustomRichTextEditor
                     label="Comments"
@@ -479,6 +474,12 @@ export default function EditServiceOrder({
                 </Box>
 
                 <Group mt="md">
+                  <Switch
+                    size="md"
+                    color="violet"
+                    label="Chargeable"
+                    {...form.getInputProps("chargeable", { type: "checkbox" })}
+                  />
                   <Switch
                     label="Mark as Completed"
                     size="md"
@@ -492,14 +493,14 @@ export default function EditServiceOrder({
                       );
                     }}
                   />
-                  {form.values.completed_at && (
+                  <Collapse in={!!form.values.completed_at}>
                     <Text size="sm" c="dimmed">
                       Completed on:{" "}
                       {dayjs(form.values.completed_at).format(
                         "YYYY-MM-DD HH:mm"
                       )}
                     </Text>
-                  )}
+                  </Collapse>
                 </Group>
               </Fieldset>
             </Stack>
@@ -514,7 +515,8 @@ export default function EditServiceOrder({
                 size="xs"
                 leftSection={<FaPlus />}
                 onClick={addPart}
-                color="blue"
+                color="white"
+                bg="linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%"
               >
                 Add Part
               </Button>
@@ -595,7 +597,7 @@ export default function EditServiceOrder({
                 color: "white",
                 border: "none",
               }}
-              onClick={() => router.back()}
+              onClick={() => router.push(`/dashboard/serviceorders`)}
             >
               Cancel
             </Button>

@@ -464,15 +464,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           <Grid.Col span={10}>
             <Stack>
               {/* HEADER: Job Number & Basic Info */}
-              <Paper
-                p="md"
-                radius="md"
-                shadow="sm"
-                mb="md"
-                style={{
-                  background: "linear-gradient(270deg, #ffffffff, #e9e5ffec)",
-                }}
-              >
+              <Paper p="md" radius="md" shadow="sm" mb="md" bg={"gray.1"}>
                 <Group justify="space-between" align="center">
                   <Text
                     fw={600}
@@ -545,143 +537,151 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
               </Paper>
             </Stack>
 
-            <Paper
-              p="md"
-              radius="md"
-              pb={30}
-              style={{
-                background: "linear-gradient(270deg, #ffffffff, #e9e5ffec)",
-              }}
-            >
-              <Stack gap="xl">
-                {/* ---------------------------------------------------- */}
-                {/* 1. INSTALLER & SCHEDULE */}
-                {/* ---------------------------------------------------- */}
-                <Box>
-                  <Group mb={8} style={{ color: "#4A00E0" }}>
-                    <FaTools size={18} />
-                    <Text fw={600}>Installer & Key Dates</Text>
-                  </Group>
-                  <SimpleGrid cols={3} spacing="md">
-                    <Select
-                      label="Assigned Installer"
-                      placeholder="Select Installer"
-                      data={installerOptions}
-                      searchable
-                      clearable
-                      value={String(form.values.installer_id)}
-                      onChange={(val) => {
-                        form.setFieldValue(
-                          "installer_id",
-                          val ? Number(val) : null
-                        );
-                      }}
-                    />
-                    <DateInput
-                      label="Scheduled Installation Date"
-                      placeholder="Start Date"
-                      clearable
-                      valueFormat="YYYY-MM-DD"
-                      {...form.getInputProps("installation_date")}
-                    />
-                    <DateInput
-                      label="Scheduled Inspection Date"
-                      placeholder="Date"
-                      clearable
-                      valueFormat="YYYY-MM-DD"
-                      {...form.getInputProps("inspection_date")}
-                    />
-                  </SimpleGrid>
-                </Box>
-
-                <Divider />
-
-                {/* ---------------------------------------------------- */}
-                {/* 2. SHIPPING MANAGEMENT */}
-                {/* ---------------------------------------------------- */}
-                <Box>
-                  <Group mb={8} style={{ color: "#218838" }}>
-                    <FaTruckLoading size={18} />
-                    <Text fw={600}>Shipping Management</Text>
-                  </Group>
-                  <SimpleGrid cols={4} spacing="md">
-                    <DateInput
-                      label="Wrap Date"
-                      placeholder="Date Cabinets Wrapped"
-                      clearable
-                      valueFormat="YYYY-MM-DD"
-                      {...form.getInputProps("wrap_date")}
-                    />
-
-                    <DateInput
-                      label="Scheduled Ship Date"
-                      placeholder="Prod Ship Date"
-                      clearable
-                      valueFormat="YYYY-MM-DD"
-                      {...form.getInputProps("ship_schedule")}
-                    />
-                    <Select
-                      label="Shipping Date Status"
-                      w={"200px"}
-                      data={[
-                        { value: "unprocessed", label: "Unprocessed" },
-                        { value: "tentative", label: "Tentative" },
-                        { value: "confirmed", label: "Confirmed" },
-                      ]}
-                      {...form.getInputProps("ship_status")}
-                      rightSection={
-                        form.values.ship_status === "confirmed" ? (
-                          <FaCheckCircle size={12} color="green" />
-                        ) : null
-                      }
-                    />
-                    <Box style={{ display: "flex", alignItems: "flex-end" }}>
-                      <Switch
-                        size="lg"
-                        offLabel="Not Shipped"
-                        onLabel="SHIPPED"
-                        color="green"
-                        {...form.getInputProps("has_shipped", {
-                          type: "checkbox",
-                        })}
-                        checked={form.values.has_shipped}
-                        styles={{
-                          track: {
-                            padding: "5px",
-                            cursor: "pointer",
-                            background: form.values.has_shipped
-                              ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                              : "linear-gradient(135deg, #FF6B6B 0%, #FF3B3B 100%)",
-                            border: "none",
-                            color: form.values.has_shipped ? "white" : "black",
-                            transition: "background 200ms ease",
-                          },
+            <Paper bg={"gray.1"} p="md" radius="md">
+              <Paper p="md" radius="md" pb={30}>
+                <Stack gap="xl">
+                  {/* ---------------------------------------------------- */}
+                  {/* 1. INSTALLER & SCHEDULE */}
+                  {/* ---------------------------------------------------- */}
+                  <Box>
+                    <Group mb={8} style={{ color: "#4A00E0" }}>
+                      <FaTools size={18} />
+                      <Text fw={600}>Installer & Key Dates</Text>
+                    </Group>
+                    <SimpleGrid cols={3} spacing="md">
+                      <Select
+                        label="Assigned Installer"
+                        placeholder="Select Installer"
+                        data={installerOptions}
+                        searchable
+                        clearable
+                        value={String(form.values.installer_id)}
+                        onChange={(val) => {
+                          form.setFieldValue(
+                            "installer_id",
+                            val ? Number(val) : null
+                          );
                         }}
                       />
-                    </Box>
-                  </SimpleGrid>
-                </Box>
+                      <DateInput
+                        label="Scheduled Installation Date"
+                        placeholder="Start Date"
+                        clearable
+                        valueFormat="YYYY-MM-DD"
+                        {...form.getInputProps("installation_date")}
+                      />
+                      <DateInput
+                        label="Scheduled Inspection Date"
+                        placeholder="Date"
+                        clearable
+                        valueFormat="YYYY-MM-DD"
+                        {...form.getInputProps("inspection_date")}
+                      />
+                    </SimpleGrid>
+                  </Box>
 
-                <Divider />
+                  <Divider />
 
-                {/* ---------------------------------------------------- */}
-                {/* 3. NOTES & REFERENCE */}
-                {/* ---------------------------------------------------- */}
-                <Box>
-                  <Group mb={8}>
-                    <FaCalendarCheck size={18} />
-                    <Text fw={600}>Notes & Reference</Text>
-                  </Group>
-                  <Stack>
-                    <Textarea
-                      label="Installation/Site Notes"
-                      placeholder="Document site conditions, issues, or specific instructions here."
-                      rows={4}
-                      {...form.getInputProps("installation_notes")}
-                    />
-                  </Stack>
-                </Box>
-              </Stack>
+                  {/* ---------------------------------------------------- */}
+                  {/* 2. SHIPPING MANAGEMENT */}
+                  {/* ---------------------------------------------------- */}
+                  <Box>
+                    <Group mb={8} style={{ color: "#218838" }}>
+                      <FaTruckLoading size={18} />
+                      <Text fw={600}>Shipping Management</Text>
+                    </Group>
+                    <Group style={{ display: "flex" }}>
+                      <SimpleGrid cols={3} spacing="md">
+                        <DateInput
+                          label="Wrap Date"
+                          placeholder="Date Cabinets Wrapped"
+                          clearable
+                          valueFormat="YYYY-MM-DD"
+                          {...form.getInputProps("wrap_date")}
+                        />
+
+                        <DateInput
+                          label="Scheduled Ship Date"
+                          placeholder="Ship Date"
+                          clearable
+                          valueFormat="YYYY-MM-DD"
+                          {...form.getInputProps("ship_schedule")}
+                        />
+                        <Select
+                          label="Shipping Date Status"
+                          w={"200px"}
+                          data={[
+                            { value: "unprocessed", label: "Unprocessed" },
+                            { value: "tentative", label: "Tentative" },
+                            { value: "confirmed", label: "Confirmed" },
+                          ]}
+                          {...form.getInputProps("ship_status")}
+                          rightSection={
+                            form.values.ship_status === "confirmed" ? (
+                              <FaCheckCircle size={12} color="green" />
+                            ) : null
+                          }
+                        />
+                      </SimpleGrid>
+                      <Box style={{ alignSelf: "flex-end" }}>
+                        <Switch
+                          size="xl"
+                          offLabel="Not Shipped"
+                          onLabel="SHIPPED"
+                          thumbIcon={<FaTruckLoading />}
+                          color="green"
+                          {...form.getInputProps("has_shipped", {
+                            type: "checkbox",
+                          })}
+                          checked={form.values.has_shipped}
+                          styles={{
+                            track: {
+                              padding: "5px",
+                              cursor: "pointer",
+                              background: form.values.has_shipped
+                                ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
+                                : "linear-gradient(135deg, #0010eeff 0%, #af26ffff 100%)",
+                              border: "none",
+                              color: form.values.has_shipped
+                                ? "white"
+                                : "black",
+                              transition: "background 200ms ease",
+                            },
+                            thumb: {
+                              background: form.values.has_shipped
+                                ? "#218838"
+                                : "#fff",
+                            },
+                            trackLabel: {
+                              color: "white",
+                            },
+                          }}
+                        />
+                      </Box>
+                    </Group>
+                  </Box>
+
+                  <Divider />
+
+                  {/* ---------------------------------------------------- */}
+                  {/* 3. NOTES & REFERENCE */}
+                  {/* ---------------------------------------------------- */}
+                  <Box>
+                    <Group mb={8}>
+                      <FaCalendarCheck size={18} />
+                      <Text fw={600}>Notes & Reference</Text>
+                    </Group>
+                    <Stack>
+                      <Textarea
+                        label="Installation/Site Notes"
+                        placeholder="Document site conditions, issues, or specific instructions here."
+                        rows={4}
+                        {...form.getInputProps("installation_notes")}
+                      />
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
             </Paper>
           </Grid.Col>
 
@@ -913,11 +913,11 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       {/* Footer Buttons */}
       <Paper
         p="md"
+        bg={"gray.1"}
         style={{
           position: "sticky",
           bottom: 0,
           zIndex: 10,
-          background: "linear-gradient(180deg, #ebebebff 0%, #ffffffff 100%)",
         }}
       >
         <Group justify="flex-end">

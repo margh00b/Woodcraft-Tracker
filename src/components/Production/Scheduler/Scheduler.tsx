@@ -288,12 +288,7 @@ export default function EditProductionSchedulePage({
           <Grid.Col span={10}>
             <Stack>
               {/* HEADER */}
-              <Paper
-                p="md"
-                radius="md"
-                shadow="sm"
-                style={{ background: "#e3e3e3" }}
-              >
+              <Paper p="md" radius="md" shadow="sm" bg="gray.1">
                 <Group align="center">
                   <Text
                     fw={600}
@@ -315,169 +310,180 @@ export default function EditProductionSchedulePage({
               </Paper>
 
               {/* FORM */}
-              <Paper p="md" radius="md" shadow="xl" pb={30}>
-                <Stack>
-                  {/* Rush & Placement/Shipping */}
-                  <Switch
-                    size="xl"
-                    offLabel="Normal"
-                    onLabel="Rush"
-                    thumbIcon={<FaFire />}
-                    {...form.getInputProps("rush", { type: "checkbox" })}
-                    checked={form.values.rush}
-                    onChange={(e) =>
-                      form.setFieldValue("rush", e.currentTarget.checked)
-                    }
-                    styles={{
-                      track: {
-                        padding: "5px",
-                        cursor: "pointer",
-                        background: form.values.rush
-                          ? "linear-gradient(135deg, #ff4d4d 0%, #c80000 100%)"
-                          : "linear-gradient(135deg, #555555 0%, #e3e3e3 100%)",
-                        border: "none",
-                        color: form.values.rush ? "white" : "black",
-                        transition: "background 200ms ease",
-                      },
-                      thumb: {
-                        background: form.values.rush ? "#ff6b6b" : "#fff",
-                      },
-                      label: { fontWeight: 600, display: "inline-block" },
-                    }}
-                  />
+              <Paper p="md" radius="md" shadow="xl" pb={30} bg="gray.1">
+                <Paper p="md" radius="md" shadow="xl" bg="white">
+                  <Stack>
+                    {/* Rush & Placement/Shipping */}
+                    <Switch
+                      size="xl"
+                      offLabel="Normal"
+                      onLabel="Rush"
+                      thumbIcon={<FaFire />}
+                      {...form.getInputProps("rush", { type: "checkbox" })}
+                      checked={form.values.rush}
+                      onChange={(e) =>
+                        form.setFieldValue("rush", e.currentTarget.checked)
+                      }
+                      styles={{
+                        track: {
+                          padding: "5px",
+                          cursor: "pointer",
+                          background: form.values.rush
+                            ? "linear-gradient(135deg, #ff4d4d 0%, #c80000 100%)"
+                            : "linear-gradient(135deg, #555555 0%, #131111ff 100%)",
+                          border: "none",
+                          color: form.values.rush ? "white" : "black",
+                          transition: "background 200ms ease",
+                        },
+                        trackLabel: {
+                          color: form.values.rush ? "white" : "white",
+                        },
+                        thumb: {
+                          background: form.values.rush ? "#ff6b6b" : "#fff",
+                        },
+                        label: { fontWeight: 600, display: "inline-block" },
+                      }}
+                    />
 
-                  <Box>
-                    <Group mb={8}>
-                      <FaShippingFast size={18} />
-                      <Text fw={600}>Placement & Shipping</Text>
-                    </Group>
-                    <SimpleGrid cols={5} spacing="sm">
-                      <DateInput
-                        label="Received Date"
-                        {...form.getInputProps("received_date")}
-                      />
-                      <DateInput
-                        label="Placement Date"
-                        {...form.getInputProps("placement_date")}
-                      />
-                      <DateInput
-                        label="Ship Date"
-                        {...form.getInputProps("ship_schedule")}
-                      />
-
-                      <Select
-                        label="Shipping Date Status"
-                        w={"200px"}
-                        data={[
-                          { value: "unprocessed", label: "Unprocessed" },
-                          { value: "tentative", label: "Tentative" },
-                          { value: "confirmed", label: "Confirmed" },
-                        ]}
-                        {...form.getInputProps("ship_status")}
-                        rightSection={
-                          form.values.ship_status === "confirmed" ? (
-                            <FaCheckCircle size={12} color="green" />
-                          ) : null
-                        }
-                      />
-
-                      <Box
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-end",
-                          paddingBottom: 2,
-                        }}
-                      >
-                        <Switch
-                          size="lg"
-                          offLabel="Not In Plant"
-                          onLabel="In Plant"
-                          thumbIcon={<FaIndustry />}
-                          checked={!!form.values.in_plant_actual}
-                          onChange={(e) =>
-                            form.setFieldValue(
-                              "in_plant_actual",
-                              e.currentTarget.checked
-                                ? new Date().toISOString()
-                                : null
-                            )
-                          }
-                          styles={{
-                            track: {
-                              padding: "4px",
-                              cursor: "pointer",
-                              background: form.values.in_plant_actual
-                                ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                                : "linear-gradient(135deg, #ff9a9a 0%, #ff6b6b 100%)",
-                              border: "none",
-                              color: form.values.in_plant_actual
-                                ? "white"
-                                : "black",
-                              transition: "background 200ms ease",
-                            },
-                            thumb: {
-                              background: form.values.in_plant_actual
-                                ? "#218838"
-                                : "#fff",
-                            },
-                            label: { fontWeight: 600, display: "inline-block" },
-                          }}
-                        />
-                      </Box>
-                    </SimpleGrid>
-                  </Box>
-
-                  {/* Schedule Groups */}
-                  {[
-                    {
-                      title: "Doors Schedule",
-                      icon: <FaDoorOpen />,
-                      fields: [
-                        ["doors_in_schedule", "Doors In Schedule"],
-                        ["doors_out_schedule", "Doors Out Schedule"],
-                      ],
-                    },
-                    {
-                      title: "Cutting Schedule",
-                      icon: <FaCut />,
-                      fields: [
-                        ["cut_finish_schedule", "Cut Finish Schedule"],
-                        ["cut_melamine_schedule", "Cut Melamine Schedule"],
-                      ],
-                    },
-                    {
-                      title: "Paint Schedule",
-                      icon: <FaPaintBrush />,
-                      fields: [
-                        ["paint_in_schedule", "Paint In Schedule"],
-                        ["paint_out_schedule", "Paint Out Schedule"],
-                      ],
-                    },
-                    {
-                      title: "Assembly",
-                      icon: <FaCogs />,
-                      fields: [["assembly_schedule", "Assembly Schedule"]],
-                      single: true,
-                    },
-                  ].map(({ title, icon, fields, single }) => (
-                    <Box key={title}>
+                    <Box>
                       <Group mb={8}>
-                        {icon} <Text fw={600}>{title}</Text>
+                        <FaShippingFast size={18} />
+                        <Text fw={600}>Placement & Shipping</Text>
                       </Group>
-                      <SimpleGrid cols={single ? 1 : 2} spacing="sm">
-                        {fields.map(([key, label]) => (
-                          <DateInput
-                            key={key}
-                            label={label}
-                            {...form.getInputProps(
-                              key as keyof SchedulingFormValues
-                            )}
+                      <SimpleGrid cols={5} spacing="sm">
+                        <DateInput
+                          label="Received Date"
+                          {...form.getInputProps("received_date")}
+                        />
+                        <DateInput
+                          label="Placement Date"
+                          {...form.getInputProps("placement_date")}
+                        />
+                        <DateInput
+                          label="Ship Date"
+                          {...form.getInputProps("ship_schedule")}
+                        />
+
+                        <Select
+                          label="Shipping Date Status"
+                          w={"200px"}
+                          data={[
+                            { value: "unprocessed", label: "Unprocessed" },
+                            { value: "tentative", label: "Tentative" },
+                            { value: "confirmed", label: "Confirmed" },
+                          ]}
+                          {...form.getInputProps("ship_status")}
+                          rightSection={
+                            form.values.ship_status === "confirmed" ? (
+                              <FaCheckCircle size={12} color="green" />
+                            ) : null
+                          }
+                        />
+
+                        <Box
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-end",
+                            paddingBottom: 2,
+                          }}
+                        >
+                          <Switch
+                            size="xl"
+                            offLabel="Not In Plant"
+                            onLabel="In Plant"
+                            thumbIcon={<FaIndustry />}
+                            checked={!!form.values.in_plant_actual}
+                            onChange={(e) =>
+                              form.setFieldValue(
+                                "in_plant_actual",
+                                e.currentTarget.checked
+                                  ? new Date().toISOString()
+                                  : null
+                              )
+                            }
+                            styles={{
+                              track: {
+                                padding: "4px",
+                                cursor: "pointer",
+                                background: form.values.in_plant_actual
+                                  ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
+                                  : "linear-gradient(135deg, #0010eeff 0%, #af26ffff 100%)",
+                                border: "none",
+                                color: form.values.in_plant_actual
+                                  ? "white"
+                                  : "black",
+                                transition: "background 200ms ease",
+                              },
+                              trackLabel: {
+                                color: "white",
+                              },
+                              thumb: {
+                                background: form.values.in_plant_actual
+                                  ? "#218838"
+                                  : "#fff",
+                              },
+                              label: {
+                                fontWeight: 600,
+                                display: "inline-block",
+                              },
+                            }}
                           />
-                        ))}
+                        </Box>
                       </SimpleGrid>
                     </Box>
-                  ))}
-                </Stack>
+
+                    {/* Schedule Groups */}
+                    {[
+                      {
+                        title: "Doors Schedule",
+                        icon: <FaDoorOpen />,
+                        fields: [
+                          ["doors_in_schedule", "Doors In Schedule"],
+                          ["doors_out_schedule", "Doors Out Schedule"],
+                        ],
+                      },
+                      {
+                        title: "Cutting Schedule",
+                        icon: <FaCut />,
+                        fields: [
+                          ["cut_finish_schedule", "Cut Finish Schedule"],
+                          ["cut_melamine_schedule", "Cut Melamine Schedule"],
+                        ],
+                      },
+                      {
+                        title: "Paint Schedule",
+                        icon: <FaPaintBrush />,
+                        fields: [
+                          ["paint_in_schedule", "Paint In Schedule"],
+                          ["paint_out_schedule", "Paint Out Schedule"],
+                        ],
+                      },
+                      {
+                        title: "Assembly",
+                        icon: <FaCogs />,
+                        fields: [["assembly_schedule", "Assembly Schedule"]],
+                        single: true,
+                      },
+                    ].map(({ title, icon, fields, single }) => (
+                      <Box key={title}>
+                        <Group mb={8}>
+                          {icon} <Text fw={600}>{title}</Text>
+                        </Group>
+                        <SimpleGrid cols={single ? 1 : 2} spacing="sm">
+                          {fields.map(([key, label]) => (
+                            <DateInput
+                              key={key}
+                              label={label}
+                              {...form.getInputProps(
+                                key as keyof SchedulingFormValues
+                              )}
+                            />
+                          ))}
+                        </SimpleGrid>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
               </Paper>
             </Stack>
           </Grid.Col>
@@ -485,17 +491,20 @@ export default function EditProductionSchedulePage({
           {/* TIMELINE */}
           <Grid.Col span={2}>
             <Box pt="md" style={{ justifyItems: "center" }}>
-              <Text
-                fw={600}
-                size="lg"
-                mb="md"
-                c="violet"
-                display={"flex"}
-                style={{ alignItems: "center" }}
-              >
-                <FaCalendarCheck style={{ marginRight: 8 }} /> Actual Progress
-              </Text>
-              <Paper shadow="sm" p="md" radius="md" w={"100%"}>
+              <Paper p="md" radius="md" w={"100%"}>
+                <Center>
+                  <Text
+                    fw={600}
+                    size="lg"
+                    mb="lg"
+                    c="violet"
+                    display={"flex"}
+                    style={{ alignItems: "center" }}
+                  >
+                    <FaCalendarCheck style={{ marginRight: 8 }} /> Actual
+                    Progress
+                  </Text>
+                </Center>
                 <Timeline
                   bulletSize={24}
                   lineWidth={2}
