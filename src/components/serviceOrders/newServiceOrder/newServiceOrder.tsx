@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Container,
   Button,
@@ -25,6 +26,7 @@ import {
   Table,
   Box,
   Switch,
+  Tooltip,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { FaPlus, FaTrash, FaTools, FaSave } from "react-icons/fa";
@@ -35,6 +37,7 @@ import {
 } from "@/zod/serviceorder.schema";
 import { useJobs } from "@/hooks/useJobs";
 import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
+import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
 
 export default function NewServiceOrder() {
   const { supabase, isAuthenticated } = useSupabase();
@@ -42,10 +45,13 @@ export default function NewServiceOrder() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // 1. Fetch Jobs (Reusable Hook)
+  const [
+    isAddInstallerOpen,
+    { open: openAddInstaller, close: closeAddInstaller },
+  ] = useDisclosure(false);
+
   const { data: jobOptions, isLoading: jobsLoading } = useJobs(isAuthenticated);
 
-  // 2. Fetch Installers (Local Query)
   const { data: installersData, isLoading: installersLoading } = useQuery({
     queryKey: ["installers-list"],
     queryFn: async () => {
@@ -67,7 +73,6 @@ export default function NewServiceOrder() {
     }));
   }, [installersData]);
 
-  // 3. Form Setup
   const form = useForm<ServiceOrderFormValues>({
     initialValues: {
       job_id: "",
@@ -88,7 +93,6 @@ export default function NewServiceOrder() {
 
   const [existingSOCount, setExistingSOCount] = useState<number | null>(null);
 
-  // Auto-populate Service Order Number when Job ID changes
   useEffect(() => {
     const fetchSoNumber = async () => {
       const jobId = form.values.job_id;
@@ -98,7 +102,6 @@ export default function NewServiceOrder() {
       }
 
       try {
-        // 1. Get Job Number
         const { data: jobData, error: jobError } = await supabase
           .from("jobs")
           .select("job_number")
@@ -108,7 +111,6 @@ export default function NewServiceOrder() {
         if (jobError) throw jobError;
         if (!jobData) return;
 
-        // 2. Get Count of existing Service Orders for this job
         const { count, error: countError } = await supabase
           .from("service_orders")
           .select("*", { count: "exact", head: true })
@@ -118,11 +120,9 @@ export default function NewServiceOrder() {
 
         setExistingSOCount(count || 0);
 
-        // 3. Generate Next Suffix
         const nextSuffix = (count || 0) + 1;
         const nextSoNumber = `${jobData.job_number}-S${nextSuffix}`;
 
-        // 4. Set Value
         form.setFieldValue("service_order_number", nextSoNumber);
       } catch (error) {
         console.error("Error auto-generating SO number:", error);
@@ -132,14 +132,10 @@ export default function NewServiceOrder() {
     fetchSoNumber();
   }, [form.values.job_id]);
 
-  // ... (rest of the code)
-
-  // 4. Submit Mutation
   const submitMutation = useMutation({
     mutationFn: async (values: ServiceOrderFormValues) => {
       if (!user) throw new Error("User not authenticated");
 
-      // A. Insert Service Order
       const { data: soData, error: soError } = await supabase
         .from("service_orders")
         .insert({
@@ -163,7 +159,6 @@ export default function NewServiceOrder() {
       if (soError) throw new Error(`Create Order Error: ${soError.message}`);
       const newId = soData.service_order_id;
 
-      // B. Insert Parts (if any)
       if (values.parts && values.parts.length > 0) {
         const partsPayload = values.parts.map((p) => ({
           service_order_id: newId,
@@ -189,7 +184,7 @@ export default function NewServiceOrder() {
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["service_orders_list"] });
-      router.push("/dashboard/serviceorders"); // Assuming you will create this list page later
+      router.push("/dashboard/serviceorders");
     },
     onError: (err: any) => {
       notifications.show({
@@ -204,7 +199,6 @@ export default function NewServiceOrder() {
     submitMutation.mutate(values);
   };
 
-  // Helper to add a part row
   const addPart = () => {
     form.insertListItem("parts", { qty: 1, part: "", description: "" });
   };
@@ -242,7 +236,6 @@ export default function NewServiceOrder() {
         }}
       >
         <Stack gap="md">
-          {/* HEADER */}
           <Paper p="md" radius="md" shadow="xs" style={{ background: "#fff" }}>
             <Group>
               <FaTools size={24} color="#4A00E0" />
@@ -252,7 +245,6 @@ export default function NewServiceOrder() {
             </Group>
           </Paper>
 
-          {/* MAIN DETAILS */}
           <Paper p="md" radius="md" shadow="xl" bg="gray.1">
             <Stack>
               <Fieldset legend="Job & Identifier" variant="filled" bg="white">
@@ -287,14 +279,29 @@ export default function NewServiceOrder() {
 
               <Fieldset legend="Logistics" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 3 }}>
-                  <Select
-                    label="Assign Installer"
-                    placeholder="Select Installer"
-                    data={installerOptions}
-                    searchable
-                    clearable
-                    {...form.getInputProps("installer_id")}
-                  />
+                  <Group align="flex-end" gap="xs" style={{ width: "100%" }}>
+                    <Select
+                      label="Assign Installer"
+                      placeholder="Select Installer"
+                      data={installerOptions}
+                      searchable
+                      clearable
+                      style={{ flex: 1 }}
+                      {...form.getInputProps("installer_id")}
+                    />
+                    <Tooltip label="Create New Installer">
+                      <ActionIcon
+                        variant="filled"
+                        color="#4A00E0"
+                        size="lg"
+                        mb={2}
+                        onClick={openAddInstaller}
+                      >
+                        <FaPlus size={12} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+
                   <DateInput
                     label="Due Date"
                     placeholder="YYYY-MM-DD"
@@ -351,7 +358,6 @@ export default function NewServiceOrder() {
             </Stack>
           </Paper>
 
-          {/* PARTS TABLE */}
           <Paper p="md" radius="md" shadow="xl">
             <Group justify="space-between" mb="md">
               <Text fw={600}>Required Parts</Text>
@@ -421,11 +427,9 @@ export default function NewServiceOrder() {
             )}
           </Paper>
 
-          {/* Padding for sticky footer */}
           <Box h={80} />
         </Stack>
 
-        {/* STICKY FOOTER */}
         <Paper
           withBorder
           p="md"
@@ -463,6 +467,15 @@ export default function NewServiceOrder() {
           </Group>
         </Paper>
       </form>
+
+      <AddInstaller
+        opened={isAddInstallerOpen}
+        onClose={() => {
+          closeAddInstaller();
+          // Invalidate the query key used in this component to refresh the list
+          queryClient.invalidateQueries({ queryKey: ["installers-list"] });
+        }}
+      />
     </Container>
   );
 }
