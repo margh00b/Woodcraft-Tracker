@@ -986,6 +986,19 @@ export type Database = {
           },
         ]
       }
+      plant_master_view: {
+        Row: {
+          client_name: string | null
+          created_at: string | null
+          description: string | null
+          display_id: string | null
+          due_date: string | null
+          id: number | null
+          record_type: string | null
+          status_raw: string | null
+        }
+        Relationships: []
+      }
       plant_table_view: {
         Row: {
           assembly_completed_actual: string | null

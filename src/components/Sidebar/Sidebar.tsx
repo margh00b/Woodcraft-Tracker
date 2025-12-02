@@ -29,6 +29,7 @@ import { FaGears } from "react-icons/fa6";
 import { MdFactory, MdSupervisorAccount } from "react-icons/md";
 import { GoTools } from "react-icons/go";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { GrSchedules } from "react-icons/gr";
 
 export type SidebarLink = {
   iconName: string;
@@ -55,6 +56,7 @@ const iconMap: Record<string, any> = {
   FaClipboardCheck,
   FaTruckLoading,
   MdSupervisorAccount,
+  GrSchedules,
 };
 
 function MainLink({ item }: { item: SidebarLink }) {

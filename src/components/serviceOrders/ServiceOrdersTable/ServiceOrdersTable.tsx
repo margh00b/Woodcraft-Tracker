@@ -45,11 +45,12 @@ import {
   FaTools,
 } from "react-icons/fa";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useServiceOrdersTable } from "@/hooks/useServiceOrdersTable";
 import { Views } from "@/types/db";
 import { useUser } from "@clerk/nextjs";
 import { usePermissions } from "@/hooks/usePermissions";
-
+dayjs.extend(utc);
 // Define shape based on the View structure
 type ServiceOrderView = Views<"service_orders_table_view">;
 
@@ -176,7 +177,7 @@ export default function ServiceOrdersTable() {
       minSize: 110,
       cell: (info) => {
         const date = info.getValue();
-        return date ? dayjs(date).format("YYYY-MM-DD") : "—";
+        return date ? dayjs.utc(date).format("YYYY-MM-DD") : "—";
       },
     }),
     columnHelper.accessor("completed_at", {

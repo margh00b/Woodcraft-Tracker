@@ -204,7 +204,7 @@ export default function EditServiceOrder({
         job_id: String(serviceOrderData.job_id),
         service_order_number: serviceOrderData.service_order_number,
         due_date: serviceOrderData.due_date
-          ? new Date(serviceOrderData.due_date)
+          ? dayjs(serviceOrderData.due_date).toDate()
           : null,
         installer_id: serviceOrderData.installer_id
           ? String(serviceOrderData.installer_id)
