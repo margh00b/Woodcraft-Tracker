@@ -11,7 +11,7 @@ export default function EditSalePage() {
 
   const { canEditSales } = usePermissions();
 
-  if (!canEditSales) {
+  if (canEditSales) {
     return <EditSale salesOrderId={salesOrderId} />;
   }
 
