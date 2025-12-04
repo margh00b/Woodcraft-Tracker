@@ -1,4 +1,3 @@
-// src.zip/components/serviceOrders/EditServiceOrder/EditServiceOrder.tsx
 "use client";
 
 import { useEffect, useMemo } from "react";
@@ -28,23 +27,14 @@ import {
   Box,
   Switch,
   Divider,
-  Grid,
   Modal,
   Collapse,
   rem,
+  Tooltip,
 } from "@mantine/core";
 import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
-import {
-  FaPlus,
-  FaTrash,
-  FaTools,
-  FaSave,
-  FaUser,
-  FaCheck,
-  FaEye,
-} from "react-icons/fa";
-import { MdOutlineDoorSliding } from "react-icons/md";
+import { FaPlus, FaTrash, FaTools, FaSave, FaEye } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   ServiceOrderFormValues,
@@ -55,20 +45,19 @@ import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
 import PdfPreview from "../PdfPreview/PdfPreview";
 import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
 import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
-import { Tables } from "@/types/db"; // Added Tables import
+import { Tables } from "@/types/db";
+import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
 
 interface EditServiceOrderProps {
   serviceOrderId: string;
 }
 
-// UPDATED: Define the Cabinet structure with joins for display purposes
 type JoinedCabinet = Tables<"cabinets"> & {
   door_styles: { name: string } | null;
   species: { Species: string } | null;
   colors: { Name: string } | null;
 };
 
-// UPDATED: Define the full fetch result type
 type ServiceOrderData = Tables<"service_orders"> & {
   service_order_parts: Tables<"service_order_parts">[];
   installers: Tables<"installers"> | null;
@@ -89,14 +78,16 @@ export default function EditServiceOrder({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Modal State for Preview
   const [previewOpened, { open: openPreview, close: closePreview }] =
     useDisclosure(false);
 
-  // 1. Fetch Jobs
+  const [
+    addInstallerOpened,
+    { open: openAddInstaller, close: closeAddInstaller },
+  ] = useDisclosure(false);
+
   const { data: jobOptions, isLoading: jobsLoading } = useJobs(isAuthenticated);
 
-  // 2. Fetch Installers
   const { data: installersData, isLoading: installersLoading } = useQuery({
     queryKey: ["installers-list"],
     queryFn: async () => {
@@ -118,7 +109,6 @@ export default function EditServiceOrder({
     }));
   }, [installersData]);
 
-  // 3. Fetch Service Order Details (UPDATED QUERY)
   const { data: serviceOrderData, isLoading: soLoading } =
     useQuery<ServiceOrderData>({
       queryKey: ["service_order", serviceOrderId],
@@ -179,7 +169,6 @@ export default function EditServiceOrder({
       enabled: isAuthenticated,
     });
 
-  // 4. Form Setup
   const form = useForm<ServiceOrderFormValues>({
     initialValues: {
       job_id: "",
@@ -200,7 +189,6 @@ export default function EditServiceOrder({
     validate: zodResolver(ServiceOrderSchema),
   });
 
-  // Populate form
   useEffect(() => {
     if (serviceOrderData) {
       form.setValues({
@@ -233,12 +221,10 @@ export default function EditServiceOrder({
     }
   }, [serviceOrderData]);
 
-  // 5. Submit Mutation
   const submitMutation = useMutation({
     mutationFn: async (values: ServiceOrderFormValues) => {
       if (!user) throw new Error("User not authenticated");
 
-      // Update SO
       const { error: soError } = await supabase
         .from("service_orders")
         .update({
@@ -263,7 +249,6 @@ export default function EditServiceOrder({
 
       if (soError) throw new Error(`Update Order Error: ${soError.message}`);
 
-      // Update Parts
       const { error: deleteError } = await supabase
         .from("service_order_parts")
         .delete()
@@ -370,7 +355,6 @@ export default function EditServiceOrder({
                 Service Order: {serviceOrderData?.service_order_number || "—"}
               </Text>
 
-              {/* ACTION BUTTONS: PREVIEW & DOWNLOAD */}
               <Group>
                 {serviceOrderData && (
                   <>
@@ -378,7 +362,7 @@ export default function EditServiceOrder({
                       variant="light"
                       color="white"
                       bg="linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%"
-                      rightSection={"PDF"}
+                      rightSection={<Text size="xs">PDF</Text>}
                       onClick={openPreview}
                     >
                       <FaEye />
@@ -393,11 +377,8 @@ export default function EditServiceOrder({
             </Group>
             <Divider my="sm" color="violet" />
 
-            {/* --- EXISTING DETAILS (Clients, Specs, Form) --- */}
             <SimpleGrid cols={2}>
-              {/* CLIENT INFO */}
               {shipping && <ClientInfo shipping={shipping} />}
-
               {cabinet && <CabinetSpecs cabinet={cabinet} />}
             </SimpleGrid>
           </Paper>
@@ -426,14 +407,28 @@ export default function EditServiceOrder({
 
               <Fieldset legend="Logistics" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 3 }}>
-                  <Select
-                    label="Assign Installer"
-                    placeholder="Select Installer"
-                    data={installerOptions}
-                    searchable
-                    clearable
-                    {...form.getInputProps("installer_id")}
-                  />
+                  <Group align="flex-end" gap="xs" style={{ width: "100%" }}>
+                    <Select
+                      label="Assign Installer"
+                      placeholder="Select Installer"
+                      data={installerOptions}
+                      searchable
+                      clearable
+                      style={{ flex: 1 }}
+                      {...form.getInputProps("installer_id")}
+                    />
+                    <Tooltip label="Create New Installer">
+                      <ActionIcon
+                        variant="filled"
+                        color="#4A00E0"
+                        size="lg"
+                        mb={2}
+                        onClick={openAddInstaller}
+                      >
+                        <FaPlus size={12} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                   <DateInput
                     label="Due Date"
                     placeholder="YYYY-MM-DD"
@@ -610,7 +605,6 @@ export default function EditServiceOrder({
           <Box h={80} />
         </Stack>
 
-        {/* STICKY FOOTER */}
         <Paper
           withBorder
           p="md"
@@ -649,7 +643,6 @@ export default function EditServiceOrder({
         </Paper>
       </form>
 
-      {/* --- PREVIEW MODAL --- */}
       <Modal
         opened={previewOpened}
         onClose={closePreview}
@@ -661,6 +654,14 @@ export default function EditServiceOrder({
       >
         <PdfPreview data={serviceOrderData} />
       </Modal>
+
+      <AddInstaller
+        opened={addInstallerOpened}
+        onClose={() => {
+          closeAddInstaller();
+          queryClient.invalidateQueries({ queryKey: ["installers-list"] });
+        }}
+      />
     </Container>
   );
 }

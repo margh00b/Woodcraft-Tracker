@@ -11,7 +11,7 @@ export default function ServiceOrderPage() {
 
   const { canEditServiceOrders } = usePermissions();
 
-  if (canEditServiceOrders) {
+  if (!canEditServiceOrders) {
     return <EditServiceOrder serviceOrderId={serviceOrderId} />;
   }
 

@@ -177,7 +177,15 @@ export default function ServiceOrdersTable() {
       minSize: 110,
       cell: (info) => {
         const date = info.getValue();
-        return date ? dayjs.utc(date).format("YYYY-MM-DD") : "—";
+        const isPast = dayjs(date).isBefore(dayjs(), "day");
+
+        return date ? (
+          <Text size="sm" fw={isPast ? 700 : 400} c={isPast ? "red" : "dark"}>
+            {dayjs(date).format("YYYY-MM-DD")}
+          </Text>
+        ) : (
+          "—"
+        );
       },
     }),
     columnHelper.accessor("completed_at", {
@@ -188,13 +196,12 @@ export default function ServiceOrdersTable() {
         const date = info.getValue();
         if (date) {
           return (
-            <Badge
-              variant="gradient"
-              gradient={{ from: "#3ac47d", to: "#0f9f4f", deg: 135 }}
-              leftSection={<FaCheckCircle />}
-            >
-              Completed
-            </Badge>
+            <Group gap={6}>
+              <FaCheckCircle color="var(--mantine-color-green-6)" size={14} />
+              <Text size="sm" c="green.8" fw={600}>
+                {dayjs(date).format("YYYY-MM-DD")}
+              </Text>
+            </Group>
           );
         }
         return (

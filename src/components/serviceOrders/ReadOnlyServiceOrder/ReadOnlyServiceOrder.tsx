@@ -21,7 +21,6 @@ import {
   Avatar,
   Card,
   rem,
-  TypographyStylesProvider,
   Typography,
 } from "@mantine/core";
 import {
@@ -34,6 +33,8 @@ import {
   FaHammer,
   FaBoxOpen,
   FaMapMarkerAlt,
+  FaDollarSign,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
@@ -42,7 +43,6 @@ type ReadOnlyServiceOrderProps = {
   serviceOrderId: string;
 };
 
-// Reusable Section Header with Icon
 const SectionTitle = ({
   icon: Icon,
   title,
@@ -68,7 +68,6 @@ const SectionTitle = ({
   </Group>
 );
 
-// Improved Info Row with Hydration Fix
 const InfoRow = ({
   label,
   value,
@@ -90,7 +89,6 @@ const InfoRow = ({
     <Text size="sm" c="dimmed" fw={500}>
       {label}
     </Text>
-    {/* COMPONENT="DIV" FIXES THE HYDRATION ERROR */}
     <Text
       component="div"
       size="sm"
@@ -166,7 +164,6 @@ export default function ReadOnlyServiceOrder({
     );
   }
 
-  // Derived State
   const job = so.jobs;
   const shipping = job?.sales_orders;
   const installer = so.installers;
@@ -194,7 +191,6 @@ export default function ReadOnlyServiceOrder({
         flexDirection: "column",
       }}
     >
-      {/* --- HEADER --- */}
       <Paper
         p="md"
         radius={0}
@@ -249,11 +245,9 @@ export default function ReadOnlyServiceOrder({
         </Container>
       </Paper>
 
-      {/* --- CONTENT SCROLL AREA --- */}
       <Box style={{ flex: 1, overflowY: "auto" }} p="md">
         <Container size="100%" px="xs">
           <Grid gutter="lg">
-            {/* COLUMN 1: Client & Logistics */}
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Stack>
                 <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -332,6 +326,7 @@ export default function ReadOnlyServiceOrder({
                     <InfoRow label="Service Type" value={so.service_type} />
                     <InfoRow label="Detail" value={so.service_type_detail} />
                     <InfoRow label="Service By" value={so.service_by} />
+                    <Divider my={4} />
                     <InfoRow
                       label="Chargeable"
                       value={
@@ -341,12 +336,27 @@ export default function ReadOnlyServiceOrder({
                         />
                       }
                     />
+                    <InfoRow
+                      label="Warranty"
+                      value={
+                        <BooleanBadge
+                          value={so.is_warranty_so || false}
+                          label={so.is_warranty_so ? "YES" : "NO"}
+                        />
+                      }
+                    />
+                    {so.is_warranty_so && (
+                      <InfoRow
+                        label="Warranty Cost"
+                        value={`$${so.warranty_order_cost ?? 0}`}
+                        highlight
+                      />
+                    )}
                   </Stack>
                 </Card>
               </Stack>
             </Grid.Col>
 
-            {/* COLUMN 2: Schedule & Notes */}
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Stack>
                 <Card
@@ -434,7 +444,6 @@ export default function ReadOnlyServiceOrder({
               </Stack>
             </Grid.Col>
 
-            {/* COLUMN 3: Parts List */}
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
                 <SectionTitle
