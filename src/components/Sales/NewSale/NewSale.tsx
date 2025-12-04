@@ -31,9 +31,11 @@ import {
   Modal,
   Collapse,
   Checkbox,
+  Radio,
+  Textarea,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { FaCopy, FaPlus, FaCheckCircle } from "react-icons/fa";
+import { FaCopy, FaPlus, FaCheckCircle, FaCircle } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   MasterOrderInput,
@@ -41,12 +43,10 @@ import {
 } from "@/zod/salesOrder_Cabinets_Jobs.schema";
 import { Tables } from "@/types/db";
 import AddClient from "@/components/Clients/AddClient/AddClient";
-import { useJobBaseNumbers } from "@/hooks/useJobBaseNumbers";
 import {
   DeliveryTypeOptions,
   DrawerBoxOptions,
   DrawerHardwareOptions,
-  FinishOptions,
   flooringClearanceOptions,
   flooringTypeOptions,
   InteriorOptions,
@@ -62,7 +62,7 @@ type ReferenceOption = {
 };
 
 interface ExtendedMasterOrderInput extends MasterOrderInput {
-  manual_job_base?: number;
+  manual_job_base: number;
   manual_job_suffix?: string;
 }
 
@@ -77,8 +77,7 @@ interface NewDoorStyleState {
 export default function NewSale() {
   const { supabase, isAuthenticated } = useSupabase();
   const { user } = useUser();
-  const { data: jobBaseOptions, isLoading: jobsLoading } =
-    useJobBaseNumbers(isAuthenticated);
+  //const { data: jobBaseOptions, isLoading: jobsLoading } = useJobBaseNumbers(isAuthenticated);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -322,19 +321,20 @@ export default function NewSale() {
       stage: "QUOTE",
       total: 0,
       deposit: 0,
-      install: false,
+      install: undefined as unknown as boolean,
       comments: "",
-      order_type: "",
-      delivery_type: "",
-      manual_job_base: undefined,
+      order_type: undefined as unknown as string,
+      delivery_type: undefined as unknown as string,
+      manual_job_base: undefined as unknown as number,
       manual_job_suffix: "",
       is_memo: false,
+
+      flooring_type: "",
+      flooring_clearance: "",
       cabinet: {
         species: "",
         color: "",
         door_style: "",
-        finish: "",
-        glaze: "",
         top_drawer_front: "",
         interior: "",
         drawer_box: "",
@@ -342,7 +342,6 @@ export default function NewSale() {
         box: "",
         piece_count: "",
         glass_type: "",
-        hinge_soft_close: false,
         doors_parts_only: false,
         handles_supplied: false,
         handles_selected: false,
@@ -359,25 +358,13 @@ export default function NewSale() {
         shipping_email_1: "",
         shipping_email_2: "",
       },
-      checklist: {
-        layout_date: null,
-        client_meeting_date: null,
-        follow_up_date: null,
-        appliance_specs_date: null,
-        selections_date: null,
-        markout_date: null,
-        review_date: null,
-        second_markout_date: null,
-        flooring_type: "",
-        flooring_clearance: "",
-      },
     },
     validate: zodResolver(MasterOrderSchema),
   });
 
   useEffect(() => {
     if (form.values.stage !== "SOLD") {
-      form.setFieldValue("manual_job_base", undefined);
+      form.setFieldValue("manual_job_base", undefined as unknown as number);
       form.setFieldValue("manual_job_suffix", "");
     }
   }, [form.values.stage]);
@@ -394,14 +381,14 @@ export default function NewSale() {
         comments,
         install,
         order_type,
+        flooring_type,
+        flooring_clearance,
         delivery_type,
         shipping,
-        checklist,
         manual_job_base,
         manual_job_suffix,
         is_memo,
       } = values;
-
       if (stage === "SOLD" && !manual_job_base) {
         throw new Error("Job Base Number is required for Sold jobs.");
       }
@@ -419,13 +406,10 @@ export default function NewSale() {
 
         // Existing fields
         box: values.cabinet.box,
-        finish: values.cabinet.finish,
-        glaze: values.cabinet.glaze,
         top_drawer_front: values.cabinet.top_drawer_front,
         interior: values.cabinet.interior,
         drawer_box: values.cabinet.drawer_box,
         drawer_hardware: values.cabinet.drawer_hardware,
-        hinge_soft_close: values.cabinet.hinge_soft_close,
         handles_supplied: values.cabinet.handles_supplied,
         handles_selected: values.cabinet.handles_selected,
         glass: values.cabinet.glass,
@@ -436,8 +420,11 @@ export default function NewSale() {
           ? values.cabinet.piece_count
           : "",
       };
-      // --- END FIX ---
 
+      const effectiveIsMemo =
+        is_memo === true ||
+        manual_job_suffix?.toLowerCase().includes("x") ||
+        false;
       const transactionPayload = {
         client_id: client_id,
         stage: stage,
@@ -447,15 +434,16 @@ export default function NewSale() {
         install: install,
         order_type: order_type,
         delivery_type: delivery_type,
-        cabinet: cabinetPayload, // Use the new FK payload
+        cabinet: cabinetPayload,
         designer: user?.username || "Staff",
+        flooring_type: flooring_type,
+        flooring_clearance: flooring_clearance,
         shipping: shipping,
-        checklist: checklist,
         manual_job_base: manual_job_base,
         manual_job_suffix: manual_job_suffix
           ? manual_job_suffix.trim().toUpperCase()
           : null,
-        is_memo: is_memo,
+        is_memo: effectiveIsMemo,
       };
 
       const { data: transactionResult, error: rpcError } = await supabase.rpc(
@@ -576,7 +564,9 @@ export default function NewSale() {
 
     submitMutation.mutate(values);
   };
-
+  const isMemoChecked =
+    form.values.is_memo === true ||
+    form.values.manual_job_suffix?.toLowerCase().includes("x");
   return (
     <Container
       size="100%"
@@ -604,38 +594,8 @@ export default function NewSale() {
         <Stack gap={5}>
           {/* 1. MASTER DETAILS (Client & Stage) */}
           <Paper withBorder p="md" radius="md" shadow="xl">
-            <Group
-              align="end"
-              mt="md"
-              style={{ width: "100%" }}
-              justify="space-between"
-            >
+            <SimpleGrid cols={3}>
               <Group align="end">
-                <Switch
-                  onLabel="Memo"
-                  offLabel="Memo ?"
-                  size="xl"
-                  thumbIcon={<FaCheckCircle />}
-                  checked={form.values.is_memo === true}
-                  onChange={(e) =>
-                    form.setFieldValue("is_memo", e.currentTarget.checked)
-                  }
-                  styles={{
-                    track: {
-                      cursor: "pointer",
-                      background: form.values.is_memo
-                        ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                        : "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
-                      color: "white",
-                      border: "none",
-                      padding: "0 0.2rem",
-                      width: "6rem",
-                    },
-                    thumb: {
-                      background: form.values.is_memo ? "#218838" : "#4a00e0",
-                    },
-                  }}
-                />
                 <Switch
                   offLabel="Quote"
                   onLabel="Sold"
@@ -669,7 +629,7 @@ export default function NewSale() {
 
                 <Collapse in={form.values.stage === "SOLD"}>
                   <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
-                    <Select
+                    {/*<Select
                       label="Suggest Job Base #"
                       placeholder="Search existing jobs..."
                       data={jobBaseOptions || []}
@@ -703,7 +663,7 @@ export default function NewSale() {
                           form.setFieldValue("manual_job_base", undefined);
                         }
                       }}
-                    />
+                    />*/}
                     <NumberInput
                       label="Base Job #"
                       placeholder="40000..."
@@ -766,7 +726,7 @@ export default function NewSale() {
                     borderWidth: "1px",
                     borderStyle: "solid",
                   },
-                  root: { maxWidth: "40%" },
+                  root: { width: "100%" },
                 }}
                 {...form.getInputProps("client_id")}
                 renderOption={({ option }) => {
@@ -813,7 +773,42 @@ export default function NewSale() {
                   });
                 }}
               />
-            </Group>
+
+              <Switch
+                onLabel="Memo"
+                offLabel="Memo"
+                size="xl"
+                thumbIcon={isMemoChecked ? <FaCheckCircle /> : <FaCircle />}
+                checked={!!isMemoChecked}
+                onChange={(e) => {
+                  form.setFieldValue(
+                    "is_memo",
+                    e.currentTarget.checked ? true : false
+                  );
+                }}
+                disabled={true}
+                styles={{
+                  track: {
+                    cursor: "not-allowed",
+                    background: isMemoChecked
+                      ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
+                      : "linear-gradient(135deg, #ddddddff 0%, #dadadaff 100%)",
+                    color: isMemoChecked ? "white" : "black",
+                    border: "none",
+                    padding: "0 0.2rem",
+                    width: "6rem",
+                  },
+                  thumb: {
+                    background: isMemoChecked ? "#218838" : "#ffffffff",
+                  },
+                  root: {
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "flex-end",
+                  },
+                }}
+              />
+            </SimpleGrid>
           </Paper>
 
           {/* CONDITIONAL BILLING / SHIPPING */}
@@ -967,7 +962,32 @@ export default function NewSale() {
           <Paper withBorder p="md" bg={"gray.1"}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
               {/* LEFT COLUMN: Cabinet & Financials */}
+
               <Stack>
+                <Fieldset
+                  legend="Basic Information"
+                  variant="filled"
+                  bg={"white"}
+                >
+                  <SimpleGrid cols={2} mt="sm">
+                    <Autocomplete
+                      label="Order Type"
+                      withAsterisk
+                      placeholder="Single Fam, Multi Fam, Reno..."
+                      data={OrderTypeOptions}
+                      {...form.getInputProps(`order_type`)}
+                    />
+                    <Select
+                      label="Delivery Type"
+                      withAsterisk
+                      placeholder="Pickup, Delivery..."
+                      data={DeliveryTypeOptions}
+                      searchable
+                      nothingFoundMessage="No delivery type found"
+                      {...form.getInputProps(`delivery_type`)}
+                    />
+                  </SimpleGrid>
+                </Fieldset>
                 <Fieldset
                   legend="Cabinet Specifications"
                   variant="filled"
@@ -1051,20 +1071,22 @@ export default function NewSale() {
                       {...form.getInputProps(`cabinet.door_style`)}
                     />
                     <Autocomplete
-                      label="Finish"
-                      placeholder="Select or type Finish"
-                      data={FinishOptions}
-                      {...form.getInputProps(`cabinet.finish`)}
-                    />
-                    <TextInput
-                      label="Glaze"
-                      {...form.getInputProps(`cabinet.glaze`)}
-                    />
-                    <Autocomplete
                       label="Top Drawer Front"
                       placeholder="Select or type Top Drawer Front"
                       data={TopDrawerFrontOptions}
                       {...form.getInputProps(`cabinet.top_drawer_front`)}
+                    />
+                    <Autocomplete
+                      label="Interior Material"
+                      placeholder="Select Interior Material"
+                      data={InteriorOptions}
+                      {...form.getInputProps(`cabinet.interior`)}
+                    />
+                    <Autocomplete
+                      label="Drawer Box"
+                      placeholder="Select Drawer Box"
+                      data={DrawerBoxOptions}
+                      {...form.getInputProps(`cabinet.drawer_box`)}
                     />
                   </SimpleGrid>
 
@@ -1075,30 +1097,31 @@ export default function NewSale() {
                       data={[]} // Allow custom typing, no predefined list usually or add if you have one
                       {...form.getInputProps(`cabinet.box`)}
                     />
-                    <Autocomplete
-                      label="Interior Material"
-                      placeholder="Select or type Interior Material"
-                      data={InteriorOptions}
-                      {...form.getInputProps(`cabinet.interior`)}
-                    />
-                    <Autocomplete
-                      label="Drawer Box"
-                      placeholder="Select or type Drawer Box"
-                      data={DrawerBoxOptions}
-                      {...form.getInputProps(`cabinet.drawer_box`)}
-                    />
+
                     <Autocomplete
                       label="Drawer Hardware"
-                      placeholder="Select or type Drawer Hardware"
+                      placeholder="Select Drawer Hardware"
                       data={DrawerHardwareOptions}
                       {...form.getInputProps(`cabinet.drawer_hardware`)}
+                    />
+                    <Autocomplete
+                      label="Flooring Type"
+                      placeholder="Hardwood, Tile, etc."
+                      data={flooringTypeOptions}
+                      {...form.getInputProps(`flooring_type`)}
+                    />
+                    <Autocomplete
+                      label="Flooring Clearance"
+                      placeholder="3/8, 1/2, etc."
+                      data={flooringClearanceOptions}
+                      {...form.getInputProps(`flooring_clearance`)}
                     />
                   </SimpleGrid>
 
                   <Divider mt="md" />
 
                   {/* Row 3: CONDITIONAL GROUPS (Glass & Parts Count) */}
-                  <SimpleGrid cols={2} mt="md">
+                  <SimpleGrid cols={3} mt="md">
                     {/* COLUMN 1: GLASS SPECIFICATIONS */}
                     <Stack gap={5}>
                       <Switch
@@ -1138,24 +1161,9 @@ export default function NewSale() {
                         {...form.getInputProps(`cabinet.piece_count`)}
                       />
                     </Stack>
-                  </SimpleGrid>
-
-                  <Divider mt="md" />
-
-                  {/* Row 4: Hardware & General */}
-                  <SimpleGrid cols={2} mt="md">
-                    <Group>
-                      <Switch
-                        label="Soft Close Hinges"
-                        size="md"
-                        color="#4a00e0"
-                        {...form.getInputProps(`cabinet.hinge_soft_close`, {
-                          type: "checkbox",
-                        })}
-                      />
+                    <Stack justify="center" align="end">
                       <Switch
                         label="Handles Supplied"
-                        size="md"
                         color="#4a00e0"
                         {...form.getInputProps(`cabinet.handles_supplied`, {
                           type: "checkbox",
@@ -1163,16 +1171,50 @@ export default function NewSale() {
                       />
                       <Switch
                         label="Handles Selected"
-                        size="md"
                         color="#4a00e0"
                         {...form.getInputProps(`cabinet.handles_selected`, {
                           type: "checkbox",
                         })}
                       />
-                    </Group>
+                    </Stack>
                   </SimpleGrid>
-                </Fieldset>
 
+                  <Divider mt="md" />
+                </Fieldset>
+              </Stack>
+
+              {/* RIGHT COLUMN: Details */}
+              <Stack>
+                <Fieldset legend="Details" variant="filled" bg={"white"}>
+                  <Textarea
+                    label="Comments"
+                    minRows={10}
+                    styles={{ input: { minHeight: "200px" } }}
+                    {...form.getInputProps(`comments`)}
+                  />
+
+                  <Radio.Group
+                    label="Installation Required"
+                    withAsterisk
+                    mt="md"
+                    value={
+                      form.values.install === true
+                        ? "true"
+                        : form.values.install === false
+                        ? "false"
+                        : ""
+                    }
+                    onChange={(val) =>
+                      form.setFieldValue("install", val === "true")
+                    }
+                    error={form.errors.install}
+                  >
+                    <Group mt="xs">
+                      <Radio value="true" label="Yes" color="#4a00e0" />
+                      <Radio value="false" label="No" color="#4a00e0" />
+                    </Group>
+                  </Radio.Group>
+                </Fieldset>
                 <Fieldset legend="Financials" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
                     <NumberInput
@@ -1198,152 +1240,11 @@ export default function NewSale() {
                   </SimpleGrid>
                 </Fieldset>
               </Stack>
-
-              {/* RIGHT COLUMN: Production Checklist & Details */}
-              <Stack>
-                <Fieldset legend="Checklist" variant="filled" bg={"white"}>
-                  <SimpleGrid cols={3}>
-                    <Box w="100%">
-                      <DateInput
-                        label="Layout"
-                        clearable
-                        {...form.getInputProps(`checklist.layout_date`)}
-                      />
-                    </Box>
-
-                    <DateInput
-                      label="Client Meeting"
-                      clearable
-                      {...form.getInputProps(`checklist.client_meeting_date`)}
-                    />
-                    <DateInput
-                      label="Follow Up"
-                      clearable
-                      {...form.getInputProps(`checklist.follow_up_date`)}
-                    />
-                  </SimpleGrid>
-                  <SimpleGrid cols={3} mt="sm">
-                    <DateInput
-                      label="Appliance Specs"
-                      clearable
-                      {...form.getInputProps(`checklist.appliance_specs_date`)}
-                    />
-                    <DateInput
-                      label="Selections"
-                      clearable
-                      {...form.getInputProps(`checklist.selections_date`)}
-                    />
-                    <DateInput
-                      label="Measure (Markout)"
-                      clearable
-                      {...form.getInputProps(`checklist.markout_date`)}
-                    />
-                  </SimpleGrid>
-                  <SimpleGrid cols={3} mt="sm">
-                    <DateInput
-                      label="Review"
-                      clearable
-                      {...form.getInputProps(`checklist.review_date`)}
-                    />
-                    <DateInput
-                      label="Second Markout"
-                      clearable
-                      {...form.getInputProps(`checklist.second_markout_date`)}
-                    />
-                    <div></div>
-                  </SimpleGrid>
-                </Fieldset>
-
-                <Fieldset legend="Details" variant="filled" bg={"white"}>
-                  <TextInput
-                    label="Comments"
-                    {...form.getInputProps(`comments`)}
-                  />
-                  <SimpleGrid cols={2} mt="sm">
-                    <Autocomplete
-                      label="Order Type"
-                      placeholder="Single Fam, Multi Fam, Reno..."
-                      data={OrderTypeOptions}
-                      {...form.getInputProps(`order_type`)}
-                    />
-                    <Select
-                      label="Delivery Type"
-                      placeholder="Pickup, Delivery..."
-                      data={DeliveryTypeOptions}
-                      searchable
-                      nothingFoundMessage="No delivery type found"
-                      {...form.getInputProps(`delivery_type`)}
-                    />
-                  </SimpleGrid>
-                  <SimpleGrid cols={2} mt="sm">
-                    <Autocomplete
-                      label="Flooring Type"
-                      placeholder="Hardwood, Tile, etc."
-                      data={flooringTypeOptions}
-                      {...form.getInputProps(`checklist.flooring_type`)}
-                    />
-                    <Autocomplete
-                      label="Flooring Clearance"
-                      placeholder="3/8, 1/2, etc."
-                      data={flooringClearanceOptions}
-                      {...form.getInputProps(`checklist.flooring_clearance`)}
-                    />
-                  </SimpleGrid>
-                  <Switch
-                    color="#4a00e0"
-                    mt="md"
-                    label="Installation Required"
-                    style={{
-                      display: "inline-flex",
-                    }}
-                    {...form.getInputProps("install", { type: "checkbox" })}
-                  />
-                </Fieldset>
-              </Stack>
             </SimpleGrid>
           </Paper>
 
           {/* SUBMIT BAR */}
         </Stack>
-        <Paper
-          withBorder
-          p="md"
-          radius="md"
-          pos="sticky"
-          bottom={0}
-          style={{ zIndex: 10 }}
-        >
-          <Group justify="flex-end">
-            <Button
-              size="md"
-              variant="outline"
-              style={{
-                background: "linear-gradient(135deg, #FF6B6B 0%, #FF3B3B 100%)",
-                color: "white",
-                border: "none",
-              }}
-              onClick={() => router.back()}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="md"
-              loading={submitMutation.isPending}
-              style={{
-                background:
-                  form.values.stage === "SOLD"
-                    ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                    : "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
-                color: "white",
-                border: "none",
-              }}
-              form="single-order-form"
-            >
-              {form.values.stage === "SOLD" ? "Process Sale" : "Save Quote"}
-            </Button>
-          </Group>
-        </Paper>
       </form>
       <AddClient
         opened={isAddClientModalOpen}
@@ -1557,6 +1458,45 @@ export default function NewSale() {
           </Group>
         </Stack>
       </Modal>
+      <Paper
+        withBorder
+        p="md"
+        radius="md"
+        pos="sticky"
+        bottom={0}
+        style={{ zIndex: 10 }}
+      >
+        <Group justify="flex-end">
+          <Button
+            size="md"
+            variant="outline"
+            style={{
+              background: "linear-gradient(135deg, #FF6B6B 0%, #FF3B3B 100%)",
+              color: "white",
+              border: "none",
+            }}
+            onClick={() => router.back()}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="md"
+            loading={submitMutation.isPending}
+            style={{
+              background:
+                form.values.stage === "SOLD"
+                  ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
+                  : "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
+              color: "white",
+              border: "none",
+            }}
+            form="single-order-form"
+          >
+            {form.values.stage === "SOLD" ? "Process Sale" : "Save Quote"}
+          </Button>
+        </Group>
+      </Paper>
     </Container>
   );
 }

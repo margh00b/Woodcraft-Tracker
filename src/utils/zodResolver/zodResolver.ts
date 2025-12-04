@@ -1,5 +1,5 @@
-import { notifications } from "@mantine/notifications";
 import { ZodType } from "zod";
+import { notifications } from "@mantine/notifications";
 
 export function zodResolver(schema: ZodType<any, any, any>) {
   return (values: any) => {
@@ -8,11 +8,16 @@ export function zodResolver(schema: ZodType<any, any, any>) {
     if (parsed.success) return {};
 
     const errors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
+
+    parsed.error.issues.forEach((issue) => {
       console.log("Zod issue:", issue);
+      const path = issue.path.join(".");
+      errors[path] = issue.message;
+    });
+    if (Object.keys(errors).length > 0) {
       notifications.show({
-        title: "Error",
-        message: issue.message,
+        title: "Validation Error",
+        message: "Please fix the highlighted fields.",
         color: "red",
       });
     }
