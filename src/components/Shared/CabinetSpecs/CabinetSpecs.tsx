@@ -94,10 +94,7 @@ export default function CabinetSpecs({ cabinet }: CabinetSpecsProps) {
             <SpecRow label="Box" value={getDisplayValue(cabinet, "box")} />
             {/* FIX: Use getDisplayValue for Foreign Key fields */}
             <SpecRow label="Color" value={getDisplayValue(cabinet, "color")} />
-            <SpecRow
-              label="Finish"
-              value={getDisplayValue(cabinet, "finish")}
-            />
+
             <SpecRow
               label="Species"
               value={getDisplayValue(cabinet, "species")}
@@ -117,6 +114,10 @@ export default function CabinetSpecs({ cabinet }: CabinetSpecsProps) {
             <SpecRow
               label="Drawer Box"
               value={getDisplayValue(cabinet, "drawer_box")}
+            />
+            <SpecRow
+              label="Drawer Hardware"
+              value={getDisplayValue(cabinet, "drawer_hardware")}
             />
           </StackSpacing>
         </Grid.Col>
@@ -152,19 +153,18 @@ export default function CabinetSpecs({ cabinet }: CabinetSpecsProps) {
                 />
               )}
             </div>
-
-            <BooleanRow
-              label="Handles Selected"
-              value={cabinet.handles_selected}
-            />
-            <BooleanRow
-              label="Handles Supplied"
-              value={cabinet.handles_supplied}
-            />
-            <BooleanRow
-              label="Hinge Soft Close"
-              value={cabinet.hinge_soft_close}
-            />
+            {cabinet.handles_selected && (
+              <BooleanRow
+                label="Handles Selected"
+                value={cabinet.handles_selected}
+              />
+            )}
+            {cabinet.handles_supplied && (
+              <BooleanRow
+                label="Handles Supplied"
+                value={cabinet.handles_supplied}
+              />
+            )}
           </StackSpacing>
         </Grid.Col>
       </Grid>

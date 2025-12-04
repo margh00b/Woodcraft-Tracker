@@ -40,6 +40,8 @@ import {
 import { useJobs } from "@/hooks/useJobs";
 import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
 import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
+import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
+import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
 interface NewServiceOrderProps {
   preselectedJobId?: string;
 }
@@ -113,7 +115,7 @@ export default function NewServiceOrder({
   });
 
   const [existingSOCount, setExistingSOCount] = useState<number | null>(null);
-
+  const [jobData, setJobData] = useState<any>(null);
   useEffect(() => {
     const fetchSoNumber = async () => {
       const jobId = form.values.job_id;
@@ -150,9 +152,60 @@ export default function NewServiceOrder({
         console.error("Error auto-generating SO number:", error);
       }
     };
+    const fetchJobDetails = async () => {
+      const jobId = form.values.job_id;
+      if (!jobId) return;
 
+      try {
+        const { data: jobData, error: jobError } = await supabase
+          .from("jobs")
+          .select(
+            `sales_orders (
+              shipping_street,
+              shipping_city,
+              shipping_province,
+              shipping_zip,
+              shipping_client_name,
+              shipping_phone_1,
+              shipping_phone_2,
+              shipping_email_1,
+              shipping_email_2,
+              cabinet:cabinets (
+                box,
+                glass,
+                interior,
+                drawer_box,
+                drawer_hardware,
+                glass_type,
+                piece_count,
+                doors_parts_only,
+                handles_selected,
+                handles_supplied,
+                top_drawer_front,
+                door_styles(name),
+                species(Species),
+                colors(Name)
+              )
+            )
+          )
+        `
+          )
+          .eq("id", jobId)
+          .single();
+
+        if (jobError) throw jobError;
+        if (!jobData) return;
+        setJobData(jobData);
+      } catch (error) {
+        console.error("Error fetching job details:", error);
+      }
+    };
+    fetchJobDetails();
     fetchSoNumber();
   }, [form.values.job_id]);
+
+  const cabinet = jobData?.sales_orders?.cabinet;
+  const client = jobData?.sales_orders;
 
   const submitMutation = useMutation({
     mutationFn: async (values: ServiceOrderFormValues) => {
@@ -268,7 +321,14 @@ export default function NewServiceOrder({
               </Text>
             </Group>
           </Paper>
+          <Paper p="md" radius="md" shadow="xs" style={{ background: "#fff" }}>
+            <SimpleGrid cols={2}>
+              {/* CLIENT INFO */}
+              {client && <ClientInfo shipping={client} />}
 
+              {cabinet && <CabinetSpecs cabinet={cabinet} />}
+            </SimpleGrid>
+          </Paper>
           <Paper p="md" radius="md" shadow="xl" bg="gray.1">
             <Stack>
               <Fieldset legend="Job & Identifier" variant="filled" bg="white">
