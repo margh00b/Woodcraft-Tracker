@@ -7,21 +7,21 @@ import {
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
-interface UsePlantTableParams {
+interface UsePlantShippingTableParams {
   pagination: PaginationState;
   columnFilters: ColumnFiltersState;
   sorting: SortingState;
 }
 
-export function usePlantTable({
+export function usePlantShippingTable({
   pagination,
   columnFilters,
   sorting,
-}: UsePlantTableParams) {
+}: UsePlantShippingTableParams) {
   const { supabase, isAuthenticated } = useSupabase();
 
   return useQuery({
-    queryKey: ["plant_table_view", pagination, columnFilters, sorting],
+    queryKey: ["plant_shipping_table", pagination, columnFilters, sorting],
     queryFn: async () => {
       let query = supabase
         .from("plant_table_view")
@@ -29,13 +29,13 @@ export function usePlantTable({
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
-        
-        if (id === "wrap_date_range" && Array.isArray(value)) {
+
+        if (id === "ship_date_range" && Array.isArray(value)) {
           const [start, end] = value;
           if (start && end) {
             query = query
-              .gte("wrap_date", dayjs(start).format("YYYY-MM-DD"))
-              .lte("wrap_date", dayjs(end).format("YYYY-MM-DD"));
+              .gte("ship_schedule", dayjs(start).format("YYYY-MM-DD"))
+              .lte("ship_schedule", dayjs(end).format("YYYY-MM-DD"));
           }
           return;
         }
@@ -51,7 +51,9 @@ export function usePlantTable({
             query = query.ilike("client_name", `%${valStr}%`);
             break;
           case "address":
-            query = query.or(`shipping_street.ilike.%${valStr}%,shipping_city.ilike.%${valStr}%`);
+            query = query.or(
+              `shipping_street.ilike.%${valStr}%,shipping_city.ilike.%${valStr}%`
+            );
             break;
           default:
             break;
@@ -62,7 +64,7 @@ export function usePlantTable({
         const { id, desc } = sorting[0];
         query = query.order(id, { ascending: !desc });
       } else {
-        query = query.order("wrap_date", { ascending: true });
+        query = query.order("ship_schedule", { ascending: true });
       }
 
       const from = pagination.pageIndex * pagination.pageSize;

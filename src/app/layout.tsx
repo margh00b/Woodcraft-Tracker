@@ -59,7 +59,12 @@ const dashboardLinks: SidebarLink[] = [
       {
         iconName: "FaCalendarAlt",
         label: "Wrap Schedule",
-        path: "/dashboard/plant",
+        path: "/dashboard/plant/wrap",
+      },
+      {
+        iconName: "FaCalendarAlt",
+        label: "Ship Schedule",
+        path: "/dashboard/plant/ship",
       },
       {
         iconName: "FaClipboardCheck",

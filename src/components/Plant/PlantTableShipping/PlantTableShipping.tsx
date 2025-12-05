@@ -35,23 +35,32 @@ import {
   Anchor,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { FaSearch, FaCalendarAlt, FaBoxOpen, FaCheck } from "react-icons/fa";
+import {
+  FaSearch,
+  FaTruckLoading,
+  FaBoxOpen,
+  FaCheck,
+  FaCalendarCheck,
+} from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
-import { usePlantWrapTable } from "@/hooks/usePlantWrapTable";
+import { usePlantShippingTable } from "@/hooks/usePlantShippingTable";
 import { Views } from "@/types/db";
+
 type PlantTableView = Views<"plant_table_view">;
-export default function PlantTableWrap() {
+
+export default function PlantShippingTable() {
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
+  // --- State ---
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
   });
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "wrap_date", desc: false },
+    { id: "ship_schedule", desc: false },
   ]);
 
   const [inputFilters, setInputFilters] = useState<ColumnFiltersState>([]);
@@ -61,22 +70,19 @@ export default function PlantTableWrap() {
     null,
   ]);
 
-  const {
-    data: wrapData,
-    isLoading,
-    isError,
-    error,
-  } = usePlantWrapTable({
+  // --- Data ---
+  const { data, isLoading, isError, error } = usePlantShippingTable({
     pagination,
     columnFilters: activeFilters,
     sorting,
   });
-  const data = wrapData?.data.filter((item) => item.wrap_date !== null);
-  const tableData = (data as unknown as PlantTableView[]) || [];
-  const totalCount = data?.length || 0;
+
+  const tableData = (data?.data as unknown as PlantTableView[]) || [];
+  const totalCount = data?.count || 0;
   const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
-  const toggleWrapMutation = useMutation({
+  // --- Mutation: Toggle Shipped Status ---
+  const toggleShippedMutation = useMutation({
     mutationFn: async ({
       installId,
       currentStatus,
@@ -87,16 +93,16 @@ export default function PlantTableWrap() {
       const { error } = await supabase
         .from("installation")
         .update({
-          wrap_completed: currentStatus ? null : new Date().toISOString(),
+          has_shipped: !currentStatus,
         })
         .eq("installation_id", installId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["plant_table_view"] });
+      queryClient.invalidateQueries({ queryKey: ["plant_shipping_table"] });
       notifications.show({
         title: "Updated",
-        message: "Wrap status updated successfully",
+        message: "Shipping status updated successfully",
         color: "green",
       });
     },
@@ -109,6 +115,7 @@ export default function PlantTableWrap() {
     },
   });
 
+  // --- Filter Handlers ---
   const setInputFilterValue = (id: string, value: any) => {
     setInputFilters((prev) => {
       const existing = prev.filter((f) => f.id !== id);
@@ -126,8 +133,8 @@ export default function PlantTableWrap() {
 
     let filters = [...inputFilters];
     if (dateRange[0] && dateRange[1]) {
-      filters = filters.filter((f) => f.id !== "wrap_date_range");
-      filters.push({ id: "wrap_date_range", value: dateRange });
+      filters = filters.filter((f) => f.id !== "ship_date_range");
+      filters.push({ id: "ship_date_range", value: dateRange });
     }
     setActiveFilters(filters);
   };
@@ -139,36 +146,68 @@ export default function PlantTableWrap() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  // --- Column Defs ---
   const columnHelper = createColumnHelper<PlantTableView>();
 
   const columns = [
-    columnHelper.accessor("wrap_date", {
-      header: "Wrap Date",
-      size: 0,
+    columnHelper.accessor("ship_schedule", {
+      header: "Ship Date",
+      size: 0, // Hidden column used for grouping logic
     }),
-    columnHelper.accessor("wrap_completed", {
-      header: "Wrapped",
-      size: 70,
+    columnHelper.accessor("has_shipped", {
+      header: "Shipped",
+      size: 80,
       cell: (info) => {
-        const isComplete = !!info.getValue();
+        const isShipped = !!info.getValue();
         const installId = info.row.original.installation_id;
+        const partially = info.row.original.partially_shipped;
+
         return (
           <Center onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={isComplete}
-              color="#7400e0ff"
-              size="md"
-              disabled={!installId || toggleWrapMutation.isPending}
-              onChange={() => {
-                if (installId) {
-                  toggleWrapMutation.mutate({
-                    installId,
-                    currentStatus: isComplete,
-                  });
-                }
-              }}
-              style={{ cursor: "pointer" }}
-            />
+            <Tooltip
+              label={partially ? "Partially Shipped" : "Toggle Shipped Status"}
+            >
+              <Checkbox
+                checked={isShipped}
+                indeterminate={partially || false}
+                color="#8c00ffff"
+                size="sm"
+                disabled={!installId || toggleShippedMutation.isPending}
+                onChange={() => {
+                  if (installId) {
+                    toggleShippedMutation.mutate({
+                      installId,
+                      currentStatus: isShipped,
+                    });
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              />
+            </Tooltip>
+          </Center>
+        );
+      },
+    }),
+    columnHelper.accessor("installation_completed", {
+      header: "Installed",
+      size: 80,
+      cell: (info) => {
+        const completedDate = info.getValue();
+        return (
+          <Center>
+            {completedDate ? (
+              <Tooltip
+                label={`Installed: ${dayjs(completedDate).format(
+                  "YYYY-MM-DD"
+                )}`}
+              >
+                <FaCheck color="green" size={10} />
+              </Tooltip>
+            ) : (
+              <Text c="dimmed" size="xs">
+                -
+              </Text>
+            )}
           </Center>
         );
       },
@@ -220,6 +259,7 @@ export default function PlantTableWrap() {
     }),
     columnHelper.accessor("cabinet_species", { header: "Species", size: 110 }),
     columnHelper.accessor("cabinet_color", { header: "Color", size: 110 }),
+    // --- Production Actuals Indicators ---
     columnHelper.accessor("doors_completed_actual", {
       header: "D",
       size: 40,
@@ -280,17 +320,6 @@ export default function PlantTableWrap() {
           </Text>
         ),
     }),
-    columnHelper.accessor("installation_notes", {
-      header: "Notes",
-      size: 180,
-      cell: (info) => (
-        <Tooltip label={info.getValue() || ""} multiline w={250}>
-          <Text size="xs" c={info.getValue() ? "dark" : "dimmed"} truncate>
-            {info.getValue() || "—"}
-          </Text>
-        </Tooltip>
-      ),
-    }),
   ];
 
   const table = useReactTable({
@@ -306,24 +335,25 @@ export default function PlantTableWrap() {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // --- Grouping Logic (By Ship Schedule) ---
   const groupedRows = useMemo(() => {
     if (!table.getRowModel().rows) return {};
     return table.getRowModel().rows.reduce((acc, row) => {
       const job = row.original;
-      const wrapDate = job.wrap_date
-        ? dayjs(job.wrap_date).format("YYYY-MM-DD")
-        : "No Date";
-      if (!acc[wrapDate]) acc[wrapDate] = [];
-      acc[wrapDate].push(row);
+      const shipDate = job.ship_schedule
+        ? dayjs(job.ship_schedule).format("YYYY-MM-DD")
+        : "Unscheduled";
+      if (!acc[shipDate]) acc[shipDate] = [];
+      acc[shipDate].push(row);
       return acc;
     }, {} as Record<string, Row<PlantTableView>[]>);
   }, [table.getRowModel().rows]);
 
   const sortedGroupKeys = useMemo(() => {
     return Object.keys(groupedRows).sort((a, b) => {
-      if (a === "No Date") return 1;
-      if (b === "No Date") return -1;
-      return dayjs(a).isAfter(dayjs(b)) ? -1 : 1;
+      if (a === "Unscheduled") return 1;
+      if (b === "Unscheduled") return -1;
+      return dayjs(a).isAfter(dayjs(b)) ? 1 : -1; // ASC sort for shipping usually
     });
   }, [groupedRows]);
 
@@ -354,18 +384,19 @@ export default function PlantTableWrap() {
           variant="gradient"
           gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
         >
-          <FaCalendarAlt size={26} />
+          <FaTruckLoading size={26} />
         </ThemeIcon>
         <Stack gap={0}>
           <Title order={2} style={{ color: "#343a40" }}>
-            Plant Wrap Schedule
+            Plant Shipping Schedule
           </Title>
           <Text size="sm" c="dimmed">
-            Track plant wrap schedule
+            Manage outgoing shipments
           </Text>
         </Stack>
       </Group>
 
+      {/* FILTERS */}
       <Accordion variant="contained" radius="md" mb="md">
         <Accordion.Item value="filters">
           <Accordion.Control icon={<FaSearch size={16} />}>
@@ -395,14 +426,14 @@ export default function PlantTableWrap() {
               />
               <DatePickerInput
                 type="range"
-                label="Wrap Date Range"
+                label="Ship Date Range"
                 placeholder="Pick dates range"
                 value={dateRange}
                 onChange={(val) =>
                   setDateRange(val as [Date | null, Date | null])
                 }
                 clearable
-                leftSection={<FaCalendarAlt size={14} />}
+                leftSection={<FaCalendarCheck size={14} />}
               />
             </SimpleGrid>
             <Group justify="flex-end" mt="md">
@@ -426,7 +457,12 @@ export default function PlantTableWrap() {
         </Accordion.Item>
       </Accordion>
 
-      <ScrollArea style={{ flex: 1 }} type="always">
+      {/* DATA ACCORDION */}
+      <ScrollArea
+        style={{ flex: 1 }}
+        type="always"
+        styles={{ scrollbar: { zIndex: 99 } }}
+      >
         {table.getRowModel().rows.length === 0 ? (
           <Center py="xl">
             <Text c="dimmed">No jobs found.</Text>
@@ -441,23 +477,27 @@ export default function PlantTableWrap() {
               content: { padding: 0 },
             }}
           >
-            {sortedGroupKeys.map((wrapDate) => {
-              const jobsInGroup = groupedRows[wrapDate];
-              const isPastDue = dayjs(wrapDate).isBefore(dayjs(), "day");
+            {sortedGroupKeys.map((shipDate) => {
+              const jobsInGroup = groupedRows[shipDate];
+              // Past due logic
+              const isPastDue =
+                shipDate !== "Unscheduled" &&
+                dayjs(shipDate).isBefore(dayjs(), "day");
+
               const totalBoxes = jobsInGroup.reduce((sum, row) => {
                 const parsed = parseInt(row.original.cabinet_box || "0", 10);
                 return isNaN(parsed) ? sum : sum + parsed;
               }, 0);
 
               return (
-                <Accordion.Item key={wrapDate} value={wrapDate}>
+                <Accordion.Item key={shipDate} value={shipDate}>
                   <Accordion.Control>
                     <Group gap="md">
-                      <FaCalendarAlt size={16} />
+                      <FaTruckLoading size={16} />
                       <Text fw={700} size="md">
-                        Wrap Date:{" "}
+                        Ship Date:{" "}
                         <span style={{ color: isPastDue ? "red" : "#4A00E0" }}>
-                          {wrapDate}
+                          {shipDate}
                         </span>
                       </Text>
                       <Badge variant="light" color="black">
@@ -480,12 +520,16 @@ export default function PlantTableWrap() {
                       stickyHeader
                       highlightOnHover
                       withColumnBorders
+                      // FIX: Ensure header is below scrollbar
+                      styles={{
+                        th: { zIndex: 1 },
+                      }}
                     >
                       <Table.Thead>
                         <Table.Tr>
                           {table
                             .getFlatHeaders()
-                            .slice(2)
+                            .slice(1) // Skip grouping column
                             .map((header) => (
                               <Table.Th
                                 key={header.id}
@@ -504,7 +548,7 @@ export default function PlantTableWrap() {
                           <Table.Tr key={row.id}>
                             {row
                               .getVisibleCells()
-                              .slice(2)
+                              .slice(1) // Skip grouping column
                               .map((cell) => (
                                 <Table.Td
                                   key={cell.id}
@@ -533,6 +577,7 @@ export default function PlantTableWrap() {
         )}
       </ScrollArea>
 
+      {/* PAGINATION */}
       <Box
         style={{
           borderTop: "1px solid #eee",
