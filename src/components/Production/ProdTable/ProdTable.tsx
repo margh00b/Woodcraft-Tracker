@@ -593,7 +593,9 @@ export default function ProdTable() {
             ) : (
               table.getRowModel().rows.map((row) => {
                 const bgColor =
-                  row.original.placement_date === null ? "#ffefefff" : undefined;
+                  row.original.placement_date === null
+                    ? "#ffefefff"
+                    : undefined;
                 return (
                   <Table.Tr
                     key={row.id}

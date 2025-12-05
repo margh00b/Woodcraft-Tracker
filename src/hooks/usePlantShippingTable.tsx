@@ -25,7 +25,8 @@ export function usePlantShippingTable({
     queryFn: async () => {
       let query = supabase
         .from("plant_table_view")
-        .select("*", { count: "exact" });
+        .select("*", { count: "exact" })
+        .not("ship_schedule", "is", null);
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;

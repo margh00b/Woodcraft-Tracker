@@ -41,12 +41,16 @@ import {
   FaBoxOpen,
   FaCheck,
   FaCalendarCheck,
+  FaPrint,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
 import { usePlantShippingTable } from "@/hooks/usePlantShippingTable";
 import { Views } from "@/types/db";
+import { useDisclosure } from "@mantine/hooks";
+// IMPORTS for PDF
+import ShippingPdfPreviewModal from "./ShippingPdfPreviewModal";
 
 type PlantTableView = Views<"plant_table_view">;
 
@@ -70,14 +74,16 @@ export default function PlantShippingTable() {
     null,
   ]);
 
+  // Modal State for PDF
+  const [pdfOpened, { open: openPdf, close: closePdf }] = useDisclosure(false);
+
   // --- Data ---
   const { data, isLoading, isError, error } = usePlantShippingTable({
     pagination,
     columnFilters: activeFilters,
     sorting,
   });
-
-  const tableData = (data?.data as unknown as PlantTableView[]) || [];
+  const tableData = (data?.data as PlantTableView[]) || [];
   const totalCount = data?.count || 0;
   const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
@@ -146,13 +152,34 @@ export default function PlantShippingTable() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  // --- Handle Print Preview Action ---
+  const handlePrintPreview = () => {
+    // Check if active filters contain the date range (meaning filters are applied)
+    const hasActiveDateFilter = activeFilters.some(
+      (f) => f.id === "ship_date_range"
+    );
+
+    if (!hasActiveDateFilter || !dateRange[0] || !dateRange[1]) {
+      notifications.show({
+        title: "Date Filter Required",
+        message:
+          "Please select and apply a Date Range before generating the PDF report.",
+        color: "orange",
+        icon: <FaCalendarCheck />,
+      });
+      return;
+    }
+
+    openPdf();
+  };
+
   // --- Column Defs ---
   const columnHelper = createColumnHelper<PlantTableView>();
 
   const columns = [
     columnHelper.accessor("ship_schedule", {
       header: "Ship Date",
-      size: 0, // Hidden column used for grouping logic
+      size: 0,
     }),
     columnHelper.accessor("has_shipped", {
       header: "Shipped",
@@ -259,7 +286,6 @@ export default function PlantShippingTable() {
     }),
     columnHelper.accessor("cabinet_species", { header: "Species", size: 110 }),
     columnHelper.accessor("cabinet_color", { header: "Color", size: 110 }),
-    // --- Production Actuals Indicators ---
     columnHelper.accessor("doors_completed_actual", {
       header: "D",
       size: 40,
@@ -335,7 +361,6 @@ export default function PlantShippingTable() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // --- Grouping Logic (By Ship Schedule) ---
   const groupedRows = useMemo(() => {
     if (!table.getRowModel().rows) return {};
     return table.getRowModel().rows.reduce((acc, row) => {
@@ -353,7 +378,7 @@ export default function PlantShippingTable() {
     return Object.keys(groupedRows).sort((a, b) => {
       if (a === "Unscheduled") return 1;
       if (b === "Unscheduled") return -1;
-      return dayjs(a).isAfter(dayjs(b)) ? 1 : -1; // ASC sort for shipping usually
+      return dayjs(a).isAfter(dayjs(b)) ? 1 : -1;
     });
   }, [groupedRows]);
 
@@ -377,23 +402,37 @@ export default function PlantShippingTable() {
       display="flex"
       style={{ flexDirection: "column" }}
     >
-      <Group mb="md">
-        <ThemeIcon
-          size={50}
-          radius="md"
-          variant="gradient"
-          gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+      <Group
+        mb="md"
+        style={{ display: "flex", justifyContent: "space-between" }}
+      >
+        <Group>
+          <ThemeIcon
+            size={50}
+            radius="md"
+            variant="gradient"
+            gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+          >
+            <FaTruckLoading size={26} />
+          </ThemeIcon>
+          <Stack gap={0}>
+            <Title order={2} style={{ color: "#343a40" }}>
+              Plant Shipping Schedule
+            </Title>
+            <Text size="sm" c="dimmed">
+              Manage outgoing shipments
+            </Text>
+          </Stack>
+        </Group>
+        {/* PRINT PREVIEW BUTTON */}
+        <Button
+          variant="outline"
+          color="violet"
+          onClick={handlePrintPreview}
+          leftSection={<FaPrint size={14} />}
         >
-          <FaTruckLoading size={26} />
-        </ThemeIcon>
-        <Stack gap={0}>
-          <Title order={2} style={{ color: "#343a40" }}>
-            Plant Shipping Schedule
-          </Title>
-          <Text size="sm" c="dimmed">
-            Manage outgoing shipments
-          </Text>
-        </Stack>
+          Print Preview
+        </Button>
       </Group>
 
       {/* FILTERS */}
@@ -440,6 +479,7 @@ export default function PlantShippingTable() {
               <Button variant="default" onClick={handleClearFilters}>
                 Clear Filters
               </Button>
+
               <Button
                 variant="filled"
                 color="blue"
@@ -479,7 +519,6 @@ export default function PlantShippingTable() {
           >
             {sortedGroupKeys.map((shipDate) => {
               const jobsInGroup = groupedRows[shipDate];
-              // Past due logic
               const isPastDue =
                 shipDate !== "Unscheduled" &&
                 dayjs(shipDate).isBefore(dayjs(), "day");
@@ -520,7 +559,6 @@ export default function PlantShippingTable() {
                       stickyHeader
                       highlightOnHover
                       withColumnBorders
-                      // FIX: Ensure header is below scrollbar
                       styles={{
                         th: { zIndex: 1 },
                       }}
@@ -593,6 +631,14 @@ export default function PlantShippingTable() {
           color="#4A00E0"
         />
       </Box>
+
+      {/* PDF PREVIEW MODAL */}
+      <ShippingPdfPreviewModal
+        opened={pdfOpened}
+        onClose={closePdf}
+        data={tableData}
+        dateRange={dateRange}
+      />
     </Box>
   );
 }

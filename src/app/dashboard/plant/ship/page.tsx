@@ -1,4 +1,4 @@
-import PlantTableShipping from "@/components/Plant/PlantTableShipping/PlantTableShipping";
+import PlantTableShipping from "@/components/Plant/PlantShippingTable/PlantShippingTable";
 
 export default function PlantPage() {
   return <PlantTableShipping />;

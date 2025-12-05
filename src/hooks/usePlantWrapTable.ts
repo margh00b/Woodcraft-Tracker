@@ -25,7 +25,8 @@ export function usePlantWrapTable({
     queryFn: async () => {
       let query = supabase
         .from("plant_table_view")
-        .select("*", { count: "exact" });
+        .select("*", { count: "exact" })
+        .not("wrap_date", "is", null);
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;

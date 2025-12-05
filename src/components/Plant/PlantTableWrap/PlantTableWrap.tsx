@@ -61,19 +61,13 @@ export default function PlantTableWrap() {
     null,
   ]);
 
-  const {
-    data: wrapData,
-    isLoading,
-    isError,
-    error,
-  } = usePlantWrapTable({
+  const { data, isLoading, isError, error } = usePlantWrapTable({
     pagination,
     columnFilters: activeFilters,
     sorting,
   });
-  const data = wrapData?.data.filter((item) => item.wrap_date !== null);
-  const tableData = (data as unknown as PlantTableView[]) || [];
-  const totalCount = data?.length || 0;
+  const tableData = (data?.data as PlantTableView[]) || [];
+  const totalCount = data?.count || 0;
   const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
   const toggleWrapMutation = useMutation({
