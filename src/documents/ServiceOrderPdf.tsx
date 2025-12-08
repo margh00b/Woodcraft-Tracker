@@ -125,9 +125,11 @@ const htmlStyles = {
   ul: {
     marginLeft: 10,
     marginBottom: 2,
+    fontSize: 10,
   },
   li: {
     marginLeft: 0,
+    fontSize: 10,
   },
   strong: {
     fontWeight: "bold" as const,
