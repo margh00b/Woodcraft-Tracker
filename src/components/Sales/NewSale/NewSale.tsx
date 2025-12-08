@@ -52,6 +52,7 @@ import {
   OrderTypeOptions,
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
+import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 type DoorStyleOptionData = Pick<Tables<"door_styles">, "id" | "name">;
 type ReferenceOption = {
@@ -352,7 +353,12 @@ export default function NewSale() {
     },
     validate: zodResolver(MasterOrderSchema),
   });
-
+  const { setIsDirty } = useNavigationGuard();
+  const isDirty = form.isDirty();
+  useEffect(() => {
+    setIsDirty(isDirty);
+    return () => setIsDirty(false);
+  }, [isDirty, setIsDirty]);
   useEffect(() => {
     if (form.values.stage !== "SOLD") {
       form.setFieldValue("manual_job_base", undefined as unknown as number);

@@ -11,7 +11,6 @@ import {
   Collapse,
   UnstyledButton,
 } from "@mantine/core";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   FaHome,
@@ -31,6 +30,9 @@ import { MdFactory, MdSupervisorAccount } from "react-icons/md";
 import { GoTools } from "react-icons/go";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { GrSchedules } from "react-icons/gr";
+
+// Import the Navigation Guard Hook
+import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 export type SidebarLink = {
   iconName: string;
@@ -66,10 +68,12 @@ function MainLink({ item }: { item: SidebarLink }) {
   const Icon = iconMap[item.iconName] || FaHome;
   const hasLinks = Array.isArray(item.links);
 
+  // Access the navigation guard to handle safe navigation
+  const { navigatePush } = useNavigationGuard();
+
   // Determine active state
   const isActive = item.path ? pathname === item.path : false;
 
-  // FIX: Ensure this is strictly boolean by using '?? false'
   const isChildActive = hasLinks
     ? item.links?.some((link) => pathname === link.path) ?? false
     : false;
@@ -170,13 +174,18 @@ function MainLink({ item }: { item: SidebarLink }) {
     );
   }
 
+  // UPDATED: Use UnstyledButton + navigatePush instead of Next.js Link
   return (
-    <Link
-      href={item.path || "#"}
-      style={{ textDecoration: "none", display: "block" }}
+    <UnstyledButton
+      onClick={() => {
+        if (item.path) {
+          navigatePush(item.path);
+        }
+      }}
+      style={{ width: "100%", display: "block" }}
     >
       {linkContent}
-    </Link>
+    </UnstyledButton>
   );
 }
 

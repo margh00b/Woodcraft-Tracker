@@ -18,6 +18,8 @@ import ClerkTokenProvider from "@/providers/ClerkTokenProvider";
 import SupabaseProvider from "@/providers/SupabaseProvider";
 import Sidebar, { SidebarLink } from "@/components/Sidebar/Sidebar";
 import { usePathname } from "next/navigation";
+import NavigationGuardProvider from "@/providers/NavigationGuardProvider";
+import TopNavigationBar from "@/components/Shared/TopNavigationBar/TopNavigationBar";
 
 const Quicksand = localFont({
   src: "../../public/Fonts/Quicksand/Quicksand-Regular.ttf",
@@ -118,22 +120,29 @@ export default function RootLayout({
               <QueryProvider>
                 <MantineProvider>
                   <Notifications />
-                  <div
-                    style={{
-                      display: "flex",
-                      minHeight: "100vh",
-                    }}
-                  >
-                    {showSidebar && <Sidebar links={dashboardLinks} />}
+                  <NavigationGuardProvider>
                     <div
                       style={{
-                        flex: 1,
-                        minWidth: 0,
+                        display: "flex",
+                        minHeight: "100vh",
                       }}
                     >
-                      {children}
+                      {showSidebar && <Sidebar links={dashboardLinks} />}
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        {showSidebar && <TopNavigationBar />}
+
+                        {/* Page Content */}
+                        <div style={{ flex: 1, position: "relative" }}>
+                          {children}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </NavigationGuardProvider>
                 </MantineProvider>
               </QueryProvider>
             </SupabaseProvider>

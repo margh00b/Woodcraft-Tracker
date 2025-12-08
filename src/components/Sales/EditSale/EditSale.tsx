@@ -53,6 +53,7 @@ import {
 import { useJobBaseNumbers } from "@/hooks/useJobBaseNumbers";
 import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
 import AddClient from "@/components/Clients/AddClient/AddClient";
+import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 const FEATURE_MANUAL_JOB_ENTRY = true;
 
@@ -381,11 +382,18 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     validate: zodResolver(MasterOrderSchema),
   });
 
+  const { setIsDirty } = useNavigationGuard();
+  const isDirty = form.isDirty();
+  useEffect(() => {
+    setIsDirty(isDirty);
+    return () => setIsDirty(false);
+  }, [isDirty, setIsDirty]);
+
   // Populate Form
   useEffect(() => {
     if (salesOrderData) {
       const cabinet = salesOrderData.cabinet;
-      form.setValues({
+      form.initialize({
         client_id: salesOrderData.client_id,
         stage: salesOrderData.stage,
         total: salesOrderData.total,
