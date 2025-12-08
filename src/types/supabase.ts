@@ -47,6 +47,13 @@ export type Database = {
             foreignKeyName: "backorders_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "backorders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "installation_table_view"
             referencedColumns: ["job_id"]
           },
@@ -444,6 +451,13 @@ export type Database = {
             foreignKeyName: "invoices_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "installation_table_view"
             referencedColumns: ["job_id"]
           },
@@ -522,6 +536,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_installation_id"
+            columns: ["installation_id"]
+            isOneToOne: true
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["installation_id"]
+          },
           {
             foreignKeyName: "fk_installation_id"
             columns: ["installation_id"]
@@ -716,6 +737,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_tracking_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
+          },
           {
             foreignKeyName: "purchase_tracking_job_id_fkey"
             columns: ["job_id"]
@@ -1013,6 +1041,13 @@ export type Database = {
             foreignKeyName: "service_orders_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "service_orders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "installation_table_view"
             referencedColumns: ["job_id"]
           },
@@ -1080,6 +1115,32 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      inspection_table_view: {
+        Row: {
+          inspection_completed: string | null
+          inspection_date: string | null
+          installation_date: string | null
+          installation_id: number | null
+          installer_company: string | null
+          installer_first_name: string | null
+          installer_id: number | null
+          installer_last_name: string | null
+          job_id: number | null
+          job_number: string | null
+          rush: boolean | null
+          shipping_client_name: string | null
+          site_address: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_installer"
+            columns: ["installer_id"]
+            isOneToOne: false
+            referencedRelation: "installers"
+            referencedColumns: ["installer_id"]
+          },
+        ]
       }
       installation_table_view: {
         Row: {
@@ -1247,6 +1308,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "sales_table_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_tracking_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "purchase_tracking_job_id_fkey"

@@ -1,5 +1,5 @@
-import SalesTable from "@/components/Sales/SalesTable/SalesTable";
+import ManagerDashboard from "@/components/Manager/ManagerDashboard";
 
-export default function Dashboard() {
-  return <SalesTable />;
+export default function ManagerDashboardPage() {
+  return <ManagerDashboard />;
 }

@@ -27,9 +27,9 @@ const dashboardLinks: SidebarLink[] = [
   {
     iconName: "MdSupervisorAccount",
     label: "Overview",
-    path: "/dashboard/manager",
+    path: "/dashboard",
   },
-  { iconName: "FaHome", label: "Sales", path: "/dashboard" },
+  { iconName: "FaHome", label: "Sales", path: "/dashboard/sales" },
   { iconName: "FaGears", label: "Production", path: "/dashboard/production" },
   {
     iconName: "FaShoppingBag",
@@ -46,7 +46,11 @@ const dashboardLinks: SidebarLink[] = [
     label: "Service Orders",
     path: "/dashboard/serviceorders",
   },
-
+  {
+    iconName: "FaClipboardCheck",
+    label: "Inspections",
+    path: "/dashboard/inspections",
+  },
   {
     iconName: "MdFactory",
     label: "Plant",

@@ -197,6 +197,11 @@ export default function RelatedBackorders({
                 leftSection={<FaPlus size={10} />}
                 onClick={onAddBackorder}
                 color="white"
+                styles={{
+                  root: {
+                    border: "none",
+                  },
+                }}
                 bg="linear-gradient(135deg, #FF5E62 0%, #FF9966 100%)"
               >
                 Add Backorder

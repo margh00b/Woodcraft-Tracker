@@ -5,44 +5,29 @@ import {
   ColumnFiltersState,
   SortingState,
 } from "@tanstack/react-table";
-import dayjs from "dayjs";
 
-interface UsePlantShippingTableParams {
+interface UseInspectionTableParams {
   pagination: PaginationState;
   columnFilters: ColumnFiltersState;
   sorting: SortingState;
 }
 
-export function usePlantShippingTable({
+export function useInspectionTable({
   pagination,
   columnFilters,
   sorting,
-}: UsePlantShippingTableParams) {
+}: UseInspectionTableParams) {
   const { supabase, isAuthenticated } = useSupabase();
 
   return useQuery({
-    queryKey: ["plant_shipping_table", pagination, columnFilters, sorting],
+    queryKey: ["inspection_table_view", pagination, columnFilters, sorting],
     queryFn: async () => {
       let query = supabase
-        .from("plant_table_view")
-        .select("*", { count: "exact" })
-        .not("ship_schedule", "is", null)
-        .not("has_shipped", "is", true)
-        .is("installation_completed", null);
+        .from("inspection_table_view" as any) 
+        .select("*", { count: "exact" });
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
-
-        if (id === "ship_date_range" && Array.isArray(value)) {
-          const [start, end] = value;
-          if (start && end) {
-            query = query
-              .gte("ship_schedule", dayjs(start).format("YYYY-MM-DD"))
-              .lte("ship_schedule", dayjs(end).format("YYYY-MM-DD"));
-          }
-          return;
-        }
-
         const valStr = String(value);
         if (!valStr) return;
 
@@ -50,13 +35,16 @@ export function usePlantShippingTable({
           case "job_number":
             query = query.ilike("job_number", `%${valStr}%`);
             break;
-          case "client":
-            query = query.ilike("client_name", `%${valStr}%`);
+          case "shipping_client_name":
+            query = query.ilike("shipping_client_name", `%${valStr}%`);
             break;
-          case "address":
+          case "installer_company":
             query = query.or(
-              `shipping_street.ilike.%${valStr}%,shipping_city.ilike.%${valStr}%`
+              `installer_company.ilike.%${valStr}%,installer_first_name.ilike.%${valStr}%,installer_last_name.ilike.%${valStr}%`
             );
+            break;
+          case "inspection_date":
+            query = query.eq("inspection_date", valStr);
             break;
           default:
             break;
@@ -67,7 +55,7 @@ export function usePlantShippingTable({
         const { id, desc } = sorting[0];
         query = query.order(id, { ascending: !desc });
       } else {
-        query = query.order("ship_schedule", { ascending: true });
+        query = query.order("inspection_date", { ascending: true });
       }
 
       const from = pagination.pageIndex * pagination.pageSize;

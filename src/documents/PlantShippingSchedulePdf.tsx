@@ -77,11 +77,9 @@ const styles = StyleSheet.create({
   },
 
   // Column Widths (Total ~100%)
-  colShipped: { width: "5%", textAlign: "center" },
-  colInstalled: { width: "5%", textAlign: "center" },
   colJob: { width: "8%" },
-  colClient: { width: "12%" },
-  colLoc: { width: "12%" },
+  colClient: { width: "17%" },
+  colLoc: { width: "17%" },
   colBox: { width: "5%" },
   colDoor: { width: "10%" },
   colSpec: { width: "12%" },
@@ -183,12 +181,6 @@ export const PlantShippingSchedulePdf = ({
 
               {/* Table Header */}
               <View style={styles.tableHeader}>
-                <Text style={[styles.headerText, styles.colShipped]}>
-                  Shipped
-                </Text>
-                <Text style={[styles.headerText, styles.colInstalled]}>
-                  Installed
-                </Text>
                 <Text style={[styles.headerText, styles.colJob]}>Job #</Text>
                 <Text style={[styles.headerText, styles.colClient]}>
                   Client
@@ -210,13 +202,6 @@ export const PlantShippingSchedulePdf = ({
               {/* Rows */}
               {rows.map((row) => (
                 <View style={styles.tableRow} key={row.job_id}>
-                  <View style={styles.colShipped}>
-                    <Checkbox checked={!!row.has_shipped} />
-                  </View>
-                  <View style={styles.colInstalled}>
-                    <Checkbox checked={!!row.installation_completed} />
-                  </View>
-
                   <Text style={[styles.rowText, styles.colJob]}>
                     {row.job_number}
                   </Text>
@@ -224,7 +209,7 @@ export const PlantShippingSchedulePdf = ({
                     {row.client_name}
                   </Text>
                   <Text style={[styles.rowText, styles.colLoc]}>
-                    {[row.shipping_city, row.shipping_province]
+                    {[row.shipping_street, row.shipping_city]
                       .filter(Boolean)
                       .join(", ")}
                   </Text>

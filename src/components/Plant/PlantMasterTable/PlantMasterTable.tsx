@@ -31,6 +31,7 @@ import {
   ThemeIcon,
   Title,
   SimpleGrid,
+  Anchor,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -45,6 +46,8 @@ import dayjs from "dayjs";
 import { DateInput } from "@mantine/dates";
 import { usePlantMasterTable } from "@/hooks/usePlantMasterTable";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useDisclosure } from "@mantine/hooks";
+import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
 
 // Define the shape based on our View
 type PlantMasterRow = {
@@ -74,7 +77,14 @@ export default function PlantMasterTable() {
   const [currentType, setCurrentType] = useState<"ALL" | "JOB" | "SERVICE">(
     "ALL"
   );
+  const [drawerJobId, setDrawerJobId] = useState<number | null>(null);
+  const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
+    useDisclosure(false);
 
+  const handleJobClick = (id: number) => {
+    setDrawerJobId(id);
+    openDrawer();
+  };
   // --- 1. Stats Query (Counts for Pills) ---
   const { data: stats } = useQuery({
     queryKey: ["plant_master_stats"],
@@ -180,11 +190,29 @@ export default function PlantMasterTable() {
     columnHelper.accessor("display_id", {
       header: "Ref #",
       size: 120,
-      cell: (info) => (
-        <Text fw={700} size="sm">
-          {info.getValue()}
-        </Text>
-      ),
+      cell: (info) => {
+        return info.row.original.record_type === "JOB" ? (
+          <Anchor
+            component="button"
+            size="sm"
+            fw={600}
+            w="100%"
+            style={{ textAlign: "left" }}
+            c="#6f00ffff"
+            onClick={(e) => {
+              e.stopPropagation();
+              const jobId = info.row.original.id;
+              if (jobId) handleJobClick(jobId);
+            }}
+          >
+            <Text fw={600}>{info.getValue()}</Text>
+          </Anchor>
+        ) : (
+          <Text fw={700} size="sm">
+            {info.getValue()}
+          </Text>
+        );
+      },
     }),
     columnHelper.accessor("client_name", {
       header: "Client",
@@ -519,6 +547,11 @@ export default function PlantMasterTable() {
           color="#4A00E0"
         />
       </Box>
+      <JobDetailsDrawer
+        jobId={drawerJobId}
+        opened={drawerOpened}
+        onClose={closeDrawer}
+      />
     </Box>
   );
 }

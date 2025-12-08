@@ -392,7 +392,7 @@ export default function ManagerDashboardClient() {
             </ThemeIcon>
             <Stack gap={0}>
               <Title order={2} style={{ color: "#2C2E33" }}>
-                Manager Dashboard
+                Overview
               </Title>
               <Text size="sm" c="dimmed">
                 Operational Overview & Sales Performance

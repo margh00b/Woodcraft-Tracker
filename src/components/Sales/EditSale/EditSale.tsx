@@ -576,7 +576,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       queryClient.invalidateQueries({
         queryKey: ["sales_table"],
       });
-      router.push("/dashboard");
+      router.push("/dashboard/sales");
     },
     onError: (err: any) => {
       notifications.show({
