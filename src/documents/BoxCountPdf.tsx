@@ -158,7 +158,7 @@ export const BoxCountReportPdf = ({
 
   const grandAvg =
     grandTotal.jobs > 0
-      ? (grandTotal.boxes / grandTotal.jobs).toFixed(1)
+      ? (grandTotal.boxes / grandTotal.jobs).toFixed(0)
       : "0.0";
 
   return (
@@ -199,8 +199,8 @@ export const BoxCountReportPdf = ({
             const row = groupedData[key];
             const avg =
               row.jobsCount > 0
-                ? (row.totalBoxes / row.jobsCount).toFixed(1)
-                : "0.0";
+                ? (row.totalBoxes / row.jobsCount).toFixed(0)
+                : "0";
 
             return (
               <View style={styles.tableRow} key={key}>
