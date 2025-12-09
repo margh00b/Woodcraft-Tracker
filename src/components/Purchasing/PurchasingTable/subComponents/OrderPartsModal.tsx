@@ -139,14 +139,16 @@ export const OrderPartsModal = ({
           <Box>
             <Paper withBorder p="xs" bg="gray.0" mb="sm" radius="md">
               <SimpleGrid cols={14} spacing="xs">
-                <Text
-                  size="xs"
-                  fw={700}
-                  c="dimmed"
-                  style={{ gridColumn: "span 2" }}
-                >
-                  PO #
-                </Text>
+                {(itemType === "handles" || itemType === "acc") && (
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c="dimmed"
+                    style={{ gridColumn: "span 3" }}
+                  >
+                    PO #
+                  </Text>
+                )}
                 <Text
                   size="xs"
                   fw={700}
@@ -155,14 +157,26 @@ export const OrderPartsModal = ({
                 >
                   QTY
                 </Text>
-                <Text
-                  size="xs"
-                  fw={700}
-                  c="dimmed"
-                  style={{ gridColumn: "span 6" }}
-                >
-                  PART DESCRIPTION
-                </Text>
+                {itemType === "handles" || itemType === "acc" ? (
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c="dimmed"
+                    style={{ gridColumn: "span 5" }}
+                  >
+                    PART DESCRIPTION
+                  </Text>
+                ) : (
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c="dimmed"
+                    style={{ gridColumn: "span 8" }}
+                  >
+                    PART DESCRIPTION
+                  </Text>
+                )}
+
                 <Text
                   size="xs"
                   fw={700}
@@ -184,15 +198,17 @@ export const OrderPartsModal = ({
                   spacing="xs"
                   style={{ alignItems: "center" }}
                 >
-                  <TextInput
-                    style={{ gridColumn: "span 2" }}
-                    value={item.po_number || ""}
-                    onChange={(e) =>
-                      updateItem(idx, "po_number", e.currentTarget.value)
-                    }
-                    placeholder="PO #"
-                    disabled={!isPoEditable}
-                  />
+                  {(itemType === "handles" || itemType === "acc") && (
+                    <TextInput
+                      style={{ gridColumn: "span 3" }}
+                      value={item.po_number || ""}
+                      onChange={(e) =>
+                        updateItem(idx, "po_number", e.currentTarget.value)
+                      }
+                      placeholder="PO #"
+                      disabled={!isPoEditable}
+                    />
+                  )}
                   <NumberInput
                     style={{ gridColumn: "span 2" }}
                     min={1}
@@ -200,14 +216,33 @@ export const OrderPartsModal = ({
                     onChange={(v) => updateItem(idx, "quantity", v)}
                     placeholder="1"
                   />
-                  <TextInput
-                    style={{ gridColumn: "span 6" }}
-                    value={item.part_description || ""}
-                    onChange={(e) =>
-                      updateItem(idx, "part_description", e.currentTarget.value)
-                    }
-                    placeholder="Description"
-                  />
+                  {itemType === "handles" || itemType === "acc" ? (
+                    <TextInput
+                      style={{ gridColumn: "span 5" }}
+                      value={item.part_description || ""}
+                      onChange={(e) =>
+                        updateItem(
+                          idx,
+                          "part_description",
+                          e.currentTarget.value
+                        )
+                      }
+                      placeholder="Description"
+                    />
+                  ) : (
+                    <TextInput
+                      style={{ gridColumn: "span 8" }}
+                      value={item.part_description || ""}
+                      onChange={(e) =>
+                        updateItem(
+                          idx,
+                          "part_description",
+                          e.currentTarget.value
+                        )
+                      }
+                      placeholder="Description"
+                    />
+                  )}
                   <TextInput
                     style={{ gridColumn: "span 3" }}
                     value={item.company || ""}
@@ -216,7 +251,6 @@ export const OrderPartsModal = ({
                     }
                     placeholder="Supplier"
                   />
-
                   <ActionIcon
                     color="red"
                     variant="subtle"
