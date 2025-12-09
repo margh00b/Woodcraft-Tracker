@@ -52,7 +52,6 @@ import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
 import RelatedBackorders from "@/components/Shared/RelatedBO/RelatedBO";
 import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
 import AddBackorderModal from "@/components/Installation/AddBOModal/AddBOModal";
-import { calculateBusinessDate } from "@/utils/subtractBizDays";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 // ---------- Types ----------
@@ -85,7 +84,6 @@ export default function EditProductionSchedulePage({
   const queryClient = useQueryClient();
   const [isBackorderPromptOpen, setIsBackorderPromptOpen] = useState(false);
   const [isAddBackorderModalOpen, setIsAddBackorderModalOpen] = useState(false);
-  const [isAutoFilledDate, setIsAutoFilledDate] = useState(false);
   // ---------- Fetch Job ----------
   const { data, isLoading } = useQuery<JobType>({
     queryKey: ["production-schedule", jobId],
@@ -187,30 +185,6 @@ export default function EditProductionSchedulePage({
   useEffect(() => {
     if (data?.production_schedule) form.setValues(data.production_schedule);
   }, [data]);
-  useEffect(() => {
-    if (form.values.doors_in_schedule && form.values.ship_schedule) {
-      const doorsindate = dayjs(form.values.doors_in_schedule);
-      const shipdate = dayjs(form.values.ship_schedule);
-      const doorsoutdate = calculateBusinessDate(doorsindate, 10, "add");
-      const assemblydate = calculateBusinessDate(shipdate, 4, "subtract");
-      const cutmelamedate = calculateBusinessDate(
-        dayjs(assemblydate),
-        7,
-        "subtract"
-      );
-      form.setFieldValue("doors_out_schedule", doorsoutdate);
-      form.setFieldValue("cut_finish_schedule", doorsoutdate);
-      form.setFieldValue("assembly_schedule", assemblydate);
-      form.setFieldValue("cut_melamine_schedule", cutmelamedate);
-      form.setFieldValue("paint_in_schedule", doorsoutdate);
-      form.setFieldValue("paint_out_schedule", assemblydate);
-      form.setFieldValue("assembly_schedule", assemblydate);
-      setIsAutoFilledDate(true);
-    }
-    if (!form.values.doors_in_schedule) {
-      setIsAutoFilledDate(false);
-    }
-  }, [form.values.doors_in_schedule]);
 
   // ---------- Timeline / Progress Logic ----------
   const actualSteps = useMemo(() => {
@@ -605,13 +579,6 @@ export default function EditProductionSchedulePage({
                                 new Date(date).getUTCDay() === 6
                               }
                               key={key}
-                              styles={{
-                                input: {
-                                  backgroundColor: isAutoFilledDate
-                                    ? "#cbffcbff"
-                                    : "white",
-                                },
-                              }}
                               label={label}
                               {...form.getInputProps(
                                 key as keyof SchedulingFormValues
