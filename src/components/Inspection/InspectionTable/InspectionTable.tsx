@@ -695,6 +695,7 @@ export default function InspectionTable() {
             label="Completion Date"
             placeholder="YYYY-MM-DD"
             value={completionDateInput}
+            
             onChange={(date) =>
               setCompletionDateInput(date ? dayjs(date).toDate() : null)
             }

@@ -274,14 +274,6 @@ export default function ReadOnlyServiceOrder({
                 </Text>
               </Stack>
             </Group>
-
-            <Button
-              variant="default"
-              leftSection={<FaArrowLeft size={12} />}
-              onClick={() => router.back()}
-            >
-              Back
-            </Button>
           </Group>
         </Container>
       </Paper>

@@ -233,15 +233,6 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
                 </Text>
               </Stack>
             </Group>
-
-            <Button
-              variant="default"
-              size="xs"
-              leftSection={<FaArrowLeft size={10} />}
-              onClick={() => router.back()}
-            >
-              Back to List
-            </Button>
           </Group>
         </Paper>
 

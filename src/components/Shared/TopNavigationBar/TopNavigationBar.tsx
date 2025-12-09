@@ -1,67 +1,69 @@
 "use client";
 
-import {
-  Group,
-  ActionIcon,
-  Tooltip,
-  Paper,
-  useMantineTheme,
-  rem,
-} from "@mantine/core";
+import { Group, ActionIcon, Tooltip, Paper, Center } from "@mantine/core";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 export default function TopNavigationBar() {
   const { navigateBack, navigateForward } = useNavigationGuard();
-  const theme = useMantineTheme();
+
+  const buttonStyle = {
+    transition: "all 0.2s ease",
+    border: "1px solid #dee2e6",
+    "&:hover": {
+      color: "#7048e8",
+    },
+  };
 
   return (
     <Paper
-      h={60}
-      px="md"
+      p="md"
+      mb="md"
       radius={0}
       style={{
-        borderBottom: `1px solid ${theme.colors.gray[2]}`,
-        backgroundColor: "white",
-        zIndex: 90,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between", // Prepared for future right-side content
+        width: "100%",
+        backgroundColor: "transparent",
+        borderBottom: "1px solid #dee2e6",
       }}
     >
-      <Group gap="xs">
-        <Tooltip label="Go Back" withArrow position="bottom" openDelay={400}>
-          <ActionIcon
-            variant="light"
-            color="violet" // Matches the Sidebar's purple theme
-            size="lg"
-            radius="xl" // Circular buttons are more modern
-            onClick={navigateBack}
-            aria-label="Go Back"
-            style={{
-              border: `1px solid ${theme.colors.violet[1]}`, // Subtle border definition
-            }}
-          >
-            <FaArrowLeft size={16} />
-          </ActionIcon>
-        </Tooltip>
+      <Center>
+        <Group gap="sm">
+          <Tooltip label="Go Back" withArrow position="bottom" openDelay={500}>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              radius="md"
+              w="auto"
+              px="md"
+              onClick={navigateBack}
+              aria-label="Go Back"
+              style={buttonStyle}
+            >
+              <FaArrowLeft size={14} />
+            </ActionIcon>
+          </Tooltip>
 
-        <Tooltip label="Go Forward" withArrow position="bottom" openDelay={400}>
-          <ActionIcon
-            variant="light"
-            color="violet"
-            size="lg"
-            radius="xl"
-            onClick={navigateForward}
-            aria-label="Go Forward"
-            style={{
-              border: `1px solid ${theme.colors.violet[1]}`,
-            }}
+          <Tooltip
+            label="Go Forward"
+            withArrow
+            position="bottom"
+            openDelay={500}
           >
-            <FaArrowRight size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              radius="md"
+              w="auto"
+              px="md"
+              onClick={navigateForward}
+              aria-label="Go Forward"
+              style={buttonStyle}
+            >
+              <FaArrowRight size={14} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </Center>
     </Paper>
   );
 }

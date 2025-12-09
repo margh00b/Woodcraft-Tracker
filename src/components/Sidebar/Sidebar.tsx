@@ -10,6 +10,7 @@ import {
   Box,
   Collapse,
   UnstyledButton,
+  Center,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
 import {
@@ -33,6 +34,7 @@ import { GrSchedules } from "react-icons/gr";
 
 // Import the Navigation Guard Hook
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
+import TopNavigationBar from "../Shared/TopNavigationBar/TopNavigationBar";
 
 export type SidebarLink = {
   iconName: string;
@@ -205,8 +207,12 @@ export default function Sidebar({ links }: SidebarProps) {
         display: "flex",
         flexDirection: "column",
         padding: theme.spacing.md,
+        paddingTop: 0,
       }}
     >
+      <Center>
+        <TopNavigationBar />
+      </Center>
       {/* Logo */}
       <Group justify="space-between" mb="lg">
         <Text fz="lg" fw={700} style={{ color: "white" }}>
