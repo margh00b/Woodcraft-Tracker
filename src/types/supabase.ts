@@ -689,7 +689,9 @@ export type Database = {
           is_received: boolean | null
           item_type: string
           part_description: string
+          po_number: string | null
           purchase_tracking_id: number
+          qty_received: number | null
           quantity: number | null
         }
         Insert: {
@@ -699,7 +701,9 @@ export type Database = {
           is_received?: boolean | null
           item_type: string
           part_description: string
+          po_number?: string | null
           purchase_tracking_id: number
+          qty_received?: number | null
           quantity?: number | null
         }
         Update: {
@@ -709,7 +713,9 @@ export type Database = {
           is_received?: boolean | null
           item_type?: string
           part_description?: string
+          po_number?: string | null
           purchase_tracking_id?: number
+          qty_received?: number | null
           quantity?: number | null
         }
         Relationships: [

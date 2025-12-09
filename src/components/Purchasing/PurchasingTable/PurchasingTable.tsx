@@ -35,7 +35,6 @@ import {
   SimpleGrid,
   Anchor,
   ActionIcon,
-  Checkbox,
   NumberInput,
   Paper,
 } from "@mantine/core";
@@ -59,10 +58,8 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { usePurchasingTable } from "@/hooks/usePurchasingTable";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
-import { Views, Tables, TablesInsert } from "@/types/db"; //
+import { Views, Tables, TablesInsert } from "@/types/db";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
-
-// ---------- Types ----------
 
 type PurchasingTableView = Views<"purchasing_table_view"> & {
   doors_received_incomplete_at: string | null;
@@ -71,17 +68,19 @@ type PurchasingTableView = Views<"purchasing_table_view"> & {
   acc_received_incomplete_at: string | null;
 };
 
-type PurchaseOrderItemRow = Tables<"purchase_order_items">;
+type PurchaseOrderItemRow = Tables<"purchase_order_items"> & {
+  po_number?: string | null;
+  qty_received?: number | null;
+};
 
 type PurchaseOrderItemState =
   | PurchaseOrderItemRow
-  | (TablesInsert<"purchase_order_items"> & { id?: number });
+  | (TablesInsert<"purchase_order_items"> & {
+      id?: number;
+      po_number?: string | null;
+      qty_received?: number | null;
+    });
 
-// ---------- Modals ----------
-
-/**
- * Modal to Add/Edit Purchase Parts (Ordered Phase)
- */
 const OrderPartsModal = ({
   opened,
   onClose,
@@ -98,7 +97,6 @@ const OrderPartsModal = ({
   const { supabase } = useSupabase();
   const [items, setItems] = useState<PurchaseOrderItemState[]>([]);
 
-  // FETCH
   const { data: fetchedItems, isLoading } = useQuery({
     queryKey: ["purchase_order_items", purchaseTrackingId, itemType],
     queryFn: async () => {
@@ -115,20 +113,19 @@ const OrderPartsModal = ({
     staleTime: Infinity,
   });
 
-  // SYNC
   useEffect(() => {
     if (fetchedItems && opened) {
       if (fetchedItems.length > 0) {
         setItems(fetchedItems);
       } else {
-        // Initialize with one empty draft item
         setItems([
           {
             quantity: 1,
             part_description: "",
-            company: "", // Default empty string for text input
+            company: "",
+            po_number: "",
             is_received: false,
-            // These are technically required by TablesInsert but handled by context or DB defaults
+            qty_received: 0,
             purchase_tracking_id: purchaseTrackingId!,
             item_type: itemType,
           },
@@ -144,7 +141,9 @@ const OrderPartsModal = ({
         quantity: 1,
         part_description: "",
         company: "",
+        po_number: "",
         is_received: false,
+        qty_received: 0,
         purchase_tracking_id: purchaseTrackingId!,
         item_type: itemType,
       },
@@ -166,6 +165,8 @@ const OrderPartsModal = ({
     newItems[index] = { ...newItems[index], [field]: value };
     setItems(newItems);
   };
+
+  const isPoEditable = ["handles", "acc"].includes(itemType);
 
   return (
     <Modal
@@ -198,7 +199,15 @@ const OrderPartsModal = ({
         ) : (
           <Box>
             <Paper withBorder p="xs" bg="gray.0" mb="sm" radius="md">
-              <SimpleGrid cols={12} spacing="xs">
+              <SimpleGrid cols={14} spacing="xs">
+                <Text
+                  size="xs"
+                  fw={700}
+                  c="dimmed"
+                  style={{ gridColumn: "span 2" }}
+                >
+                  PO #
+                </Text>
                 <Text
                   size="xs"
                   fw={700}
@@ -211,7 +220,7 @@ const OrderPartsModal = ({
                   size="xs"
                   fw={700}
                   c="dimmed"
-                  style={{ gridColumn: "span 4" }}
+                  style={{ gridColumn: "span 6" }}
                 >
                   PART DESCRIPTION
                 </Text>
@@ -219,10 +228,11 @@ const OrderPartsModal = ({
                   size="xs"
                   fw={700}
                   c="dimmed"
-                  style={{ gridColumn: "span 5" }}
+                  style={{ gridColumn: "span 3" }}
                 >
-                  SUPPLIER / COMPANY
+                  SUPPLIER
                 </Text>
+
                 <Box style={{ gridColumn: "span 1" }} />
               </SimpleGrid>
             </Paper>
@@ -231,10 +241,19 @@ const OrderPartsModal = ({
               {items.map((item, idx) => (
                 <SimpleGrid
                   key={idx}
-                  cols={12}
+                  cols={14}
                   spacing="xs"
                   style={{ alignItems: "center" }}
                 >
+                  <TextInput
+                    style={{ gridColumn: "span 2" }}
+                    value={item.po_number || ""}
+                    onChange={(e) =>
+                      updateItem(idx, "po_number", e.currentTarget.value)
+                    }
+                    placeholder="PO #"
+                    disabled={!isPoEditable}
+                  />
                   <NumberInput
                     style={{ gridColumn: "span 2" }}
                     min={1}
@@ -243,21 +262,22 @@ const OrderPartsModal = ({
                     placeholder="1"
                   />
                   <TextInput
-                    style={{ gridColumn: "span 4" }}
+                    style={{ gridColumn: "span 6" }}
                     value={item.part_description || ""}
                     onChange={(e) =>
                       updateItem(idx, "part_description", e.currentTarget.value)
                     }
-                    placeholder="e.g. Shaker Door 18x24"
+                    placeholder="Description"
                   />
                   <TextInput
-                    style={{ gridColumn: "span 5" }}
+                    style={{ gridColumn: "span 3" }}
                     value={item.company || ""}
                     onChange={(e) =>
                       updateItem(idx, "company", e.currentTarget.value)
                     }
-                    placeholder="e.g. Richelieu"
+                    placeholder="Supplier"
                   />
+
                   <ActionIcon
                     color="red"
                     variant="subtle"
@@ -301,9 +321,6 @@ const OrderPartsModal = ({
   );
 };
 
-/**
- * Modal to Receive Incomplete Parts
- */
 const IncompletePartsModal = ({
   opened,
   onClose,
@@ -343,9 +360,12 @@ const IncompletePartsModal = ({
     }
   }, [fetchedItems, opened]);
 
-  const toggleReceived = (index: number) => {
+  const updateReceivedQty = (index: number, val: number | string) => {
     const newItems = [...items];
-    newItems[index].is_received = !newItems[index].is_received;
+    const qty = typeof val === "number" ? val : 0;
+    newItems[index].qty_received = qty;
+    // Auto-update legacy boolean for consistency, though logic relies on qty now
+    newItems[index].is_received = qty >= (newItems[index].quantity || 0);
     setItems(newItems);
   };
 
@@ -377,9 +397,9 @@ const IncompletePartsModal = ({
           style={{ borderColor: "var(--mantine-color-orange-2)" }}
         >
           <Text size="sm" c="orange.9" lh={1.4}>
-            Check off items that have been <b>successfully received</b>. The
-            order status will update to <b>Complete</b> only when all items are
-            checked.
+            Enter the <b>Quantity Received</b> for each item. The order status
+            will automatically update to <b>Complete</b> only when all items are
+            fully received.
           </Text>
         </Paper>
 
@@ -393,100 +413,94 @@ const IncompletePartsModal = ({
           </Center>
         ) : (
           <Box>
-            {/* Header Row */}
             <SimpleGrid cols={12} spacing="xs" mb="xs" mt="xs">
               <Text
                 size="xs"
                 fw={700}
                 c="dimmed"
-                style={{ gridColumn: "span 1", textAlign: "center" }}
+                style={{ gridColumn: "span 2", textAlign: "center" }}
               >
-                REC
+                ORDERED
               </Text>
               <Text
                 size="xs"
                 fw={700}
                 c="dimmed"
-                style={{ gridColumn: "span 1", textAlign: "center" }}
+                style={{ gridColumn: "span 3", textAlign: "center" }}
               >
-                QTY
+                RECEIVED
               </Text>
               <Text
                 size="xs"
                 fw={700}
                 c="dimmed"
-                style={{ gridColumn: "span 6" }}
+                style={{ gridColumn: "span 7" }}
               >
                 PART DESCRIPTION
               </Text>
-              <Text
-                size="xs"
-                fw={700}
-                c="dimmed"
-                style={{ gridColumn: "span 4" }}
-              >
-                COMPANY
-              </Text>
             </SimpleGrid>
 
-            {/* Items List */}
             <Stack gap={6}>
-              {items.map((item, idx) => (
-                <Paper
-                  key={idx}
-                  withBorder
-                  p={6}
-                  radius="sm"
-                  style={{
-                    backgroundColor: item.is_received
-                      ? "var(--mantine-color-green-0)"
-                      : "white",
-                    borderColor: item.is_received
-                      ? "var(--mantine-color-green-3)"
-                      : "var(--mantine-color-gray-3)",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <SimpleGrid
-                    cols={12}
-                    spacing="xs"
-                    style={{ alignItems: "center" }}
+              {items.map((item, idx) => {
+                const isFullyReceived =
+                  (item.qty_received || 0) >= (item.quantity || 0);
+                return (
+                  <Paper
+                    key={idx}
+                    withBorder
+                    p={6}
+                    radius="sm"
+                    style={{
+                      backgroundColor: isFullyReceived
+                        ? "var(--mantine-color-green-0)"
+                        : "white",
+                      borderColor: isFullyReceived
+                        ? "var(--mantine-color-green-3)"
+                        : "var(--mantine-color-gray-3)",
+                      transition: "all 0.2s ease",
+                    }}
                   >
-                    <Center style={{ gridColumn: "span 1" }}>
-                      <Checkbox
+                    <SimpleGrid
+                      cols={12}
+                      spacing="xs"
+                      style={{ alignItems: "center" }}
+                    >
+                      <Text
+                        fw={600}
                         size="sm"
-                        checked={item.is_received || false}
-                        onChange={() => toggleReceived(idx)}
-                        color="green"
-                        aria-label="Mark Received"
-                        styles={{ input: { cursor: "pointer" } }}
-                      />
-                    </Center>
-                    <Text
-                      fw={600}
-                      size="sm"
-                      style={{ gridColumn: "span 1", textAlign: "center" }}
-                    >
-                      {item.quantity}
-                    </Text>
-                    <Text
-                      size="sm"
-                      fw={500}
-                      style={{ gridColumn: "span 6", lineHeight: 1.2 }}
-                    >
-                      {item.part_description}
-                    </Text>
-                    <Text
-                      size="sm"
-                      c="dimmed"
-                      style={{ gridColumn: "span 4", lineHeight: 1.2 }}
-                      truncate
-                    >
-                      {item.company || "—"}
-                    </Text>
-                  </SimpleGrid>
-                </Paper>
-              ))}
+                        style={{ gridColumn: "span 2", textAlign: "center" }}
+                      >
+                        {item.quantity}
+                      </Text>
+                      <Box style={{ gridColumn: "span 3" }}>
+                        <NumberInput
+                          size="xs"
+                          min={0}
+                          max={item.quantity || undefined}
+                          value={item.qty_received || 0}
+                          onChange={(val) => updateReceivedQty(idx, val)}
+                          styles={{ input: { textAlign: "center" } }}
+                        />
+                      </Box>
+                      <Stack gap={0} style={{ gridColumn: "span 7" }}>
+                        <Text size="sm" fw={500} style={{ lineHeight: 1.2 }}>
+                          {item.part_description}
+                        </Text>
+                        {item.po_number && (
+                          <Badge
+                            size="xs"
+                            variant="outline"
+                            color="gray"
+                            mt={2}
+                          >
+                            PO: {item.po_number}
+                          </Badge>
+                        )}
+                      </Stack>
+                    </SimpleGrid>
+                  </Paper>
+                );
+              })}
             </Stack>
           </Box>
         )}
@@ -517,8 +531,6 @@ const IncompletePartsModal = ({
     </Modal>
   );
 };
-
-// ---------- Status Cell Component ----------
 
 const StatusCell = ({
   orderedAt,
@@ -623,13 +635,10 @@ const StatusCell = ({
   );
 };
 
-// ---------- Main Table Component ----------
-
 export default function PurchasingTable() {
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
 
-  // State
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 20,
@@ -638,7 +647,6 @@ export default function PurchasingTable() {
   const [inputFilters, setInputFilters] = useState<ColumnFiltersState>([]);
   const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
 
-  // Modals
   const [drawerJobId, setDrawerJobId] = useState<number | null>(null);
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -658,7 +666,6 @@ export default function PurchasingTable() {
     { open: openIncompleteModal, close: closeIncompleteModal },
   ] = useDisclosure(false);
 
-  // Context
   const [activeRowContext, setActiveRowContext] = useState<{
     id: number;
     keyPrefix: "doors" | "glass" | "handles" | "acc";
@@ -670,7 +677,6 @@ export default function PurchasingTable() {
     openDrawer();
   };
 
-  // Filters
   const setInputFilterValue = (
     id: string,
     value: string | undefined | null
@@ -697,7 +703,6 @@ export default function PurchasingTable() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  // Data
   const { data, isLoading, isError, error } = usePurchasingTable({
     pagination,
     columnFilters: activeFilters,
@@ -707,7 +712,6 @@ export default function PurchasingTable() {
   const tableData = (data?.data as PurchasingTableView[]) || [];
   const pageCount = Math.ceil((data?.count || 0) / pagination.pageSize);
 
-  // Mutations
   const updateStatusMutation = useMutation({
     mutationFn: async ({
       id,
@@ -754,24 +758,23 @@ export default function PurchasingTable() {
       trackingId: number;
       type: string;
     }) => {
-      // 1. Delete existing for this tracking/type
       await supabase
         .from("purchase_order_items")
         .delete()
         .eq("purchase_tracking_id", trackingId)
         .eq("item_type", type);
 
-      // 2. Insert items
       if (items.length > 0) {
-        // Map to valid Insert type
         const itemsToInsert: TablesInsert<"purchase_order_items">[] = items.map(
           (i) => ({
             purchase_tracking_id: trackingId,
             item_type: type,
-            quantity: i.quantity || 1, // Default if undefined
+            quantity: i.quantity || 1,
             part_description: i.part_description,
             company: i.company,
             is_received: i.is_received || false,
+            po_number: i.po_number || null,
+            qty_received: i.qty_received || 0,
           })
         );
         const { error } = await supabase
@@ -788,40 +791,39 @@ export default function PurchasingTable() {
 
   const updateIncompleteItemsMutation = useMutation({
     mutationFn: async ({ items }: { items: PurchaseOrderItemState[] }) => {
-      // Only update items that actually have an ID (exist in DB)
       const updates = items
         .filter((i) => i.id !== undefined)
         .map((i) => ({
           id: i.id!,
-          is_received: i.is_received,
+          qty_received: i.qty_received,
+          is_received: (i.qty_received || 0) >= (i.quantity || 0),
         }));
 
       for (const update of updates) {
         await supabase
           .from("purchase_order_items")
-          .update({ is_received: update.is_received })
+          .update({
+            is_received: update.is_received,
+            qty_received: update.qty_received,
+          })
           .eq("id", update.id);
       }
     },
   });
 
-  // --- Handlers ---
-
   const handleSaveOrder = async (items: PurchaseOrderItemState[]) => {
     if (!activeRowContext) return;
     const { id, keyPrefix, initialComment } = activeRowContext;
 
-    // 1. Save Items
     await saveOrderItemsMutation.mutateAsync({
       items,
       trackingId: id,
       type: keyPrefix,
     });
 
-    // 2. Determine New Status
     const allReceived =
-      items.length > 0 && items.every((i) => i.is_received === true);
-
+      items.length > 0 &&
+      items.every((i) => (i.qty_received || 0) >= (i.quantity || 0));
     const currentRow = tableData.find((r) => r.purchase_check_id === id);
     const wasReceived = !!currentRow?.[`${keyPrefix}_received_at`];
 
@@ -832,12 +834,10 @@ export default function PurchasingTable() {
     let updates: any = {};
     let logMsg = "";
 
-    // Logic: If ANY item is NOT received, we cannot be "Complete".
-    if (!allReceived) {
-      updates[ordKey] = new Date().toISOString();
+    updates[ordKey] = new Date().toISOString();
 
+    if (!allReceived) {
       if (wasReceived) {
-        // Downgrade: Complete -> Incomplete
         updates[recKey] = null;
         updates[incKey] = new Date().toISOString();
         logMsg = `${keyPrefix.toUpperCase()} Updated: New parts added, status changed to Incomplete.`;
@@ -845,7 +845,6 @@ export default function PurchasingTable() {
         logMsg = `${keyPrefix.toUpperCase()} Order Details Updated`;
       }
     } else {
-      updates[ordKey] = new Date().toISOString();
       logMsg = `${keyPrefix.toUpperCase()} Order Details Updated`;
     }
 
@@ -866,12 +865,12 @@ export default function PurchasingTable() {
     if (!activeRowContext) return;
     const { id, keyPrefix, initialComment } = activeRowContext;
 
-    // 1. Update Items
     await updateIncompleteItemsMutation.mutateAsync({ items });
 
-    // 2. Update Parent Status
+    // Use Quantity logic for completion
     const allReceived =
-      items.length > 0 && items.every((i) => i.is_received === true);
+      items.length > 0 &&
+      items.every((i) => (i.qty_received || 0) >= (i.quantity || 0));
     const recKey = `${keyPrefix}_received_at`;
     const incKey = `${keyPrefix}_received_incomplete_at`;
 
@@ -879,12 +878,10 @@ export default function PurchasingTable() {
     let logMsg = "";
 
     if (allReceived) {
-      // Upgrade to Complete
       updates[recKey] = new Date().toISOString();
       updates[incKey] = null;
       logMsg = `${keyPrefix.toUpperCase()} Status Upgrade: All items received.`;
     } else {
-      // Stay/Become Incomplete
       updates[recKey] = null;
       updates[incKey] = new Date().toISOString();
       logMsg = `${keyPrefix.toUpperCase()} Partial Receipt Logged.`;
@@ -902,7 +899,6 @@ export default function PurchasingTable() {
     closeIncompleteModal();
   };
 
-  // Columns
   const columnHelper = createColumnHelper<PurchasingTableView>();
 
   const createStatusColumn = (
@@ -1250,7 +1246,6 @@ export default function PurchasingTable() {
 
       {/* --- Modals --- */}
 
-      {/* 1. Comment History Modal */}
       <Modal
         opened={commentModalOpened}
         onClose={closeCommentModal}
@@ -1294,7 +1289,6 @@ export default function PurchasingTable() {
         </Stack>
       </Modal>
 
-      {/* 2. Order Parts Modal */}
       <OrderPartsModal
         opened={orderModalOpened}
         onClose={closeOrderModal}
@@ -1303,7 +1297,6 @@ export default function PurchasingTable() {
         onSave={handleSaveOrder}
       />
 
-      {/* 3. Incomplete Items Modal */}
       <IncompletePartsModal
         opened={incompleteModalOpened}
         onClose={closeIncompleteModal}
