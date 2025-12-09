@@ -231,7 +231,7 @@ export default function JobAttachments({ jobId }: { jobId: number }) {
               maxSize={5 * 1024 ** 2}
               accept={PDF_MIME_TYPE}
               loading={isUploading}
-              multiple={false}
+              multiple
               disabled={!category} // Disable interaction
               h={36}
               p={0}
