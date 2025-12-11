@@ -36,7 +36,7 @@ export default function ClerkTokenProvider({
 
         // refresh + get token
         const supabaseToken = await getToken({
-          template: "supabase-test",
+          template: "supabase",
           skipCache: true,
         });
 

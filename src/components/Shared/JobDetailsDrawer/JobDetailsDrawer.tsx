@@ -131,7 +131,7 @@ const CompactDateBlock = ({
       {label}
     </Text>
     <Text size="sm" fw={600} c={date ? "dark" : "dimmed"}>
-      {date ? dayjs(date).format("MMM D") : "—"}
+      {date ? dayjs(date).format("MMM D, YYYY") : "—"}
     </Text>
   </Box>
 );
