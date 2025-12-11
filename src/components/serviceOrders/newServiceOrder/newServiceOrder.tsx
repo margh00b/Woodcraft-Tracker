@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -25,11 +25,11 @@ import {
   ActionIcon,
   Table,
   Box,
-  Switch,
   Tooltip,
-  rem,
   Collapse,
   Divider,
+  Switch,
+  rem,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { FaPlus, FaTrash, FaTools, FaSave, FaCheck } from "react-icons/fa";
@@ -38,7 +38,9 @@ import {
   ServiceOrderFormValues,
   ServiceOrderSchema,
 } from "@/zod/serviceorder.schema";
-import { useJobs } from "@/hooks/useJobs";
+
+import { useJobSearch } from "@/hooks/useJobSearch";
+import { useInstallerSearch } from "@/hooks/useInstallerSearch";
 import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
 import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
 import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
@@ -63,29 +65,6 @@ export default function NewServiceOrder({
     isAddInstallerOpen,
     { open: openAddInstaller, close: closeAddInstaller },
   ] = useDisclosure(false);
-
-  const { data: jobOptions, isLoading: jobsLoading } = useJobs(isAuthenticated);
-
-  const { data: installersData, isLoading: installersLoading } = useQuery({
-    queryKey: ["installers-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("installers")
-        .select("installer_id, company_name, first_name, last_name")
-        .eq("is_active", true)
-        .order("company_name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAuthenticated,
-  });
-
-  const installerOptions = useMemo(() => {
-    return (installersData || []).map((i) => ({
-      value: String(i.installer_id),
-      label: i.company_name || `${i.first_name} ${i.last_name}`,
-    }));
-  }, [installersData]);
 
   const form = useForm<ServiceOrderFormValues>({
     initialValues: {
@@ -124,6 +103,21 @@ export default function NewServiceOrder({
     validate: zodResolver(ServiceOrderSchema),
   });
 
+  const {
+    options: jobOptions,
+    isLoading: jobsLoading,
+    setSearch: setJobSearch,
+    search: jobSearch,
+  } = useJobSearch(form.values.job_id);
+
+  const {
+    options: installerOptions,
+    isLoading: installersLoading,
+    setSearch: setInstallerSearch,
+    search: installerSearch,
+  } = useInstallerSearch(form.values.installer_id);
+  // ------------------------------
+
   const { setIsDirty } = useNavigationGuard();
   const isDirty = form.isDirty();
   useEffect(() => {
@@ -154,6 +148,7 @@ export default function NewServiceOrder({
     fetchHomeownerInfo();
   }, [form.values.job_id, supabase]);
 
+  // Fetch Job Details & Generate SO#
   useEffect(() => {
     const fetchSoNumber = async () => {
       const jobId = form.values.job_id;
@@ -228,8 +223,7 @@ export default function NewServiceOrder({
                 colors(Name)
               )
             )
-          )
-        `
+          `
           )
           .eq("id", jobId)
           .single();
@@ -271,7 +265,6 @@ export default function NewServiceOrder({
     mutationFn: async (values: ServiceOrderFormValues) => {
       if (!user) throw new Error("User not authenticated");
 
-      // 1. Create Service Order
       const { data: soData, error: soError } = await supabase
         .from("service_orders")
         .insert({
@@ -299,7 +292,6 @@ export default function NewServiceOrder({
       if (soError) throw new Error(`Create Order Error: ${soError.message}`);
       const newId = soData.service_order_id;
 
-      // 2. Insert Parts if any
       if (values.parts && values.parts.length > 0) {
         const partsPayload = values.parts.map((p) => ({
           service_order_id: newId,
@@ -393,7 +385,6 @@ export default function NewServiceOrder({
         }}
       >
         <Stack gap="md">
-          {/* Header */}
           <Paper p="md" radius="md" shadow="xs" style={{ background: "#fff" }}>
             <Group>
               <FaTools size={24} color="#4A00E0" />
@@ -403,7 +394,6 @@ export default function NewServiceOrder({
             </Group>
           </Paper>
 
-          {/* Collapsible Info */}
           <Collapse in={!!shipping || !!cabinet} transitionDuration={200}>
             <Paper
               p="md"
@@ -422,18 +412,23 @@ export default function NewServiceOrder({
             </Paper>
           </Collapse>
 
-          {/* Main Form Fields */}
           <Paper p="md" radius="md" shadow="xl" bg="gray.1">
             <Stack>
               <Fieldset legend="Job & Identifier" variant="filled" bg="white">
                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                   <Select
                     label="Select Job"
-                    placeholder="Search by Job Number"
-                    data={jobOptions || []}
+                    placeholder="Type to search..."
+                    data={jobOptions}
                     searchable
                     clearable
                     withAsterisk
+                    searchValue={jobSearch}
+                    onSearchChange={setJobSearch}
+                    nothingFoundMessage={
+                      jobsLoading ? "Searching..." : "No jobs found"
+                    }
+                    rightSection={jobsLoading ? <Loader size={16} /> : null}
                     {...form.getInputProps("job_id")}
                     onClear={() => setJobData(null)}
                   />
@@ -458,20 +453,13 @@ export default function NewServiceOrder({
               </Fieldset>
 
               <Fieldset legend="Logistics" variant="filled" bg="white">
-                {/* ... inside your existing form ... */}
-
-                {/* Use a Box to contain the responsive layout */}
                 <Box mt="md">
-                  {/* 1. Desktop View (Visible from 'lg' breakpoint up) 
-      Using Group with align="stretch" allows vertical dividers to work.
-  */}
                   <Group
                     visibleFrom="lg"
                     align="stretch"
                     wrap="nowrap"
                     gap="lg"
                   >
-                    {/* COLUMN 1: INSTALLER & DATES */}
                     <Stack gap="sm" style={{ flex: 1 }}>
                       <Group align="flex-end" gap="xs" wrap="nowrap">
                         <Select
@@ -479,12 +467,22 @@ export default function NewServiceOrder({
                           placeholder={
                             form.values.installer_requested
                               ? "Installer Requested"
-                              : "Select Service Tech"
+                              : "Search Installer..."
                           }
                           data={installerOptions}
                           searchable
                           clearable
                           disabled={form.values.installer_requested}
+                          searchValue={installerSearch}
+                          onSearchChange={setInstallerSearch}
+                          nothingFoundMessage={
+                            installersLoading
+                              ? "Searching..."
+                              : "No installer found"
+                          }
+                          rightSection={
+                            installersLoading ? <Loader size={16} /> : null
+                          }
                           style={{ flex: 1 }}
                           {...form.getInputProps("installer_id")}
                         />
@@ -547,10 +545,8 @@ export default function NewServiceOrder({
                       </SimpleGrid>
                     </Stack>
 
-                    {/* DIVIDER 1 */}
                     <Divider orientation="vertical" />
 
-                    {/* COLUMN 2: SERVICE DETAILS */}
                     <Group align="stretch" gap="xs" style={{ flex: 1 }}>
                       <Stack gap={4} style={{ flex: 1 }}>
                         <TextInput
@@ -564,7 +560,6 @@ export default function NewServiceOrder({
                         />
                       </Stack>
 
-                      {/* Inner Divider */}
                       <Divider orientation="vertical" />
 
                       <Stack gap={4} style={{ flex: 1 }}>
@@ -580,31 +575,25 @@ export default function NewServiceOrder({
                       </Stack>
                     </Group>
 
-                    {/* DIVIDER 2 */}
                     <Divider orientation="vertical" />
 
-                    {/* COLUMN 3: HOMEOWNER INFO */}
                     <Box style={{ flex: 1 }}>
                       <HomeOwnersInfo form={form} />
                     </Box>
                   </Group>
 
-                  {/* 2. Mobile/Tablet View (Hidden from 'lg' up) 
-      Stacks items vertically, hides dividers.
-  */}
                   <Stack hiddenFrom="lg" gap="xl">
-                    {/* Mobile Col 1 */}
                     <Stack gap="sm">
-                      {/* ... (Repeat inputs or extract to a sub-component to avoid code duplication) ... */}
-                      {/* For brevity, use the same input logic here as above if not extracting components */}
                       <Group align="flex-end" gap="xs" wrap="nowrap">
                         <Select
                           label="Assign Service Tech"
                           data={installerOptions}
                           {...form.getInputProps("installer_id")}
+                          searchable
+                          searchValue={installerSearch}
+                          onSearchChange={setInstallerSearch}
                           style={{ flex: 1 }}
                         />
-                        {/* ... Actions ... */}
                       </Group>
                       <SimpleGrid cols={2}>
                         <DateInput
@@ -647,6 +636,7 @@ export default function NewServiceOrder({
                   </Stack>
                 </Box>
 
+                {/* ... RichText, Switches, etc ... */}
                 <Box mt="md">
                   <CustomRichTextEditor
                     label="Comments"
@@ -683,7 +673,7 @@ export default function NewServiceOrder({
             </Stack>
           </Paper>
 
-          {/* Parts Table */}
+          {/* Parts Table (unchanged) */}
           <Paper p="md" radius="md" shadow="xl">
             <Group justify="space-between" mb="md">
               <Text fw={600}>Required Parts</Text>
@@ -799,6 +789,7 @@ export default function NewServiceOrder({
         onClose={() => {
           closeAddInstaller();
           queryClient.invalidateQueries({ queryKey: ["installers-list"] });
+          queryClient.invalidateQueries({ queryKey: ["installer-search"] });
         }}
       />
     </Container>

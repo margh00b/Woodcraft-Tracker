@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
@@ -47,7 +47,10 @@ import {
   ServiceOrderFormValues,
   ServiceOrderSchema,
 } from "@/zod/serviceorder.schema";
-import { useJobs } from "@/hooks/useJobs";
+
+import { useJobSearch } from "@/hooks/useJobSearch";
+import { useInstallerSearch } from "@/hooks/useInstallerSearch";
+
 import CustomRichTextEditor from "@/components/RichTextEditor/RichTextEditor";
 import PdfPreview from "../PdfPreview/PdfPreview";
 import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
@@ -97,29 +100,48 @@ export default function EditServiceOrder({
     { open: openAddInstaller, close: closeAddInstaller },
   ] = useDisclosure(false);
 
-  const { data: jobOptions, isLoading: jobsLoading } = useJobs(isAuthenticated);
-
-  const { data: installersData, isLoading: installersLoading } = useQuery({
-    queryKey: ["installers-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("installers")
-        .select("installer_id, company_name, first_name, last_name")
-        .eq("is_active", true)
-        .order("company_name");
-      if (error) throw error;
-      return data;
+  // --- Form Setup ---
+  const form = useForm<ServiceOrderFormValues>({
+    initialValues: {
+      job_id: "",
+      service_order_number: "",
+      due_date: null,
+      installer_id: null,
+      service_type: "",
+      service_type_detail: "",
+      service_by: "",
+      service_by_detail: "",
+      hours_estimated: 0,
+      chargeable: false,
+      is_warranty_so: false,
+      installer_requested: false,
+      warranty_order_cost: undefined,
+      comments: "",
+      parts: [],
+      homeowner_name: "",
+      homeowner_phone: "",
+      homeowner_email: "",
     },
-    enabled: isAuthenticated,
+    validate: zodResolver(ServiceOrderSchema),
   });
 
-  const installerOptions = useMemo(() => {
-    return (installersData || []).map((i) => ({
-      value: String(i.installer_id),
-      label: i.company_name || `${i.first_name} ${i.last_name}`,
-    }));
-  }, [installersData]);
+  // --- 2. Use Optimized Hooks with Form Values ---
+  // These hooks automatically handle fetching the selected item if it's not in the initial search list
+  const {
+    options: jobOptions,
+    isLoading: jobsLoading,
+    setSearch: setJobSearch,
+    search: jobSearch,
+  } = useJobSearch(form.values.job_id);
 
+  const {
+    options: installerOptions,
+    isLoading: installersLoading,
+    setSearch: setInstallerSearch,
+    search: installerSearch,
+  } = useInstallerSearch(form.values.installer_id);
+
+  // --- Fetch Main Service Order Data ---
   const { data: serviceOrderData, isLoading: soLoading } =
     useQuery<ServiceOrderData>({
       queryKey: ["service_order", serviceOrderId],
@@ -184,30 +206,6 @@ export default function EditServiceOrder({
       enabled: isAuthenticated,
     });
 
-  const form = useForm<ServiceOrderFormValues>({
-    initialValues: {
-      job_id: "",
-      service_order_number: "",
-      due_date: null,
-      installer_id: null,
-      service_type: "",
-      service_type_detail: "",
-      service_by: "",
-      service_by_detail: "",
-      hours_estimated: 0,
-      chargeable: false,
-      is_warranty_so: false,
-      installer_requested: false,
-      warranty_order_cost: undefined,
-      comments: "",
-      parts: [],
-      homeowner_name: "",
-      homeowner_phone: "",
-      homeowner_email: "",
-    },
-    validate: zodResolver(ServiceOrderSchema),
-  });
-
   const { setIsDirty } = useNavigationGuard();
   const isDirty = form.isDirty();
   useEffect(() => {
@@ -215,6 +213,7 @@ export default function EditServiceOrder({
     return () => setIsDirty(false);
   }, [isDirty, setIsDirty]);
 
+  // Populate form with fetched data
   useEffect(() => {
     if (serviceOrderData) {
       const hoInfo = serviceOrderData.jobs?.homeowners_info;
@@ -352,7 +351,7 @@ export default function EditServiceOrder({
     form.insertListItem("parts", { qty: 1, part: "", description: "" });
   };
 
-  if (jobsLoading || installersLoading || soLoading) {
+  if (soLoading) {
     return (
       <Center h="100vh">
         <Loader />
@@ -463,10 +462,16 @@ export default function EditServiceOrder({
                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                   <Select
                     label="Select Job"
-                    placeholder="Search by Job Number"
-                    data={jobOptions || []}
+                    placeholder="Search by Job Number..."
+                    data={jobOptions}
                     searchable
                     withAsterisk
+                    searchValue={jobSearch}
+                    onSearchChange={setJobSearch}
+                    nothingFoundMessage={
+                      jobsLoading ? "Searching..." : "No jobs found"
+                    }
+                    rightSection={jobsLoading ? <Loader size={16} /> : null}
                     {...form.getInputProps("job_id")}
                   />
                   <TextInput
@@ -479,13 +484,7 @@ export default function EditServiceOrder({
               </Fieldset>
 
               <Fieldset legend="Logistics" variant="filled" bg="white">
-                {/* ... inside your existing form ... */}
-
-                {/* Use a Box to contain the responsive layout */}
                 <Box mt="md">
-                  {/* 1. Desktop View (Visible from 'lg' breakpoint up) 
-      Using Group with align="stretch" allows vertical dividers to work.
-  */}
                   <Group
                     visibleFrom="lg"
                     align="stretch"
@@ -500,12 +499,22 @@ export default function EditServiceOrder({
                           placeholder={
                             form.values.installer_requested
                               ? "Installer Requested"
-                              : "Select Service Tech"
+                              : "Search Installer..."
                           }
                           data={installerOptions}
                           searchable
                           clearable
                           disabled={form.values.installer_requested}
+                          searchValue={installerSearch}
+                          onSearchChange={setInstallerSearch}
+                          nothingFoundMessage={
+                            installersLoading
+                              ? "Searching..."
+                              : "No installer found"
+                          }
+                          rightSection={
+                            installersLoading ? <Loader size={16} /> : null
+                          }
                           style={{ flex: 1 }}
                           {...form.getInputProps("installer_id")}
                         />
@@ -610,6 +619,7 @@ export default function EditServiceOrder({
                     </Box>
                   </Group>
 
+                  {/* Mobile/Tablet View (Hidden from 'lg' up) */}
                   <Stack hiddenFrom="lg" gap="xl">
                     <Stack gap="sm">
                       <Group align="flex-end" gap="xs" wrap="nowrap">
@@ -617,6 +627,9 @@ export default function EditServiceOrder({
                           label="Assign Service Tech"
                           data={installerOptions}
                           {...form.getInputProps("installer_id")}
+                          searchable
+                          searchValue={installerSearch}
+                          onSearchChange={setInstallerSearch}
                           style={{ flex: 1 }}
                         />
                       </Group>
@@ -852,6 +865,7 @@ export default function EditServiceOrder({
         onClose={() => {
           closeAddInstaller();
           queryClient.invalidateQueries({ queryKey: ["installers-list"] });
+          queryClient.invalidateQueries({ queryKey: ["installer-search"] });
         }}
       />
     </Container>
