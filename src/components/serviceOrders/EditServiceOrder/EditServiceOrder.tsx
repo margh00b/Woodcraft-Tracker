@@ -714,7 +714,7 @@ export default function EditServiceOrder({
                       />
                     </Collapse>
                   </Group>
-                  <Group justify="end">
+                  <Group justify="end" align="center">
                     <Switch
                       label="Mark as Completed"
                       size="md"
@@ -728,17 +728,19 @@ export default function EditServiceOrder({
                         );
                       }}
                     />
-                    <Collapse in={!!form.values.completed_at} keepMounted>
-                      {form.values.completed_at &&
-                        dayjs(form.values.completed_at).year() !== 1999 && (
-                          <Text size="sm" c="dimmed" w={rem(250)}>
-                            Completed on:{" "}
-                            {dayjs(form.values.completed_at).format(
-                              "YYYY-MM-DD HH:mm"
-                            )}
-                          </Text>
-                        )}
-                    </Collapse>
+                    <Box w={rem(250)}>
+                      <Collapse in={!!form.values.completed_at}>
+                        {form.values.completed_at &&
+                          dayjs(form.values.completed_at).year() !== 1999 && (
+                            <Text size="sm" c="dimmed">
+                              Completed on:{" "}
+                              {dayjs(form.values.completed_at).format(
+                                "YYYY-MM-DD HH:mm"
+                              )}
+                            </Text>
+                          )}
+                      </Collapse>
+                    </Box>
                   </Group>
                 </SimpleGrid>
               </Fieldset>
