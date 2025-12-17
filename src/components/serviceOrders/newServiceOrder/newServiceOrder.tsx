@@ -657,7 +657,7 @@ export default function NewServiceOrder({
                 Add Part
               </Button>
             </Group>
-
+            {/* test */}
             {form.values.parts && form.values.parts.length > 0 ? (
               <Table withTableBorder withColumnBorders>
                 <Table.Thead>
