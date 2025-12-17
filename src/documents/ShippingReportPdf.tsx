@@ -182,17 +182,12 @@ export const ShippingReportPdf = ({
       return isNaN(box) ? sum : sum + box;
     }, 0);
 
-
     if (currentCount > ITEMS_PER_PAGE - 5) {
       startNewPage();
     }
 
     currentPage.push(
-      <View
-        key={`date-header-${dateKey}`}
-        style={styles.dateGroupHeader}
-        wrap={false}
-      >
+      <View key={`date-header-${dateKey}`} style={styles.dateGroupHeader}>
         <Text style={styles.dateGroupText}>Ship Date:</Text>
         <Text style={styles.dateGroupText}>{formattedDate}</Text>
         <Text style={styles.dateGroupText}>{dayName}</Text>

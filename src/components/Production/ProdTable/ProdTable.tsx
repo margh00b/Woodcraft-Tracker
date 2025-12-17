@@ -43,7 +43,7 @@ import {
 } from "react-icons/fa";
 import { FaGears } from "react-icons/fa6";
 import dayjs from "dayjs";
-import { DateInput } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates"; // Changed from DateInput
 import { useProdTable } from "@/hooks/useProdTable";
 import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
@@ -70,10 +70,9 @@ export default function ProdTable() {
     setDrawerJobId(id);
     openDrawer();
   };
-  const setInputFilterValue = (
-    id: string,
-    value: string | undefined | null
-  ) => {
+
+  // Updated to accept any value type (string | Date range)
+  const setInputFilterValue = (id: string, value: any) => {
     setInputFilters((prev) => {
       const existing = prev.filter((f) => f.id !== id);
       if (!value) return existing;
@@ -82,7 +81,7 @@ export default function ProdTable() {
   };
 
   const getInputFilterValue = (id: string) => {
-    return (inputFilters.find((f) => f.id === id)?.value as string) || "";
+    return inputFilters.find((f) => f.id === id)?.value;
   };
 
   const handleApplyFilters = () => {
@@ -217,6 +216,7 @@ export default function ProdTable() {
         );
       },
     }),
+    // ... Rest of the columns remain unchanged ...
     columnHelper.accessor("shipping_client_name", {
       id: "client",
       header: "Client",
@@ -354,7 +354,7 @@ export default function ProdTable() {
     state: {
       pagination,
       sorting,
-      columnFilters: activeFilters, 
+      columnFilters: activeFilters,
     },
     manualPagination: true,
     manualFiltering: true,
@@ -408,7 +408,6 @@ export default function ProdTable() {
         </Stack>
       </Group>
 
-      {}
       <Accordion variant="contained" radius="md" mb="md">
         <Accordion.Item value="search-filters">
           <Accordion.Control icon={<FaSearch size={16} />}>
@@ -423,7 +422,7 @@ export default function ProdTable() {
               <TextInput
                 label="Job Number"
                 placeholder="e.g., 202401"
-                value={getInputFilterValue("job_number")}
+                value={getInputFilterValue("job_number") as string}
                 onChange={(e) =>
                   setInputFilterValue("job_number", e.target.value)
                 }
@@ -432,68 +431,59 @@ export default function ProdTable() {
               <TextInput
                 label="Client"
                 placeholder="e.g., Smith"
-                value={getInputFilterValue("client")}
+                value={getInputFilterValue("client") as string}
                 onChange={(e) => setInputFilterValue("client", e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              <DateInput
+
+              {/* Range Pickers */}
+              <DatePickerInput
+                type="range"
                 label="Received Date"
-                placeholder="Filter by Date"
-                clearable
+                placeholder="Filter by Range"
                 value={
-                  getInputFilterValue("received_date")
-                    ? dayjs(getInputFilterValue("received_date")).toDate()
-                    : null
+                  (getInputFilterValue("received_date") as [
+                    Date | null,
+                    Date | null
+                  ]) || [null, null]
                 }
-                onChange={(date) => {
-                  const formatted = date
-                    ? dayjs(date).format("YYYY-MM-DD")
-                    : undefined;
-                  setInputFilterValue("received_date", formatted);
-                }}
+                onChange={(val) => setInputFilterValue("received_date", val)}
+                clearable
                 valueFormat="YYYY-MM-DD"
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              <DateInput
+              <DatePickerInput
+                type="range"
                 label="Placement Date"
-                placeholder="Filter by Date"
-                clearable
+                placeholder="Filter by Range"
                 value={
-                  getInputFilterValue("placement_date")
-                    ? dayjs(getInputFilterValue("placement_date")).toDate()
-                    : null
+                  (getInputFilterValue("placement_date") as [
+                    Date | null,
+                    Date | null
+                  ]) || [null, null]
                 }
-                onChange={(date) => {
-                  const formatted = date
-                    ? dayjs(date).format("YYYY-MM-DD")
-                    : undefined;
-                  setInputFilterValue("placement_date", formatted);
-                }}
+                onChange={(val) => setInputFilterValue("placement_date", val)}
+                clearable
                 valueFormat="YYYY-MM-DD"
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
-              <DateInput
+              <DatePickerInput
+                type="range"
                 label="Ship Date"
-                placeholder="Filter by Date"
-                clearable
+                placeholder="Filter by Range"
                 value={
-                  getInputFilterValue("ship_schedule")
-                    ? dayjs(getInputFilterValue("ship_schedule")).toDate()
-                    : null
+                  (getInputFilterValue("ship_schedule") as [
+                    Date | null,
+                    Date | null
+                  ]) || [null, null]
                 }
-                onChange={(date) => {
-                  const formatted = date
-                    ? dayjs(date).format("YYYY-MM-DD")
-                    : undefined;
-                  setInputFilterValue("ship_schedule", formatted);
-                }}
+                onChange={(val) => setInputFilterValue("ship_schedule", val)}
+                clearable
                 valueFormat="YYYY-MM-DD"
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
+
               <TextInput
                 label="Site Address"
                 placeholder="Street or City"
-                value={getInputFilterValue("site_address")}
+                value={getInputFilterValue("site_address") as string}
                 onChange={(e) =>
                   setInputFilterValue("site_address", e.target.value)
                 }
@@ -501,7 +491,6 @@ export default function ProdTable() {
               />
             </SimpleGrid>
 
-            {}
             <Group justify="flex-end" mt="md">
               <Button
                 variant="default"
@@ -548,6 +537,7 @@ export default function ProdTable() {
           withColumnBorders
           style={{ minWidth: "2300px" }}
         >
+          {/* Table Header and Body Code remains standard... */}
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
@@ -628,7 +618,6 @@ export default function ProdTable() {
         </Table>
       </ScrollArea>
 
-      {}
       <Box
         style={{
           position: "fixed",

@@ -22,6 +22,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
 import EditBackorderModal from "@/components/Installation/EditBOModal/EditBOModal";
 import BackorderPdfPreviewModal from "../BOPdfModal/BOPdfModal";
+import { colors, linearGradients } from "@/theme";
 
 type Backorder = Tables<"backorders">;
 
@@ -180,7 +181,7 @@ export default function RelatedBackorders({
       <Paper p="md" radius="md" shadow="sm" withBorder bg={"gray.1"}>
         <Paper p="md" radius="md" bg={"white"}>
           <Group mb="md">
-            <FaBoxOpen size={18} color="#FF5E62" />
+            <FaBoxOpen size={18} color={colors.orange.secondary} />
             <Text fw={600} size="lg">
               Related Backorders
             </Text>
@@ -198,7 +199,7 @@ export default function RelatedBackorders({
                     border: "none",
                   },
                 }}
-                bg="linear-gradient(135deg, #FF5E62 0%, #FF9966 100%)"
+                bg={linearGradients.backorder}
               >
                 Add Backorder
               </Button>
@@ -234,9 +235,9 @@ export default function RelatedBackorders({
                   mt="sm"
                   styles={{
                     control: {},
-                    label: { fontWeight: 500, color: "#4A00E0" },
+                    label: { fontWeight: 500, color: colors.violet.primary },
                     item: {
-                      border: "1px solid #dee2e6",
+                      border: `1px solid ${colors.gray.border}`,
                       backgroundColor: "white",
                     },
                     content: { padding: 0 },

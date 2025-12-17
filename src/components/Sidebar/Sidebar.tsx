@@ -35,6 +35,7 @@ import { GrSchedules } from "react-icons/gr";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 import TopNavigationBar from "../Shared/TopNavigationBar/TopNavigationBar";
 import Link from "next/link";
+import { colors, linearGradients } from "@/theme";
 
 export type SidebarLink = {
   iconName: string;
@@ -202,7 +203,7 @@ export default function Sidebar({ links }: SidebarProps) {
         height: "100vh",
         overflowY: "auto",
         scrollbarWidth: "none",
-        background: "linear-gradient(0deg, #7b2de2ff 20%, #4A00E0 80%)",
+        background: linearGradients.primaryVertical,
         borderRight: `1px solid ${theme.colors.gray[3]}`,
         display: "flex",
         flexDirection: "column",
@@ -267,8 +268,7 @@ export default function Sidebar({ links }: SidebarProps) {
                   gap: "8px",
                   padding: "8px 12px",
                   borderRadius: "6px",
-                  background:
-                    "linear-gradient(135deg, #f0edff 0%, #e4dbff 100%)",
+                  background: linearGradients.lightViolet,
                   border: "1px solid #d3c9ff",
                   cursor: "pointer",
                   transition: "0.2s ease",
@@ -277,12 +277,12 @@ export default function Sidebar({ links }: SidebarProps) {
                   },
                 },
                 userButtonOuterIdentifier: {
-                  color: "#4A00E0",
+                  color: colors.violet.primary,
                   fontWeight: 600,
                   fontSize: "14px",
                 },
                 avatarBox: {
-                  border: "2px solid #6C63FF",
+                  border: `2px solid ${colors.violet.light}`,
                 },
               },
             }}

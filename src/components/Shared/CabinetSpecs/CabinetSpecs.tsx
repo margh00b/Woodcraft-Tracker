@@ -2,6 +2,7 @@ import { Paper, Text, Grid } from "@mantine/core";
 import { FaCheck } from "react-icons/fa";
 import { Tables } from "@/types/db";
 import { BiSolidCabinet } from "react-icons/bi";
+import { colors } from "@/theme";
 interface CabinetData extends Tables<"cabinets"> {
   door_styles: { name: string } | null | undefined;
   species: { Species: string } | null | undefined;
@@ -28,7 +29,6 @@ const getDisplayValue = (obj: any, key: string): string => {
   return String(obj[key as keyof Tables<"cabinets">] ?? "—");
 };
 
-
 const SpecRow = ({ label, value }: { label: string; value: string }) => (
   <Text size="sm" lh={1.4}>
     <strong>{label}:</strong> {value}
@@ -48,7 +48,7 @@ const BooleanRow = ({
     style={{ display: "flex", alignItems: "center", gap: 6 }}
   >
     <strong>{label}:</strong>
-    {value && <FaCheck color="#8e2de2" size={12} />}
+    {value && <FaCheck color={colors.violet.secondary} size={12} />}
   </Text>
 );
 
@@ -75,7 +75,7 @@ export default function CabinetSpecs({ cabinet }: CabinetSpecsProps) {
         fw={600}
         size="lg"
         mb="md"
-        c="#4A00E0"
+        c={colors.violet.primary}
         style={{ display: "flex", alignItems: "center" }}
       >
         <BiSolidCabinet style={{ marginRight: 8 }} /> Cabinet Details

@@ -1,6 +1,7 @@
 import { Paper, Text, Stack } from "@mantine/core";
 import { FaUser } from "react-icons/fa";
 import { Tables } from "@/types/db";
+import { colors } from "@/theme";
 
 interface ClientInfoProps {
   shipping: Partial<Tables<"sales_orders">> | null | undefined;
@@ -34,7 +35,7 @@ export default function ClientInfo({ shipping }: ClientInfoProps) {
         fw={600}
         size="lg"
         mb="md"
-        c="#4A00E0"
+        c={colors.violet.primary}
         style={{ display: "flex", alignItems: "center" }}
       >
         <FaUser style={{ marginRight: 8 }} /> Client Details

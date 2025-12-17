@@ -5,6 +5,7 @@ import {
   ColumnFiltersState,
   SortingState,
 } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
 interface UseProdTableParams {
   pagination: PaginationState;
@@ -28,6 +29,20 @@ export function useProdTable({
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
+
+        if (
+          (id === "received_date" ||
+            id === "placement_date" ||
+            id === "ship_schedule") &&
+          Array.isArray(value)
+        ) {
+          const [start, end] = value;
+          if (start) query = query.gte(id, dayjs(start).format("YYYY-MM-DD"));
+          if (end) query = query.lte(id, dayjs(end).format("YYYY-MM-DD"));
+          return;
+        }
+
+        // Handle Standard Text Filters
         const valStr = String(value);
         if (!valStr) return;
 
@@ -41,19 +56,11 @@ export function useProdTable({
           case "site_address":
             query = query.ilike("site_address", `%${valStr}%`);
             break;
-          case "received_date":
-            query = query.eq("received_date", valStr);
-            break;
-          case "placement_date":
-            query = query.eq("placement_date", valStr);
-            break;
-          case "ship_schedule":
-            query = query.eq("ship_schedule", valStr);
-            break;
           default:
             query = query.ilike(id, `%${valStr}%`);
         }
       });
+
       if (sorting.length > 0) {
         const { id, desc } = sorting[0];
         const dbColumn = id === "client" ? "shipping_client_name" : id;
@@ -61,6 +68,7 @@ export function useProdTable({
       } else {
         query = query.order("job_number", { ascending: false });
       }
+
       const from = pagination.pageIndex * pagination.pageSize;
       const to = from + pagination.pageSize - 1;
       query = query.range(from, to);

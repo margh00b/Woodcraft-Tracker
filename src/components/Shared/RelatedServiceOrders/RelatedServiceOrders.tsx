@@ -22,6 +22,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import PdfPreview from "@/components/serviceOrders/PdfPreview/PdfPreview";
+import { colors, linearGradients } from "@/theme";
 
 interface RelatedServiceOrdersProps {
   jobId: number | null | undefined;
@@ -193,7 +194,7 @@ export default function RelatedServiceOrders({
     <Paper p="md" radius="md" shadow="sm" withBorder bg={"gray.1"}>
       <Paper p="md" radius="md" bg={"white"}>
         <Group mb="md">
-          <FaTools size={18} color="#4A00E0" />
+          <FaTools size={18} color={colors.violet.primary} />
           <Text fw={600} size="lg">
             Related Service Orders
           </Text>
@@ -209,7 +210,7 @@ export default function RelatedServiceOrders({
                 router.push(targetUrl);
               }}
               style={{
-                background: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+                background: linearGradients.primary,
                 color: "white",
                 border: "none",
               }}
@@ -241,9 +242,9 @@ export default function RelatedServiceOrders({
                 mt="sm"
                 styles={{
                   control: {},
-                  label: { fontWeight: 500, color: "#4A00E0" },
+                  label: { fontWeight: 500, color: colors.violet.primary },
                   item: {
-                    border: "1px solid #dee2e6",
+                    border: `1px solid ${colors.gray.border}`,
                     backgroundColor: "white",
                   },
                   content: { padding: 0 },

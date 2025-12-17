@@ -5,6 +5,7 @@ import {
   ColumnFiltersState,
   SortingState,
 } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
 interface UseSalesTableParams {
   pagination: PaginationState;
@@ -28,6 +29,22 @@ export function useSalesTable({
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
+
+        if (id === "created_at" && Array.isArray(value)) {
+          const [start, end] = value;
+          if (start)
+            query = query.gte(
+              "created_at",
+              dayjs(start).startOf("day").toISOString()
+            );
+          if (end)
+            query = query.lte(
+              "created_at",
+              dayjs(end).endOf("day").toISOString()
+            );
+          return;
+        }
+
         const valStr = String(value);
 
         if (!valStr) return;
@@ -48,6 +65,9 @@ export function useSalesTable({
             if (valStr !== "ALL") {
               query = query.eq("stage", valStr);
             }
+            break;
+          case "my_jobs":
+            query = query.ilike("designer", `%${valStr}%`);
             break;
           default:
             query = query.ilike(id, `%${valStr}%`);

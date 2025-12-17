@@ -32,7 +32,9 @@ import {
   Title,
   SimpleGrid,
   Anchor,
+  Switch,
 } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import {
   FaPlus,
   FaSearch,
@@ -41,20 +43,32 @@ import {
   FaSortUp,
   FaEye,
   FaHome,
+  FaCheckCircle,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useQuery } from "@tanstack/react-query"; 
-import { useSupabase } from "@/hooks/useSupabase"; 
+import { useQuery } from "@tanstack/react-query";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useSalesTable } from "@/hooks/useSalesTable";
 import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import {
+  colors,
+  gradients,
+  linearGradients,
+  serviceStatusGradients,
+  serviceStatusGradientsLight,
+} from "@/theme";
+import { useUser } from "@clerk/nextjs";
+
 dayjs.extend(utc);
 type SalesTableView = Views<"sales_table_view">;
+
 export default function SalesTable() {
   const router = useRouter();
-  const { supabase, isAuthenticated } = useSupabase(); 
+  const { supabase, isAuthenticated } = useSupabase();
+  const { user } = useUser();
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -71,7 +85,11 @@ export default function SalesTable() {
     setDrawerJobId(id);
     openDrawer();
   };
-  const setInputFilterValue = (id: string, value: string) => {
+
+  const setInputFilterValue = (
+    id: string,
+    value: string | undefined | null | [Date | null, Date | null]
+  ) => {
     setInputFilters((prev) => {
       const existing = prev.filter((f) => f.id !== id);
       if (!value) return existing;
@@ -80,7 +98,7 @@ export default function SalesTable() {
   };
 
   const getInputFilterValue = (id: string) => {
-    return (inputFilters.find((f) => f.id === id)?.value as string) || "";
+    return inputFilters.find((f) => f.id === id)?.value;
   };
 
   const { data: stats } = useQuery({
@@ -140,7 +158,7 @@ export default function SalesTable() {
   };
 
   const currentStage =
-    activeFilters.find((f) => f.id === "stage")?.value || "ALL";
+    (activeFilters.find((f) => f.id === "stage")?.value as string) || "ALL";
 
   const columnHelper = createColumnHelper<SalesTableView>();
 
@@ -158,7 +176,7 @@ export default function SalesTable() {
                 fw={600}
                 w="100%"
                 style={{ textAlign: "left" }}
-                c="#6f00ffff"
+                c={colors.violet.light}
                 onClick={(e) => {
                   e.stopPropagation();
                   const jobId = info.row.original.job_id;
@@ -283,12 +301,12 @@ export default function SalesTable() {
             size={50}
             radius="md"
             variant="gradient"
-            gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+            gradient={gradients.primary}
           >
             <FaHome size={26} />
           </ThemeIcon>
           <Stack gap={0}>
-            <Title order={2} style={{ color: "#343a40" }}>
+            <Title order={2} style={{ color: colors.gray.title }}>
               Sales
             </Title>
             <Text size="sm" c="dimmed">
@@ -301,7 +319,7 @@ export default function SalesTable() {
           onClick={() => router.push("/dashboard/sales/newsale")}
           leftSection={<FaPlus size={14} />}
           style={{
-            background: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+            background: linearGradients.primary,
             color: "white",
             border: "none",
           }}
@@ -317,11 +335,15 @@ export default function SalesTable() {
             Search Filters
           </Accordion.Control>
           <Accordion.Panel>
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} mt="sm" spacing="xs">
+            <SimpleGrid
+              cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
+              mt="sm"
+              spacing="xs"
+            >
               <TextInput
                 label="Job Number"
                 placeholder="e.g. 202401"
-                value={getInputFilterValue("job_number")}
+                value={(getInputFilterValue("job_number") as string) || ""}
                 onChange={(e) =>
                   setInputFilterValue("job_number", e.target.value)
                 }
@@ -330,7 +352,7 @@ export default function SalesTable() {
               <TextInput
                 label="Client Name"
                 placeholder="Search Client..."
-                value={getInputFilterValue("clientlastName")}
+                value={(getInputFilterValue("clientlastName") as string) || ""}
                 onChange={(e) =>
                   setInputFilterValue("clientlastName", e.target.value)
                 }
@@ -339,29 +361,71 @@ export default function SalesTable() {
               <TextInput
                 label="Site Address"
                 placeholder="Search Site Address..."
-                value={getInputFilterValue("site_address")}
+                value={(getInputFilterValue("site_address") as string) || ""}
                 onChange={(e) =>
                   setInputFilterValue("site_address", e.target.value)
                 }
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
-            </SimpleGrid>
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" color="gray" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-              <Button
-                variant="filled"
-                color="blue"
-                leftSection={<FaSearch size={14} />}
-                onClick={handleSearch}
-                style={{
-                  background:
-                    "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+              <DatePickerInput
+                type="range"
+                allowSingleDateInRange
+                label="Created Date"
+                placeholder="Filter by Date Range"
+                clearable
+                value={
+                  (getInputFilterValue("created_at") as [
+                    Date | null,
+                    Date | null
+                  ]) || [null, null]
+                }
+                onChange={(value) => {
+                  setInputFilterValue("created_at", value as any);
                 }}
-              >
-                Apply Filters
-              </Button>
+              />
+            </SimpleGrid>
+            <Group justify="space-between" mt="md" align="flex-end">
+              <Switch
+                label="My Jobs"
+                size="md"
+                thumbIcon={<FaCheckCircle size={8} />}
+                checked={!!getInputFilterValue("my_jobs")}
+                onChange={(e) => {
+                  const val = e.currentTarget.checked
+                    ? user?.fullName || user?.firstName || "CurrentUser"
+                    : undefined;
+                  setInputFilterValue("my_jobs", val);
+                }}
+                styles={{
+                  track: {
+                    cursor: "pointer",
+                    background: getInputFilterValue("my_jobs")
+                      ? linearGradients.primary
+                      : undefined,
+                  },
+                  thumb: {
+                    background: getInputFilterValue("my_jobs")
+                      ? linearGradients.primary
+                      : undefined,
+                  },
+                }}
+              />
+              <Group>
+                <Button variant="default" color="gray" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+                <Button
+                  variant="filled"
+                  color="blue"
+                  leftSection={<FaSearch size={14} />}
+                  onClick={handleSearch}
+                  style={{
+                    background: linearGradients.primary,
+                  }}
+                >
+                  Apply Filters
+                </Button>
+              </Group>
             </Group>
           </Accordion.Panel>
         </Accordion.Item>
@@ -375,32 +439,32 @@ export default function SalesTable() {
               key: "ALL",
               label: "All Orders",
               color: "gray",
-              count: stats?.ALL || 0, 
+              count: stats?.ALL || 0,
             },
             {
               key: "QUOTE",
               label: "Quotes",
               color: "blue",
-              count: stats?.QUOTE || 0, 
+              count: stats?.QUOTE || 0,
             },
             {
               key: "SOLD",
               label: "Jobs",
               color: "green",
-              count: stats?.SOLD || 0, 
+              count: stats?.SOLD || 0,
             },
           ].map((item) => {
             const isActive = currentStage === item.key;
             const gradients: Record<string, string> = {
-              ALL: "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
-              QUOTE: "linear-gradient(135deg, #4da0ff 0%, #0066cc 100%)",
-              SOLD: "linear-gradient(135deg, #3ac47d 0%, #0f9f4f 100%)",
+              ALL: serviceStatusGradients.ALL,
+              QUOTE: serviceStatusGradients.OPEN,
+              SOLD: serviceStatusGradients.COMPLETED,
             };
 
             const gradientsLight: Record<string, string> = {
-              ALL: "linear-gradient(135deg, #e4d9ff 0%, #d7caff 100%)",
-              QUOTE: "linear-gradient(135deg, #d7e9ff 0%, #c2ddff 100%)",
-              SOLD: "linear-gradient(135deg, #d0f2e1 0%, #b9ebd3 100%)",
+              ALL: serviceStatusGradientsLight.ALL,
+              QUOTE: serviceStatusGradientsLight.OPEN,
+              SOLD: serviceStatusGradientsLight.COMPLETED,
             };
 
             return (
@@ -457,7 +521,7 @@ export default function SalesTable() {
         }}
         styles={{
           thumb: {
-            background: "linear-gradient(135deg, #8E2DE2, #4A00E0)",
+            background: linearGradients.primary,
           },
         }}
         type="hover"
@@ -564,7 +628,7 @@ export default function SalesTable() {
         }}
       >
         <Pagination
-          color="#4A00E0"
+          color={colors.violet.primary}
           withEdges
           total={table.getPageCount()}
           value={table.getState().pagination.pageIndex + 1}

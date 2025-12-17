@@ -1,6 +1,7 @@
 import { Paper, Text, Group, Badge, SimpleGrid, Stack } from "@mantine/core";
 import { FaClipboardList, FaCheck, FaTimes } from "react-icons/fa";
 import { Tables } from "@/types/db";
+import { colors } from "@/theme";
 
 interface OrderDetailsProps {
   orderDetails: Partial<Tables<"sales_orders">> | null | undefined;
@@ -32,7 +33,7 @@ export default function OrderDetails({ orderDetails }: OrderDetailsProps) {
         fw={600}
         size="lg"
         mb="md"
-        c="#4A00E0"
+        c={colors.violet.primary}
         style={{ display: "flex", alignItems: "center" }}
       >
         <FaClipboardList style={{ marginRight: 8 }} /> Order Details

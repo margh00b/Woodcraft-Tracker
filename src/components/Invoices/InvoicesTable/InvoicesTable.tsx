@@ -57,7 +57,8 @@ import { Tables } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import AddInvoice from "../AddInvoice/AddInvoice";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useInvoicesTable } from "@/hooks/useInvoicesTable"; // Import the new hook
+import { useInvoicesTable } from "@/hooks/useInvoicesTable";
+import { colors, gradients } from "@/theme";
 
 type InvoiceRow = Tables<"invoices"> & {
   job:
@@ -442,12 +443,12 @@ export default function InvoicesTable() {
               size={40}
               radius="md"
               variant="gradient"
-              gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+              gradient={gradients.primary}
             >
               <FaFileInvoiceDollar size={20} />
             </ThemeIcon>
             <Stack gap={0}>
-              <Title order={3} style={{ color: "#343a40" }}>
+              <Title order={3} style={{ color: colors.gray.title }}>
                 Invoices
               </Title>
               <Text size="xs" c="dimmed">
@@ -460,7 +461,7 @@ export default function InvoicesTable() {
               leftSection={<FaPlus size={14} />}
               onClick={openAddModal}
               variant="gradient"
-              gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+              gradient={gradients.primary}
             >
               Add Invoice
             </Button>
@@ -627,7 +628,7 @@ export default function InvoicesTable() {
           total={table.getPageCount()}
           value={pagination.pageIndex + 1}
           onChange={(p) => table.setPageIndex(p - 1)}
-          color="#4A00E0"
+          color={colors.violet.primary}
         />
       </Center>
 
