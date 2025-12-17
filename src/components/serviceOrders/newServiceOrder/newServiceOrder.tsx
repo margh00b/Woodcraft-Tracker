@@ -330,7 +330,9 @@ export default function NewServiceOrder({
         message: "Service Order created successfully.",
         color: "green",
       });
-      queryClient.invalidateQueries({ queryKey: ["service_orders_table_view"] });
+      queryClient.invalidateQueries({
+        queryKey: ["service_orders_table_view"],
+      });
       router.push("/dashboard/serviceorders");
     },
     onError: (err: any) => {
@@ -661,7 +663,7 @@ export default function NewServiceOrder({
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th w={80}>Qty</Table.Th>
-                    <Table.Th>Part Name</Table.Th>
+                    <Table.Th w={200}>Part Name</Table.Th>
                     <Table.Th>Description</Table.Th>
                     <Table.Th w={50} />
                   </Table.Tr>

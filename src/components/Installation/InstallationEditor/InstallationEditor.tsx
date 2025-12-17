@@ -744,14 +744,14 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             styles={{
                               track: {
                                 padding: "0 12px",
-                                height: "36px", 
+                                height: "36px",
                                 cursor: "pointer",
                                 border: "none",
                                 backgroundColor: form.values.wrap_completed
                                   ? undefined
                                   : "#e9ecef",
                                 backgroundImage: form.values.wrap_completed
-                                  ? "linear-gradient(135deg, #ae3ec9 0%, #7048e8 100%)" 
+                                  ? "linear-gradient(135deg, #ae3ec9 0%, #7048e8 100%)"
                                   : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
                                 transition: "background 200ms ease",
                               },
@@ -819,14 +819,14 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             styles={{
                               track: {
                                 padding: "0 12px",
-                                height: "36px", 
+                                height: "36px",
                                 cursor: "pointer",
                                 border: "none",
                                 backgroundColor: form.values.has_shipped
                                   ? undefined
                                   : "#e9ecef",
                                 backgroundImage: form.values.has_shipped
-                                  ? "linear-gradient(135deg, #28a745 0%, #218838 100%)" 
+                                  ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
                                   : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
                                 transition: "background 200ms ease",
                               },
