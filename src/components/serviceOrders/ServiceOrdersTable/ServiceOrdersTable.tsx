@@ -355,18 +355,23 @@ export default function ServiceOrdersTable() {
             }
           >
             {date ? (
-              <Group gap={6}>
-                <FaCheckCircle color="var(--mantine-color-green-6)" size={14} />
-                {date === "1999-09-19T00:00:00+00:00" ? (
-                  <Text size="sm" c="green.8" fw={600}>
-                    Completed
-                  </Text>
-                ) : (
-                  <Text size="sm" c="green.8" fw={600}>
-                    {dayjs(date).format("YYYY-MM-DD")}
-                  </Text>
-                )}
-              </Group>
+              <Tooltip label="Completed">
+                <Group gap={6}>
+                  <FaCheckCircle
+                    color="var(--mantine-color-green-6)"
+                    size={14}
+                  />
+                  {date === "1999-09-19T00:00:00+00:00" ? (
+                    <Text size="sm" c="green.8" fw={600}>
+                      Completed
+                    </Text>
+                  ) : (
+                    <Text size="sm" c="green.8" fw={600}>
+                      {dayjs(date).format("YYYY-MM-DD")}
+                    </Text>
+                  )}{" "}
+                </Group>
+              </Tooltip>
             ) : (
               <Badge
                 variant="gradient"

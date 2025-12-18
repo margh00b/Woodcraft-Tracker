@@ -535,7 +535,7 @@ export default function ProdTable() {
           highlightOnHover
           stickyHeader
           withColumnBorders
-          style={{ minWidth: "2300px" }}
+          style={{ minWidth: "2600px" }}
         >
           {/* Table Header and Body Code remains standard... */}
           <Table.Thead>

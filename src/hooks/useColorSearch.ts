@@ -14,7 +14,7 @@ export function useColorSearch(selectedId?: string | number | null) {
       let query = supabase
         .from("colors")
         .select("Id, Name")
-        .order("Name", { ascending: true })
+        .order("Id", { ascending: true })
         .limit(20);
 
       if (debouncedSearch) {

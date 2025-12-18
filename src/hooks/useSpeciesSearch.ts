@@ -14,7 +14,7 @@ export function useSpeciesSearch(selectedId?: string | number | null) {
       let query = supabase
         .from("species")
         .select("Id, Species")
-        .order("Species", { ascending: true })
+        .order("Id", { ascending: true })
         .limit(20);
 
       if (debouncedSearch) {

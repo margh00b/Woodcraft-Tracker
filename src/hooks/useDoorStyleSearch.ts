@@ -14,7 +14,7 @@ export function useDoorStyleSearch(selectedId?: string | number | null) {
       let query = supabase
         .from("door_styles")
         .select("id, name")
-        .order("name", { ascending: true })
+        .order("id", { ascending: true })
         .limit(20);
 
       if (debouncedSearch) {
