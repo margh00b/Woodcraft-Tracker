@@ -23,8 +23,9 @@ export function useInspectionTable({
     queryKey: ["inspection_table_view", pagination, columnFilters, sorting],
     queryFn: async () => {
       let query = supabase
-        .from("inspection_table_view" as any) 
-        .select("*", { count: "exact" });
+        .from("inspection_table_view" as any)
+        .select("*", { count: "exact" })
+        .not("installation_date", "is", null);
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
@@ -55,7 +56,7 @@ export function useInspectionTable({
         const { id, desc } = sorting[0];
         query = query.order(id, { ascending: !desc });
       } else {
-        query = query.order("inspection_date", { ascending: true });
+        query = query.order("inspection_date", { ascending: false });
       }
 
       const from = pagination.pageIndex * pagination.pageSize;

@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
@@ -1437,6 +1439,7 @@ export type Database = {
       }
       installation_table_view: {
         Row: {
+          created_at: string | null
           has_shipped: boolean | null
           inspection_completed: string | null
           inspection_date: string | null
@@ -1528,6 +1531,7 @@ export type Database = {
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_species: string | null
+          created_at: string | null
           custom_finish_completed_actual: string | null
           cut_finish_completed_actual: string | null
           cut_melamine_completed_actual: string | null
