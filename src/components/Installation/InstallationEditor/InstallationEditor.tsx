@@ -551,26 +551,37 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           <Grid.Col span={10}>
             <Stack>
               <Paper p="md" radius="md" shadow="sm" mb="md" bg={"gray.1"}>
-                <Group
-                  justify="space-between"
-                  align="center"
-                  bg="white"
+                <Paper
                   p="md"
-                  style={{ borderRadius: "6px" }}
+                  radius={0}
+                  shadow="sm"
+                  style={{
+                    borderBottom: "1px solid #e0e0e0",
+                    zIndex: 10,
+                    background: "white",
+                  }}
                 >
-                  <Text
-                    fw={600}
-                    size="lg"
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    <FaShippingFast
-                      size={20}
-                      style={{ marginRight: 8 }}
-                      color="#4A00E0"
-                    />
-                    Installation Job # {jobData.job_number}
-                  </Text>
-                </Group>
+                  <Group justify="space-between" align="center">
+                    <Group gap="md">
+                      <ThemeIcon
+                        size={48}
+                        radius="md"
+                        variant="gradient"
+                        gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+                      >
+                        <FaTools size={22} />
+                      </ThemeIcon>
+                      <Stack gap={0}>
+                        <Text fw={700} size="xl" style={{ color: "#343a40" }}>
+                          Installation Job #{jobData.job_number}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          Status Overview
+                        </Text>
+                      </Stack>
+                    </Group>
+                  </Group>
+                </Paper>
                 <Divider my="sm" color="violet" />
                 <SimpleGrid cols={3}>
                   <Stack>

@@ -312,13 +312,13 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
     if (!install) return [];
     return [
       {
-        label: "Installation Complete",
-        date: install.installation_completed,
+        label: "Installation",
+        date: install.installation_date,
         isCompleted: !!install.installation_completed,
       },
       {
-        label: "Inspection Signed Off",
-        date: install.inspection_completed,
+        label: "Inspection",
+        date: install.inspection_date,
         isCompleted: !!install.inspection_completed,
       },
     ];
@@ -389,8 +389,8 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
           <Grid.Col span={{ base: 12, lg: 10 }}>
             <Stack gap="md">
               {}
-              <Paper p="md" radius="md" shadow="xs" withBorder>
-                <SimpleGrid cols={3} spacing="xl" verticalSpacing="lg">
+              <Paper p="md" radius="md" shadow="xs" withBorder bg="gray.1">
+                <SimpleGrid cols={3}>
                   <Stack>
                     <ClientInfo shipping={shipping} />
                     <OrderDetails orderDetails={orderDetails} />
@@ -445,114 +445,105 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
                 </SimpleGrid>
               </Paper>
 
-              {}
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <SectionTitle
-                  icon={FaUserTie}
-                  title="Installer & Schedule"
-                  color="blue"
-                />
-                <SimpleGrid cols={3} spacing="md">
-                  <Box>
-                    <Text size="xs" c="dimmed" fw={600} mb={4}>
-                      ASSIGNED INSTALLER
-                    </Text>
-                    <Text fw={600} size="lg">
-                      {installerName}
-                    </Text>
-                    {install?.installer?.phone_number && (
-                      <Text size="sm" c="dimmed">
-                        {install.installer.phone_number}
+              <Paper p="md" radius="md" shadow="xs" withBorder bg="gray.1">
+                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                  <SectionTitle
+                    icon={FaUserTie}
+                    title="Installer & Schedule"
+                    color="blue"
+                  />
+                  <SimpleGrid cols={3} spacing="md">
+                    <Box>
+                      <Text size="xs" c="dimmed" fw={600} mb={4}>
+                        ASSIGNED INSTALLER
                       </Text>
-                    )}
-                  </Box>
-                  <DateBlock
-                    label="Scheduled Installation"
-                    date={install?.installation_date}
-                  />
-                  <DateBlock
-                    label="Scheduled Inspection"
-                    date={install?.inspection_date}
-                  />
-                </SimpleGrid>
-              </Card>
+                      <Text fw={600} size="lg">
+                        {installerName}
+                      </Text>
+                      {install?.installer?.phone_number && (
+                        <Text size="sm" c="dimmed">
+                          {install.installer.phone_number}
+                        </Text>
+                      )}
+                    </Box>
+                    <DateBlock
+                      label="Scheduled Installation"
+                      date={install?.installation_date}
+                    />
+                    <DateBlock
+                      label="Scheduled Inspection"
+                      date={install?.inspection_date}
+                    />
+                  </SimpleGrid>
+                </Card>
 
-              {}
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <SectionTitle
-                  icon={FaTruckLoading}
-                  title="Shipping Management"
-                  color="green"
-                />
-                <SimpleGrid cols={4} spacing="md">
-                  <DateBlock label="Wrap Date" date={install?.wrap_date} />
-                  <DateBlock label="Ship Date" date={prod?.ship_schedule} />
-                  <Box
-                    p={8}
-                    bg="gray.0"
-                    style={{ borderRadius: 6, border: "1px solid #e9ecef" }}
-                  >
-                    <Text size="xs" c="dimmed" mb={2} fw={600}>
-                      Date Status
-                    </Text>
-                    <Badge
-                      color={
-                        prod?.ship_status === "confirmed"
-                          ? "green"
-                          : prod?.ship_status === "tentative"
-                          ? "orange"
-                          : "gray"
-                      }
-                      variant="light"
+                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                  <SectionTitle
+                    icon={FaTruckLoading}
+                    title="Shipping Management"
+                    color="green"
+                  />
+                  <SimpleGrid cols={4} spacing="md">
+                    <DateBlock label="Wrap Date" date={install?.wrap_date} />
+
+                    <DateBlock label="Ship Date" date={prod?.ship_schedule} />
+                    <Box
+                      p={8}
+                      bg="gray.0"
+                      style={{ borderRadius: 6, border: "1px solid #e9ecef" }}
                     >
-                      {prod?.ship_status || "Unprocessed"}
-                    </Badge>
-                  </Box>
-                  <Box
-                    p={8}
-                    bg="gray.0"
-                    style={{ borderRadius: 6, border: "1px solid #e9ecef" }}
-                  >
-                    <Text size="xs" c="dimmed" mb={2} fw={600}>
-                      Shipped?
-                    </Text>
-                    <Badge
-                      color={install?.has_shipped ? "green" : "red"}
-                      variant="filled"
-                    >
-                      {install?.has_shipped ? "YES" : "NO"}
-                    </Badge>
-                    {install?.partially_shipped && (
-                      <Badge color="orange" variant="outline" mx={4}>
-                        Partially Shipped
+                      <Text size="xs" c="dimmed" mb={2} fw={600}>
+                        Shipping Date Status
+                      </Text>
+                      <Badge
+                        color={
+                          prod?.ship_status === "confirmed"
+                            ? "green"
+                            : prod?.ship_status === "tentative"
+                            ? "orange"
+                            : "gray"
+                        }
+                        variant="light"
+                      >
+                        {prod?.ship_status || "Unprocessed"}
                       </Badge>
-                    )}
-                  </Box>
-                </SimpleGrid>
-              </Card>
+                    </Box>
+                    <Box display="flex" style={{ alignItems: "center" }}>
+                      <Badge
+                        color={install?.has_shipped ? "green" : "red"}
+                        variant="filled"
+                        size="lg"
+                      >
+                        {install?.has_shipped ? "SHIPPED" : "NOT SHIPPED"}
+                      </Badge>
+                      {install?.partially_shipped && (
+                        <Badge color="orange" variant="filled" size="lg">
+                          Partially Shipped
+                        </Badge>
+                      )}
+                    </Box>
+                  </SimpleGrid>
+                </Card>
 
-              {}
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <SectionTitle
-                  icon={FaClipboardList}
-                  title="Site Notes"
-                  color="gray"
-                />
-                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-                  {install?.installation_notes || "No notes available."}
-                </Text>
-              </Card>
+                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                  <SectionTitle
+                    icon={FaClipboardList}
+                    title="Site Notes"
+                    color="gray"
+                  />
+                  <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                    {install?.installation_notes || "No notes available."}
+                  </Text>
+                </Card>
+              </Paper>
 
-              {}
               <RelatedServiceOrders jobId={jobId} readOnly />
               <RelatedBackorders jobId={String(jobId)} readOnly />
             </Stack>
           </Grid.Col>
 
-          {}
           <Grid.Col span={{ base: 12, lg: 2 }}>
             <Stack gap="md">
-              {}
               <Card shadow="sm" padding="lg" radius="md" withBorder>
                 <SectionTitle
                   icon={FaCalendarCheck}
@@ -592,9 +583,15 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
                       <Text size="xs" c="dimmed">
                         {step.isCompleted ? "Completed" : "Pending"}
                       </Text>
-                      {step.date && (
-                        <Text size="xs" fw={500}>
-                          {dayjs(step.date).format("YYYY-MM-DD, HH:mm")}
+                      {step.date === "1999-09-19T00:00:00+00:00" ? (
+                        <Text size="sm" c="green.8" fw={600}>
+                          Completed
+                        </Text>
+                      ) : (
+                        <Text size="sm" fw={500}>
+                          {step.date
+                            ? dayjs(step.date).format("YYYY-MM-DD")
+                            : "—"}
                         </Text>
                       )}
                     </Timeline.Item>
@@ -639,9 +636,15 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
                       title={step.label}
                       lineVariant={step.isCompleted ? "solid" : "dashed"}
                     >
-                      {step.date && (
-                        <Text size="xs" c="dimmed">
-                          {dayjs(step.date).format("YYYY-MM-DD, HH:mm")}
+                      {step.date === "1999-09-19T00:00:00+00:00" ? (
+                        <Text size="sm" c="green.8" fw={600}>
+                          Completed
+                        </Text>
+                      ) : (
+                        <Text size="sm" fw={500}>
+                          {step.date
+                            ? dayjs(step.date).format("YYYY-MM-DD HH:mm")
+                            : "—"}
                         </Text>
                       )}
                     </Timeline.Item>

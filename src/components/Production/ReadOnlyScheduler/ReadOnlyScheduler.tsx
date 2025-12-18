@@ -41,6 +41,8 @@ import {
 import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
 import ClientInfo from "@/components/Shared/ClientInfo/ClientInfo";
 import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
+import RelatedBackorders from "@/components/Shared/RelatedBO/RelatedBO";
+import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
 
 type CabinetSpecsJoined = Tables<"cabinets"> & {
   door_styles: { name: string } | null;
@@ -52,6 +54,7 @@ type JobType = Tables<"jobs"> & {
   sales_orders: Tables<"sales_orders"> & {
     cabinet: CabinetSpecsJoined;
   };
+  installation: Tables<"installation">;
   production_schedule: Tables<"production_schedule">;
 };
 
@@ -114,6 +117,7 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
           `
           *,
           production_schedule:production_schedule (*),
+          installation:installation (wrap_date),
           sales_orders:sales_orders (
             id,
             shipping_street,
@@ -222,6 +226,7 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
 
   const schedule = data.production_schedule;
   const cabinet = data.sales_orders?.cabinet;
+  const installation = data.installation;
   const shipping = data.sales_orders
     ? {
         shipping_client_name: data.sales_orders.shipping_client_name,
@@ -300,9 +305,9 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
 
       <Box style={{ flex: 1, overflowY: "auto" }} p="md">
         <Grid gutter="lg">
-          <Grid.Col span={{ base: 12, lg: 9 }}>
-            <Stack gap="md">
-              <Paper p="md" radius="md" shadow="xs" withBorder>
+          <Grid.Col span={10}>
+            <Stack gap="md" mb="md">
+              <Paper p="md" radius="md" shadow="xs" withBorder bg="gray.1">
                 <SimpleGrid cols={2} spacing="xl">
                   <Stack>
                     <ClientInfo shipping={shipping} />
@@ -311,117 +316,146 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
                   {cabinet && <CabinetSpecs cabinet={cabinet} />}
                 </SimpleGrid>
               </Paper>
+              <Paper p="md" radius="md" shadow="xs" withBorder bg="gray.1">
+                <Stack gap="md">
+                  <Card shadow="sm" padding="lg" radius="md" withBorder>
+                    <SectionTitle
+                      icon={FaShippingFast}
+                      title="Logistics & Dates"
+                      color="blue"
+                    />
+                    <SimpleGrid cols={5} spacing="md">
+                      <DateBlock
+                        label="Received"
+                        date={schedule.received_date}
+                      />
+                      <DateBlock
+                        label="Placement"
+                        date={schedule.placement_date}
+                      />
+                      <DateBlock
+                        label="Wrap Date"
+                        date={installation?.wrap_date}
+                      />
+                      <DateBlock
+                        label="Ship Date"
+                        date={schedule.ship_schedule}
+                      />
+                      <Box
+                        p={8}
+                        bg="gray.0"
+                        style={{ borderRadius: 6, border: "1px solid #e9ecef" }}
+                      >
+                        <Text size="xs" c="dimmed" mb={2} fw={600}>
+                          Ship Date Status
+                        </Text>
+                        <Badge
+                          variant="light"
+                          color={
+                            schedule.ship_status === "confirmed"
+                              ? "green"
+                              : schedule.ship_status === "tentative"
+                              ? "orange"
+                              : "gray"
+                          }
+                        >
+                          {schedule.ship_status || "Unprocessed"}
+                        </Badge>
+                      </Box>
+                      <Badge variant="light" color="gray">
+                        {schedule.rush ? "Rush" : "Not Rush"}
+                      </Badge>
+                    </SimpleGrid>
+                  </Card>
 
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <SectionTitle
-                  icon={FaShippingFast}
-                  title="Logistics & Dates"
-                  color="blue"
-                />
-                <SimpleGrid cols={4} spacing="md">
-                  <DateBlock label="Received" date={schedule.received_date} />
-                  <DateBlock label="Placement" date={schedule.placement_date} />
-                  <DateBlock label="Ship Date" date={schedule.ship_schedule} />
-                  <Box
-                    p={8}
-                    bg="gray.0"
-                    style={{ borderRadius: 6, border: "1px solid #e9ecef" }}
-                  >
-                    <Text size="xs" c="dimmed" mb={2} fw={600}>
-                      Ship Status
+                  <SimpleGrid cols={2} spacing="md">
+                    <Card shadow="sm" padding="md" radius="md" withBorder>
+                      <SectionTitle
+                        icon={FaDoorOpen}
+                        title="Doors"
+                        color="orange"
+                      />
+                      <SimpleGrid cols={2}>
+                        <DateBlock
+                          label="Doors In"
+                          date={schedule.doors_in_schedule}
+                        />
+                        <DateBlock
+                          label="Doors Out"
+                          date={schedule.doors_out_schedule}
+                        />
+                      </SimpleGrid>
+                    </Card>
+
+                    <Card shadow="sm" padding="md" radius="md" withBorder>
+                      <SectionTitle
+                        icon={FaCut}
+                        title="Cutting"
+                        color="grape"
+                      />
+                      <SimpleGrid cols={2}>
+                        <DateBlock
+                          label="Cut Finish"
+                          date={schedule.cut_finish_schedule}
+                        />
+                        <DateBlock
+                          label="Cut Melamine"
+                          date={schedule.cut_melamine_schedule}
+                        />
+                      </SimpleGrid>
+                    </Card>
+
+                    <Card shadow="sm" padding="md" radius="md" withBorder>
+                      <SectionTitle
+                        icon={FaPaintBrush}
+                        title="Finishing"
+                        color="pink"
+                      />
+                      <SimpleGrid cols={2}>
+                        <DateBlock
+                          label="Paint In"
+                          date={schedule.paint_in_schedule}
+                        />
+                        <DateBlock
+                          label="Paint Out"
+                          date={schedule.paint_out_schedule}
+                        />
+                      </SimpleGrid>
+                    </Card>
+
+                    <Card shadow="sm" padding="md" radius="md" withBorder>
+                      <SectionTitle
+                        icon={FaCogs}
+                        title="Assembly"
+                        color="teal"
+                      />
+                      <SimpleGrid cols={1}>
+                        <DateBlock
+                          label="Assembly"
+                          date={schedule.assembly_schedule}
+                        />
+                      </SimpleGrid>
+                    </Card>
+                  </SimpleGrid>
+                  <Card shadow="sm" padding="lg" radius="md" withBorder>
+                    <SectionTitle
+                      icon={FaClipboardList}
+                      title="Production Notes"
+                      color="violet"
+                    />
+                    <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                      {data.production_schedule.production_comments ||
+                        "No notes recorded."}
                     </Text>
-                    <Badge
-                      variant="light"
-                      color={
-                        schedule.ship_status === "confirmed"
-                          ? "green"
-                          : schedule.ship_status === "tentative"
-                          ? "orange"
-                          : "gray"
-                      }
-                    >
-                      {schedule.ship_status || "Unprocessed"}
-                    </Badge>
-                  </Box>
-                </SimpleGrid>
-              </Card>
-
-              <SimpleGrid cols={2} spacing="md">
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  <SectionTitle
-                    icon={FaDoorOpen}
-                    title="Doors"
-                    color="orange"
-                  />
-                  <SimpleGrid cols={2}>
-                    <DateBlock
-                      label="Doors In"
-                      date={schedule.doors_in_schedule}
-                    />
-                    <DateBlock
-                      label="Doors Out"
-                      date={schedule.doors_out_schedule}
-                    />
-                  </SimpleGrid>
-                </Card>
-
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  <SectionTitle icon={FaCut} title="Cutting" color="grape" />
-                  <SimpleGrid cols={2}>
-                    <DateBlock
-                      label="Cut Finish"
-                      date={schedule.cut_finish_schedule}
-                    />
-                    <DateBlock
-                      label="Cut Melamine"
-                      date={schedule.cut_melamine_schedule}
-                    />
-                  </SimpleGrid>
-                </Card>
-
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  <SectionTitle
-                    icon={FaPaintBrush}
-                    title="Finishing"
-                    color="pink"
-                  />
-                  <SimpleGrid cols={2}>
-                    <DateBlock
-                      label="Paint In"
-                      date={schedule.paint_in_schedule}
-                    />
-                    <DateBlock
-                      label="Paint Out"
-                      date={schedule.paint_out_schedule}
-                    />
-                  </SimpleGrid>
-                </Card>
-
-                <Card shadow="sm" padding="md" radius="md" withBorder>
-                  <SectionTitle icon={FaCogs} title="Assembly" color="teal" />
-                  <SimpleGrid cols={1}>
-                    <DateBlock
-                      label="Assembly"
-                      date={schedule.assembly_schedule}
-                    />
-                  </SimpleGrid>
-                </Card>
-              </SimpleGrid>
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <SectionTitle
-                  icon={FaClipboardList}
-                  title="Production Notes"
-                  color="violet"
-                />
-                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-                  {data.production_schedule.production_comments ||
-                    "No notes recorded."}
-                </Text>
-              </Card>
+                  </Card>
+                </Stack>
+              </Paper>
             </Stack>
+            <RelatedBackorders jobId={String(jobId)} readOnly />
+            <RelatedServiceOrders jobId={jobId} readOnly />
           </Grid.Col>
 
-          <Grid.Col span={{ base: 12, lg: 3 }}>
+          <Grid.Col span={2}>
             <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
               <SectionTitle
                 icon={FaCalendarCheck}

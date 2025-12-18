@@ -44,6 +44,8 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { usePurchasingTable } from "@/hooks/usePurchasingTable";
 import dayjs from "dayjs";
 import { Views } from "@/types/db";
+import { useDisclosure } from "@mantine/hooks";
+import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
 
 type PurchasingTableView = Views<"purchasing_table_view"> & {
   doors_received_incomplete_at: string | null;
@@ -88,7 +90,9 @@ const StatusBadge = ({
 
 export default function ReadOnlyPurchasingTable() {
   const { isAuthenticated } = useSupabase();
-
+  const [drawerJobId, setDrawerJobId] = useState<number | null>(null);
+  const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
+    useDisclosure(false);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 16,
@@ -96,7 +100,10 @@ export default function ReadOnlyPurchasingTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [inputFilters, setInputFilters] = useState<ColumnFiltersState>([]);
   const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
-
+  const handleJobClick = (id: number) => {
+    setDrawerJobId(id);
+    openDrawer();
+  };
   const setInputFilterValue = (
     id: string,
     value: string | undefined | null
@@ -173,14 +180,20 @@ export default function ReadOnlyPurchasingTable() {
 
   const columns = [
     columnHelper.accessor("job_number", {
-      header: "Job #",
+      header: "Job Number",
       size: 120,
       cell: (info) => (
         <Text fw={600} size="sm">
           <Anchor
-            href={`/dashboard/sales/editsale/${info.row.original.sales_order_id}`}
-            style={{ color: "#6100bbff", fontWeight: "bold" }}
-            onClick={(e) => e.stopPropagation()}
+            component="button"
+            size="sm"
+            fw={600}
+            c="violet.9"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (info.row.original.job_id)
+                handleJobClick(info.row.original.job_id);
+            }}
           >
             {info.getValue()}
           </Anchor>
@@ -433,6 +446,11 @@ export default function ReadOnlyPurchasingTable() {
           color="#4A00E0"
         />
       </Box>
+      <JobDetailsDrawer
+        jobId={drawerJobId}
+        opened={drawerOpened}
+        onClose={closeDrawer}
+      />
     </Box>
   );
 }

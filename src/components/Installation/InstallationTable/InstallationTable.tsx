@@ -57,12 +57,13 @@ import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
 import BulkScheduleModal from "../BulkInstallationScheduleModal/BulkInstallationScheduleModal";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type InstallationJobView = Views<"installation_table_view">;
 
 export default function InstallationTable() {
   const router = useRouter();
-
+  const permissions = usePermissions();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 16,
@@ -192,34 +193,38 @@ export default function InstallationTable() {
   );
 
   const columns = [
-    {
-      id: "select",
-      // Disable sorting for the checkbox column
-      enableSorting: false,
-      header: ({ table }: any) => (
-        <Checkbox
-          color="violet"
-          styles={{ input: { cursor: "pointer" } }}
-          checked={table.getIsAllPageRowsSelected()}
-          indeterminate={table.getIsSomePageRowsSelected()}
-          onChange={table.getToggleAllPageRowsSelectedHandler()}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }: any) => (
-        <Center style={{ width: "100%", height: "100%" }}>
-          <Checkbox
-            color="violet"
-            styles={{ input: { cursor: "pointer" } }}
-            checked={row.getIsSelected()}
-            disabled={!row.getCanSelect()}
-            onChange={row.getToggleSelectedHandler()}
-            aria-label="Select row"
-          />
-        </Center>
-      ),
-      size: 40,
-    },
+    ...(permissions.isInstaller
+      ? [
+          {
+            id: "select",
+            // Disable sorting for the checkbox column
+            enableSorting: false,
+            header: ({ table }: any) => (
+              <Checkbox
+                color="violet"
+                styles={{ input: { cursor: "pointer" } }}
+                checked={table.getIsAllPageRowsSelected()}
+                indeterminate={table.getIsSomePageRowsSelected()}
+                onChange={table.getToggleAllPageRowsSelectedHandler()}
+                aria-label="Select all"
+              />
+            ),
+            cell: ({ row }: any) => (
+              <Center style={{ width: "100%", height: "100%" }}>
+                <Checkbox
+                  color="violet"
+                  styles={{ input: { cursor: "pointer" } }}
+                  checked={row.getIsSelected()}
+                  disabled={!row.getCanSelect()}
+                  onChange={row.getToggleSelectedHandler()}
+                  aria-label="Select row"
+                />
+              </Center>
+            ),
+            size: 40,
+          },
+        ]
+      : []),
     columnHelper.accessor("job_number", {
       header: "Job No.",
       size: 150,

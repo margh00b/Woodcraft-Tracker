@@ -112,9 +112,9 @@ const htmlStyles = {
     fontSize: 10,
     lineHeight: 1.4,
   },
-  p: { fontSize: 10, margin: 0, marginBottom: 4 },
-  ul: { fontSize: 10, marginLeft: 15, marginBottom: 4 },
-  li: { fontSize: 10, marginLeft: 0, marginBottom: 2 },
+  p: { fontSize: 10 },
+  ul: { fontSize: 10 },
+  li: { fontSize: 10 },
   strong: {
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
@@ -128,15 +128,14 @@ const htmlStyles = {
   em: {
     fontSize: 10,
     fontFamily: "Helvetica-Oblique",
-    fontStyle: "italic" as const,
+    fontStyle: "normal" as const,
   },
   i: {
     fontSize: 10,
     fontFamily: "Helvetica-Oblique",
-    fontStyle: "italic" as const,
+    fontStyle: "normal" as const,
   },
 };
-
 interface PdfProps {
   data: any;
 }

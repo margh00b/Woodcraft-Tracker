@@ -178,7 +178,7 @@ export default function RelatedBackorders({
 
   return (
     <>
-      <Paper p="md" radius="md" shadow="sm" withBorder bg={"gray.1"}>
+      <Paper p="md" radius="md" shadow="sm" withBorder bg={"gray.1"} mb="md">
         <Paper p="md" radius="md" bg={"white"}>
           <Group mb="md">
             <FaBoxOpen size={18} color={colors.orange.secondary} />

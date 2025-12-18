@@ -406,7 +406,7 @@ export default function EditProductionSchedulePage({
         </Paper>
         <Grid>
           <Grid.Col span={10}>
-            <Stack>
+            <Stack mb="md">
               {}
               <Paper p="md" radius="md" shadow="sm" bg="gray.1">
                 {}
@@ -810,7 +810,6 @@ export default function EditProductionSchedulePage({
           };
           form.setFieldValue("has_shipped", false);
           form.setFieldValue("partially_shipped", true);
-
         }}
       />
     </Container>
