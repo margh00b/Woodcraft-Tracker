@@ -14,6 +14,7 @@ export function usePermissions() {
   const isPlant = role === "plant";
   const isReception = role === "reception";
   const isManager = role === "manager";
+  const isInspection = role === "inspection";
 
   const canEditSales = isAdmin || isDesigner || isScheduler;
   const canEditProduction = isAdmin || isScheduler;
@@ -44,6 +45,7 @@ export function usePermissions() {
     isPlant,
     isReception,
     isManager,
+    isInspection,
     canEditSales,
     canEditProduction,
     canEditInstallation,

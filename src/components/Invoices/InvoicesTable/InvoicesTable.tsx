@@ -69,19 +69,16 @@ type InvoiceRow = Tables<"invoices"> & {
 };
 
 export default function InvoicesTable() {
+  const permissions = usePermissions();
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
-  const { canEditInvoices } = usePermissions();
 
-  // --- Server Side State ---
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 15,
   });
   const [sorting, setSorting] = useState<SortingState>([]);
-  // We separate input filters (UI state) from active filters (Query state)
-  // to allow user to type without triggering fetches on every keystroke if desired,
-  // or primarily to manage the "Search" button flow.
+
   const [inputFilters, setInputFilters] = useState<ColumnFiltersState>([]);
   const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
 
@@ -323,6 +320,7 @@ export default function InvoicesTable() {
       cell: (info) => (
         <Box
           onClick={() => {
+            if (!permissions.canEditInvoices) return;
             setEditingComment({
               id: info.row.original.invoice_id,
               text: info.getValue() || "",
@@ -344,7 +342,7 @@ export default function InvoicesTable() {
         </Box>
       ),
     }),
-    canEditInvoices
+    permissions.canEditInvoices
       ? columnHelper.display({
           id: "actions",
           header: "Actions",
@@ -456,7 +454,7 @@ export default function InvoicesTable() {
               </Text>
             </Stack>
           </Group>
-          {canEditInvoices && (
+          {permissions.canEditInvoices && (
             <Button
               leftSection={<FaPlus size={14} />}
               onClick={openAddModal}

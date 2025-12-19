@@ -51,10 +51,12 @@ import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import ShippingPdfPreviewModal from "./ShippingPdfPreviewModal";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type PlantTableView = Views<"plant_table_view">;
 
 export default function PlantShippingTable() {
+  const permissions = usePermissions();
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
@@ -195,10 +197,14 @@ export default function PlantShippingTable() {
             >
               <Checkbox
                 checked={isShipped}
+                disabled={
+                  !permissions.isPlant ||
+                  !permissions.isInstaller ||
+                  toggleShippedMutation.isPending
+                }
                 indeterminate={partially || false}
                 color="#8c00ffff"
                 size="sm"
-                disabled={!installId || toggleShippedMutation.isPending}
                 onChange={() => {
                   if (installId) {
                     toggleShippedMutation.mutate({

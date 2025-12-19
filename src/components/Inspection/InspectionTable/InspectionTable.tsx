@@ -55,6 +55,7 @@ import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import { useInspectionTable } from "@/hooks/useInspectionTable";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type InspectionTableView = {
   job_id: number;
@@ -73,6 +74,7 @@ type InspectionTableView = {
 };
 
 export default function InspectionTable() {
+  const permissions = usePermissions();
   const router = useRouter();
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
@@ -340,6 +342,7 @@ export default function InspectionTable() {
             size="xs"
             radius="sm"
             fullWidth
+            disabled={!permissions.isInstaller || !permissions.isInspection}
             justify="space-between"
             leftSection={<FaCalendarAlt size={12} style={{ opacity: 0.7 }} />}
             rightSection={
@@ -385,6 +388,7 @@ export default function InspectionTable() {
             fullWidth
             justify={isCompleted ? "space-between" : "center"}
             leftSection={isCompleted ? <FaCheckCircle size={12} /> : undefined}
+            disabled={!permissions.isInstaller || !permissions.isInspection}
             onClick={(e) => {
               e.stopPropagation();
               handleCompletionClick(info.row.original);
@@ -704,7 +708,7 @@ export default function InspectionTable() {
                 Mark Incomplete
               </Button>
             ) : (
-              <div /> 
+              <div />
             )}
 
             <Group>
