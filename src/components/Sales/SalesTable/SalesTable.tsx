@@ -61,11 +61,13 @@ import {
   serviceStatusGradientsLight,
 } from "@/theme";
 import { useUser } from "@clerk/nextjs";
+import { usePermissions } from "@/hooks/usePermissions";
 
 dayjs.extend(utc);
 type SalesTableView = Views<"sales_table_view">;
 
 export default function SalesTable() {
+  const permission = usePermissions();
   const router = useRouter();
   const { supabase, isAuthenticated } = useSupabase();
   const { user } = useUser();
@@ -314,18 +316,19 @@ export default function SalesTable() {
             </Text>
           </Stack>
         </Group>
-
-        <Button
-          onClick={() => router.push("/dashboard/sales/newsale")}
-          leftSection={<FaPlus size={14} />}
-          style={{
-            background: linearGradients.primary,
-            color: "white",
-            border: "none",
-          }}
-        >
-          New Order
-        </Button>
+        {permission.canEditSales && (
+          <Button
+            onClick={() => router.push("/dashboard/sales/newsale")}
+            leftSection={<FaPlus size={14} />}
+            style={{
+              background: linearGradients.primary,
+              color: "white",
+              border: "none",
+            }}
+          >
+            New Order
+          </Button>
+        )}
       </Group>
 
       {}

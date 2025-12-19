@@ -342,7 +342,7 @@ export default function InspectionTable() {
             size="xs"
             radius="sm"
             fullWidth
-            disabled={!permissions.isInstaller || !permissions.isInspection}
+            disabled={!permissions.canEditInspections}
             justify="space-between"
             leftSection={<FaCalendarAlt size={12} style={{ opacity: 0.7 }} />}
             rightSection={
@@ -388,7 +388,7 @@ export default function InspectionTable() {
             fullWidth
             justify={isCompleted ? "space-between" : "center"}
             leftSection={isCompleted ? <FaCheckCircle size={12} /> : undefined}
-            disabled={!permissions.isInstaller || !permissions.isInspection}
+            disabled={!permissions.canEditInspections}
             onClick={(e) => {
               e.stopPropagation();
               handleCompletionClick(info.row.original);

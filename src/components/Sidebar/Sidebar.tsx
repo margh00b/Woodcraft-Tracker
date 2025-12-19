@@ -42,6 +42,7 @@ export type SidebarLink = {
   label: string;
   path?: string;
   links?: SidebarLink[];
+  permission?: boolean;
 };
 
 type SidebarProps = {
@@ -223,9 +224,10 @@ export default function Sidebar({ links }: SidebarProps) {
 
       {}
       <Stack gap="xs" style={{ flexGrow: 1 }}>
-        {links.map((link) => (
-          <MainLink key={link.label} item={link} />
-        ))}
+        {links.map(
+          (link) =>
+            !link.permission && <MainLink key={link.label} item={link} />
+        )}
       </Stack>
 
       {}

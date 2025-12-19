@@ -280,11 +280,7 @@ export default function RelatedBackorders({
           setSelectedBackorder(null);
         }}
         backorder={selectedBackorder}
-        readOnly={
-          !permissions.isInstaller ||
-          !permissions.isService ||
-          !permissions.isAdmin
-        }
+        readOnly={!permissions.canEditInstallation}
       />
 
       {}

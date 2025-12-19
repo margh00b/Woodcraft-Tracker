@@ -322,8 +322,8 @@ export default function ManagerDashboardClient() {
                 head: true,
               })
               .eq("is_active", true)
-              .not("installation.wrap_date", "is", null) 
-              .is("installation.wrap_completed", null), 
+              .not("installation.wrap_date", "is", null)
+              .is("installation.wrap_completed", null),
 
             supabase
               .from("sales_orders")
@@ -358,17 +358,16 @@ export default function ManagerDashboardClient() {
         const startOfWeek = dayjs().startOf("week").toISOString();
         const endOfWeek = dayjs().endOf("week").toISOString();
 
-        const [activeNotWrapped, shipments, pendingPlace, pendingOrders] =
+        const [pendingCount, shipments, pendingPlace, pendingOrders] =
           await Promise.all([
             supabase
-              .from("jobs")
-              .select("id, installation!inner(wrap_completed, wrap_date)", {
+              .from("production_schedule")
+              .select("prod_id, jobs!inner()", {
                 count: "exact",
                 head: true,
               })
-              .eq("is_active", true)
-              .not("installation.wrap_date", "is", null)
-              .is("installation.wrap_completed", null),
+              .is("placement_date", null)
+              .eq("jobs.is_active", true),
 
             supabase
               .from("production_schedule")
@@ -383,8 +382,8 @@ export default function ManagerDashboardClient() {
                 "prod_id, placement_date, jobs!inner(job_number, created_at)"
               )
               .is("placement_date", null)
-              .eq("jobs.is_active", true),
-
+              .eq("jobs.is_active", true)
+              .limit(5),
             supabase
               .from("purchasing_table_view")
               .select(
@@ -407,7 +406,7 @@ export default function ManagerDashboardClient() {
         }).length;
 
         return {
-          prodTotalJobs: activeNotWrapped.count || 0,
+          prodTotalJobs: pendingCount.count || 0,
           prodPendingOrders: pendingOrdersCount,
           upcomingShipments: flattenJobRelation(shipments.data || []),
           pendingPlacement: flattenJobRelation(pendingPlace.data || []),

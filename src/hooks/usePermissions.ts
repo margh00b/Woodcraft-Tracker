@@ -19,6 +19,7 @@ export function usePermissions() {
   const canEditSales = isAdmin || isDesigner || isScheduler;
   const canEditProduction = isAdmin || isScheduler;
   const canEditInstallation = isAdmin || isInstaller || isService;
+  const canEditInspections = isAdmin || isInspection || isInstaller;
   const canEditServiceOrders = isAdmin || isInstaller || isService;
   const canEditClients =
     isAdmin ||
@@ -41,6 +42,7 @@ export function usePermissions() {
     isDesigner,
     isScheduler,
     isInstaller,
+
     isService,
     isPlant,
     isReception,
@@ -49,6 +51,7 @@ export function usePermissions() {
     canEditSales,
     canEditProduction,
     canEditInstallation,
+    canEditInspections,
     canEditServiceOrders,
     canEditClients,
     canEditPlant,

@@ -308,11 +308,7 @@ export default function BackordersTable() {
             setSelectedBO(null);
           }}
           backorder={selectedBO}
-          readOnly={
-            !permissions.isInstaller ||
-            !permissions.isService ||
-            !permissions.isAdmin
-          }
+          readOnly={!permissions.canEditInstallation}
         />
       )}
     </Box>

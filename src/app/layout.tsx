@@ -32,7 +32,11 @@ const dashboardLinks: SidebarLink[] = [
     label: "Overview",
     path: "/dashboard",
   },
-  { iconName: "FaHome", label: "Sales", path: "/dashboard/sales" },
+  {
+    iconName: "FaHome",
+    label: "Sales",
+    path: "/dashboard/sales",
+  },
   { iconName: "FaGears", label: "Production", path: "/dashboard/production" },
   {
     iconName: "FaShoppingBag",
@@ -140,7 +144,6 @@ export default function RootLayout({
                           minWidth: 0,
                         }}
                       >
-                        {}
                         <div style={{ flex: 1, position: "relative" }}>
                           {children}
                         </div>

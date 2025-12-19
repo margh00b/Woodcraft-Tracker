@@ -198,8 +198,7 @@ export default function PlantShippingTable() {
               <Checkbox
                 checked={isShipped}
                 disabled={
-                  !permissions.isPlant ||
-                  !permissions.isInstaller ||
+                  !permissions.canEditInstallation ||
                   toggleShippedMutation.isPending
                 }
                 indeterminate={partially || false}
