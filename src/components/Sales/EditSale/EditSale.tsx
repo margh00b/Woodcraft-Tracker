@@ -109,6 +109,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   const form = useForm<ExtendedMasterOrderInput>({
     initialValues: {
+      designer: "",
       client_id: 0,
       stage: "QUOTE",
       total: 0,
@@ -311,6 +312,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     if (salesOrderData) {
       const cabinet = salesOrderData.cabinet;
       form.initialize({
+        designer: salesOrderData.designer,
         client_id: salesOrderData.client_id,
         stage: salesOrderData.stage,
         total: salesOrderData.total,
@@ -694,74 +696,79 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   });
                 }}
               />
-              <Group
+              <Stack
                 style={{
                   display: "flex",
                   alignItems: "flex-end",
                   justifyContent: "flex-end",
                 }}
               >
-                <Switch
-                  onLabel="Memo"
-                  offLabel="Memo"
-                  size="xl"
-                  thumbIcon={isMemoChecked ? <FaCheckCircle /> : <FaCircle />}
-                  checked={!!isMemoChecked}
-                  onChange={(e) =>
-                    form.setFieldValue(
-                      "is_memo",
-                      e.currentTarget.checked ? true : false
-                    )
-                  }
-                  disabled
-                  styles={{
-                    track: {
-                      cursor: "pointer",
-                      background: isMemoChecked
-                        ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                        : "linear-gradient(135deg, #ddddddff 0%, #dadadaff 100%)",
-                      color: isMemoChecked ? "white" : "black",
-                      border: "none",
-                      padding: "0 0.2rem",
-                      width: "6rem",
-                    },
-                    thumb: {
-                      background: isMemoChecked ? "#218838" : "#ffffffff",
-                    },
-                  }}
-                />
-                {form.values.stage === "SOLD" && (
+                <Text size="xs" c="dimmed">
+                  Created By: {salesOrderData?.designer}
+                </Text>
+                <Group>
                   <Switch
-                    onLabel="Active"
-                    offLabel="Dead"
+                    onLabel="Memo"
+                    offLabel="Memo"
                     size="xl"
-                    thumbIcon={
-                      form.values.is_active ? <FaCheckCircle /> : <FaCircle />
-                    }
-                    checked={form.values.is_active}
+                    thumbIcon={isMemoChecked ? <FaCheckCircle /> : <FaCircle />}
+                    checked={!!isMemoChecked}
                     onChange={(e) =>
-                      form.setFieldValue("is_active", e.currentTarget.checked)
+                      form.setFieldValue(
+                        "is_memo",
+                        e.currentTarget.checked ? true : false
+                      )
                     }
+                    disabled
                     styles={{
                       track: {
                         cursor: "pointer",
-                        background: form.values.is_active
+                        background: isMemoChecked
                           ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                          : "linear-gradient(135deg, #ff0000ff 0%, #ff6363ff 100%)",
-                        color: form.values.is_active ? "white" : "white",
+                          : "linear-gradient(135deg, #ddddddff 0%, #dadadaff 100%)",
+                        color: isMemoChecked ? "white" : "black",
                         border: "none",
                         padding: "0 0.2rem",
                         width: "6rem",
                       },
                       thumb: {
-                        background: form.values.is_active
-                          ? "#218838"
-                          : "#cf0000ff",
+                        background: isMemoChecked ? "#218838" : "#ffffffff",
                       },
                     }}
                   />
-                )}
-              </Group>
+                  {form.values.stage === "SOLD" && (
+                    <Switch
+                      onLabel="Active"
+                      offLabel="Dead"
+                      size="xl"
+                      thumbIcon={
+                        form.values.is_active ? <FaCheckCircle /> : <FaCircle />
+                      }
+                      checked={form.values.is_active}
+                      onChange={(e) =>
+                        form.setFieldValue("is_active", e.currentTarget.checked)
+                      }
+                      styles={{
+                        track: {
+                          cursor: "pointer",
+                          background: form.values.is_active
+                            ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
+                            : "linear-gradient(135deg, #ff0000ff 0%, #ff6363ff 100%)",
+                          color: form.values.is_active ? "white" : "white",
+                          border: "none",
+                          padding: "0 0.2rem",
+                          width: "6rem",
+                        },
+                        thumb: {
+                          background: form.values.is_active
+                            ? "#218838"
+                            : "#cf0000ff",
+                        },
+                      }}
+                    />
+                  )}
+                </Group>
+              </Stack>
             </SimpleGrid>
           </Paper>
 

@@ -30,6 +30,7 @@ export const ShippingSchema = z.object({
 });
 
 export const MasterOrderSchema = z.object({
+  designer: z.string().optional(),
   client_id: z.number().min(1, "Client is required"),
   stage: z.enum(["QUOTE", "SOLD"]),
   total: z.number().min(0),
