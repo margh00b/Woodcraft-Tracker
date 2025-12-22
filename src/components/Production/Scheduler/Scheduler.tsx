@@ -257,8 +257,10 @@ export default function EditProductionSchedulePage({
 
       const prodId = data.production_schedule.prod_id;
       const { wrap_date, ...scheduleValues } = values;
-
-      if (scheduleValues.ship_schedule) {
+      if (
+        scheduleValues.ship_schedule &&
+        scheduleValues.ship_status === "unprocessed"
+      ) {
         scheduleValues.ship_status = "tentative";
       }
 
