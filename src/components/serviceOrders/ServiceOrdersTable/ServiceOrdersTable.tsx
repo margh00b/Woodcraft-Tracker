@@ -490,12 +490,7 @@ export default function ServiceOrdersTable() {
         )}
       </Group>
 
-      <Accordion
-        variant="contained"
-        radius="md"
-        mb="md"
-        defaultValue="search-filters"
-      >
+      <Accordion variant="contained" radius="md" mb="md">
         <Accordion.Item value="search-filters">
           <Accordion.Control icon={<FaSearch size={16} />}>
             Search Filters

@@ -521,12 +521,7 @@ export default function PlantTableWrap() {
                     </Group>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    <Table
-                      striped
-                      stickyHeader
-                      highlightOnHover
-                      withColumnBorders
-                    >
+                    <Table striped highlightOnHover withColumnBorders>
                       <Table.Thead>
                         <Table.Tr>
                           {table
@@ -534,8 +529,11 @@ export default function PlantTableWrap() {
                             .slice(2)
                             .map((header) => (
                               <Table.Th
+                                style={{
+                                  backgroundColor: "#ffffffff",
+                                  width: header.getSize(),
+                                }}
                                 key={header.id}
-                                style={{ width: header.getSize() }}
                               >
                                 {flexRender(
                                   header.column.columnDef.header,

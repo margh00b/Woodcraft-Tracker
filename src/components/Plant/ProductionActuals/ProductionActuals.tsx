@@ -270,7 +270,11 @@ export default function ProductionActuals() {
         <Stack gap="xl">
           {}
           {!selectedJobId ? (
-            <Center h={400} bg="gray.0" style={{ borderRadius: 16 }}>
+            <Center
+              h={400}
+              bg="gray.0"
+              style={{ borderRadius: 16, marginTop: "10%" }}
+            >
               <Stack align="center" gap="md">
                 <ThemeIcon
                   size={80}
@@ -327,9 +331,7 @@ export default function ProductionActuals() {
                     size={80}
                     thickness={8}
                     roundCaps
-                    sections={[
-                      { value: progress, color: "#4A00E0" }, 
-                    ]}
+                    sections={[{ value: progress, color: "#4A00E0" }]}
                     label={
                       <Text c="blue" fw={700} ta="center" size="xs">
                         {progress}%
@@ -424,8 +426,8 @@ export default function ProductionActuals() {
                             variant="gradient"
                             gradient={
                               step.isCompleted
-                                ? { from: "#28a745", to: "#218838", deg: 135 } 
-                                : { from: "#e9ecef", to: "#dee2e6", deg: 135 } 
+                                ? { from: "#28a745", to: "#218838", deg: 135 }
+                                : { from: "#e9ecef", to: "#dee2e6", deg: 135 }
                             }
                           >
                             {step.isCompleted ? (
