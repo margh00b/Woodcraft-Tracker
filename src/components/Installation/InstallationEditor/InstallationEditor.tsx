@@ -325,10 +325,10 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
 
       const { prod_id, ship_schedule, ship_status, ...installValues } = values;
       const timestamp = new Date().toISOString();
-      
+
       let finalWrapCompleted = installValues.wrap_completed;
       if (installValues.has_shipped && !installValues.partially_shipped) {
-          finalWrapCompleted = finalWrapCompleted || timestamp;
+        finalWrapCompleted = finalWrapCompleted || timestamp;
       }
 
       const installPayload = {
@@ -353,7 +353,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         .update(installPayload as any)
         .eq("installation_id", jobData.installation.installation_id);
       if (installError) throw installError;
-      
+
       const prodUpdates: Record<string, any> = {
         ship_schedule: ship_schedule
           ? dayjs(ship_schedule).format("YYYY-MM-DD")
@@ -361,19 +361,22 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         ship_status: ship_status,
       };
 
-      if ((installValues.has_shipped && !installValues.partially_shipped) || finalWrapCompleted) {
-         const autoCompleteFields = [
-            "doors_completed_actual",
-            "cut_finish_completed_actual",
-            "custom_finish_completed_actual",
-            "drawer_completed_actual",
-            "cut_melamine_completed_actual",
-            "paint_completed_actual",
-            "assembly_completed_actual"
-         ];
-         autoCompleteFields.forEach(field => {
-             prodUpdates[field] = timestamp;
-         });
+      if (
+        (installValues.has_shipped && !installValues.partially_shipped) ||
+        finalWrapCompleted
+      ) {
+        const autoCompleteFields = [
+          "doors_completed_actual",
+          "cut_finish_completed_actual",
+          "custom_finish_completed_actual",
+          "drawer_completed_actual",
+          "cut_melamine_completed_actual",
+          "paint_completed_actual",
+          "assembly_completed_actual",
+        ];
+        autoCompleteFields.forEach((field) => {
+          prodUpdates[field] = timestamp;
+        });
       }
 
       const { error: prodError } = await supabase
@@ -734,7 +737,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                           },
                         }}
                         label="Scheduled Installation Date"
-                        placeholder="Start Date"
+                        placeholder="Installation Date"
                         clearable
                         valueFormat="YYYY-MM-DD"
                         {...form.getInputProps("installation_date")}
@@ -746,7 +749,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                           },
                         }}
                         label="Scheduled Inspection Date"
-                        placeholder="Date"
+                        placeholder="Inspection Date"
                         clearable
                         valueFormat="YYYY-MM-DD"
                         {...form.getInputProps("inspection_date")}
@@ -771,7 +774,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             },
                           }}
                           label="Wrap Date"
-                          placeholder="Scheduled Wrap Date"
+                          placeholder="Wrap Date"
                           clearable
                           valueFormat="YYYY-MM-DD"
                           {...form.getInputProps("wrap_date")}

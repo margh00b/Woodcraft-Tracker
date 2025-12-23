@@ -6,6 +6,7 @@ import {
   Paper,
   Group,
   Text,
+  Button,
   Stack,
   Title,
   ThemeIcon,
@@ -14,12 +15,13 @@ import {
   Loader,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { FaTasks, FaCalendarAlt } from "react-icons/fa";
+import { FaTasks, FaCalendarAlt, FaFileExcel } from "react-icons/fa";
 import dayjs from "dayjs";
 import { useJobStatusReport } from "@/hooks/useJobStatusReport";
 import { colors } from "@/theme";
 import "@mantine/dates/styles.css";
 import { JobStatusPdf } from "@/documents/JobStatusReportPdf";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 const PDFViewer = dynamic(
   () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
@@ -44,7 +46,9 @@ export default function JobStatusReport() {
 
   useEffect(() => {
     const [start, end] = dateRange;
-    if ((start && end) || (!start && !end)) {
+    // Strict check: Only update if BOTH start and end dates are present.
+    // This prevents reload on single date selection or when the filter is cleared (no date).
+    if (start && end) {
       setQueryRange(dateRange);
     }
   }, [dateRange]);
@@ -56,10 +60,30 @@ export default function JobStatusReport() {
     error,
   } = useJobStatusReport(queryRange);
 
+  const handleExport = () => {
+    if (!reportData) return;
+
+    const excelData = reportData.map((item) => ({
+      "Job #": item.job_number,
+      Client: item.shipping_client_name,
+      "Shipping Address": item.shipping_address,
+      "Cut Mel": item.cut_melamine ? "Yes" : "No",
+      "Cut Fin": item.cut_finish ? "Yes" : "No",
+      "Cust Fin": item.custom_finish ? "Yes" : "No",
+      Doors: item.doors ? "Yes" : "No",
+      Drawers: item.drawers ? "Yes" : "No",
+      Paint: item.paint ? "Yes" : "No",
+      Assembly: item.assembly ? "Yes" : "No",
+      Wrap: item.wrap ? "Yes" : "No",
+      "% Done": `${item.completion_percentage}%`,
+    }));
+
+    exportToExcel(excelData, "Job_Status_Report");
+  };
+
   return (
     <Container size="100%" p="md">
       <Stack gap="lg">
-        {}
         <Paper p="md" radius="md" shadow="sm" bg="white">
           <Group justify="space-between" align="flex-end">
             <Group>
@@ -85,23 +109,34 @@ export default function JobStatusReport() {
               </Stack>
             </Group>
 
-            <DatePickerInput
-              type="range"
-              label="Filter by Date Sold"
-              placeholder="Select date range"
-              value={dateRange}
-              onChange={(value) =>
-                setDateRange(value as [Date | null, Date | null])
-              }
-              leftSection={
-                <FaCalendarAlt size={16} color={colors.violet.primary} />
-              }
-              clearable
-            />
+            <Group align="flex-end">
+              <DatePickerInput
+                allowSingleDateInRange
+                type="range"
+                label="Filter by Date Sold"
+                placeholder="Select date range"
+                value={dateRange}
+                onChange={(value) =>
+                  setDateRange(value as [Date | null, Date | null])
+                }
+                leftSection={
+                  <FaCalendarAlt size={16} color={colors.violet.primary} />
+                }
+                w={350}
+              />
+              <Button
+                onClick={handleExport}
+                disabled={!reportData || reportData.length === 0}
+                leftSection={<FaFileExcel size={14} />}
+                variant="outline"
+                color="green"
+              >
+                Export Excel
+              </Button>
+            </Group>
           </Group>
         </Paper>
 
-        {}
         <Paper
           shadow="md"
           p={0}

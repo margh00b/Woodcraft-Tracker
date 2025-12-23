@@ -15,15 +15,15 @@ import {
   Loader,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { FaFileInvoice, FaSync, FaCalendarAlt } from "react-icons/fa";
-import dayjs from "dayjs"; // Make sure to import dayjs
+import { FaFileInvoice, FaCalendarAlt, FaFileExcel } from "react-icons/fa";
+import dayjs from "dayjs";
 
 import { useShippedNotInvoiced } from "@/hooks/useShippedNotInvoiced";
 import { ShippedNotInvoicedPdf } from "@/documents/ShippedNotInvoiced";
 import { colors } from "@/theme";
 import "@mantine/dates/styles.css";
+import { exportToExcel } from "@/utils/exportToExcel";
 
-// Dynamic import for the PDF Viewer to avoid SSR issues
 const PDFViewer = dynamic(
   () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
   {
@@ -37,30 +37,21 @@ const PDFViewer = dynamic(
 );
 
 export default function ShippedNotInvoicedReport() {
-  // 1. Initialize State with Default Range (Current Year)
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     dayjs().startOf("year").toDate(),
     dayjs().endOf("year").toDate(),
   ]);
 
-  // 2. Separate state for the hook to prevent partial updates
-  // This effectively "buffers" the input so the query doesn't run while typing/picking
   const [queryRange, setQueryRange] =
     useState<[Date | null, Date | null]>(dateRange);
 
-  // 3. Logic: Only update the queryRange when the input is "Complete" or "Cleared"
   useEffect(() => {
     const [start, end] = dateRange;
-    // Update if:
-    // a) Both dates are present (Valid range)
-    // b) Both dates are null (Cleared filter)
     if ((start && end) || (!start && !end)) {
       setQueryRange(dateRange);
     }
-    // If only 'start' is present (user is currently picking 'end'), do nothing.
   }, [dateRange]);
 
-  // 4. Pass the 'queryRange' (the safe, complete one) to the hook
   const {
     data: reportData,
     isLoading,
@@ -68,10 +59,24 @@ export default function ShippedNotInvoicedReport() {
     error,
   } = useShippedNotInvoiced(queryRange);
 
+  const handleExport = () => {
+    if (!reportData) return;
+
+    const excelData = reportData.map((item) => ({
+      "Job #": item.job_number || "",
+      "Ship Date": item.ship_date
+        ? dayjs(item.ship_date).format("MMM D, YYYY")
+        : "-",
+      Client: item.shipping_client_name || "Unknown",
+      "Shipping Address": item.shipping_address || "Pick Up / No Address",
+    }));
+
+    exportToExcel(excelData, "Shipped_Not_Invoiced_Report");
+  };
+
   return (
     <Container size="100%" p="md">
       <Stack gap="lg">
-        {/* Header Section with Filter and Actions */}
         <Paper p="md" radius="md" shadow="sm" bg="white">
           <Group justify="space-between" align="flex-end">
             <Group>
@@ -97,23 +102,34 @@ export default function ShippedNotInvoicedReport() {
               </Stack>
             </Group>
 
-            <DatePickerInput
-              type="range"
-              label="Filter by Ship Date"
-              placeholder="Select date range"
-              value={dateRange}
-              onChange={(value) =>
-                setDateRange(value as [Date | null, Date | null])
-              }
-              leftSection={
-                <FaCalendarAlt size={16} color={colors.violet.primary} />
-              }
-              clearable
-            />
+            <Group align="flex-end">
+              <DatePickerInput
+                allowSingleDateInRange
+                type="range"
+                label="Filter by Ship Date"
+                placeholder="Select date range"
+                value={dateRange}
+                onChange={(value) =>
+                  setDateRange(value as [Date | null, Date | null])
+                }
+                leftSection={
+                  <FaCalendarAlt size={16} color={colors.violet.primary} />
+                }
+                w={350}
+              />
+              <Button
+                onClick={handleExport}
+                disabled={!reportData || reportData.length === 0}
+                leftSection={<FaFileExcel size={14} />}
+                variant="outline"
+                color="green"
+              >
+                Export Excel
+              </Button>
+            </Group>
           </Group>
         </Paper>
 
-        {/* PDF Viewer Section */}
         <Paper
           shadow="md"
           p={0}

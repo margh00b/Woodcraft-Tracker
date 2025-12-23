@@ -74,11 +74,11 @@ const styles = StyleSheet.create({
 
   colJob: { width: "8%" },
   colClient: { width: "17%" },
-  colLoc: { width: "17%" },
+  colLoc: { width: "23%" },
   colBox: { width: "5%" },
   colDoor: { width: "10%" },
   colSpec: { width: "12%" },
-  colColor: { width: "16%" },
+  colColor: { width: "10%" },
   colCheck: { width: "3%", textAlign: "center" },
 
   checkbox: {
