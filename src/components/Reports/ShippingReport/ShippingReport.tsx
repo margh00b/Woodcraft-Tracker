@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import {
@@ -103,7 +103,18 @@ export default function ShippingReport() {
     },
     enabled: isAuthenticated && !!dateRange[0] && !!dateRange[1],
   });
-
+  const memoizedPreview = useMemo(
+    () => (
+      <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
+        <ShippingReportPdf
+          data={reportData || []}
+          startDate={dateRange[0]}
+          endDate={dateRange[1]}
+        />
+      </PDFViewer>
+    ),
+    [reportData, dateRange]
+  );
   const handleExport = () => {
     if (!reportData) return;
 
@@ -238,13 +249,7 @@ export default function ShippingReport() {
               </Text>
             </Center>
           ) : reportData && reportData.length > 0 ? (
-            <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
-              <ShippingReportPdf
-                data={reportData}
-                startDate={dateRange[0]}
-                endDate={dateRange[1]}
-              />
-            </PDFViewer>
+            memoizedPreview
           ) : (
             <Center h="100%">
               <Stack align="center" gap="xs">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   Paper,
@@ -58,7 +58,14 @@ export default function ShippedNotInvoicedReport() {
     isError,
     error,
   } = useShippedNotInvoiced(queryRange);
-
+  const memoizedPreview = useMemo(
+    () => (
+      <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
+        <ShippedNotInvoicedPdf data={reportData || []} />
+      </PDFViewer>
+    ),
+    [reportData]
+  );
   const handleExport = () => {
     if (!reportData) return;
 
@@ -151,9 +158,7 @@ export default function ShippedNotInvoicedReport() {
               </Text>
             </Center>
           ) : reportData && reportData.length > 0 ? (
-            <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
-              <ShippedNotInvoicedPdf data={reportData} />
-            </PDFViewer>
+            memoizedPreview
           ) : (
             <Center h="100%">
               <Stack align="center" gap="xs">

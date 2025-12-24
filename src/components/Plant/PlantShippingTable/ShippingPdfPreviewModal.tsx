@@ -4,6 +4,7 @@ import { Modal, Loader, Center, Text, rem } from "@mantine/core";
 import dynamic from "next/dynamic";
 import { Views } from "@/types/db";
 import { PlantShippingSchedulePdf } from "@/documents/PlantShippingSchedulePdf";
+import { useMemo } from "react";
 
 const PDFViewer = dynamic(
   () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
@@ -30,6 +31,14 @@ export default function ShippingPdfPreviewModal({
   data,
   dateRange,
 }: ShippingPdfPreviewModalProps) {
+  const memoizedPreview = useMemo(
+    () => (
+      <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+        <PlantShippingSchedulePdf data={data} dateRange={dateRange} />
+      </PDFViewer>
+    ),
+    [data, dateRange]
+  );
   return (
     <Modal
       opened={opened}
@@ -38,9 +47,7 @@ export default function ShippingPdfPreviewModal({
       fullScreen
       styles={{ body: { height: "calc(100vh - 60px)", padding: 0 } }}
     >
-      <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-        <PlantShippingSchedulePdf data={data} dateRange={dateRange} />
-      </PDFViewer>
+      {memoizedPreview}
     </Modal>
   );
 }

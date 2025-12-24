@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   Paper,
@@ -46,8 +46,6 @@ export default function JobStatusReport() {
 
   useEffect(() => {
     const [start, end] = dateRange;
-    // Strict check: Only update if BOTH start and end dates are present.
-    // This prevents reload on single date selection or when the filter is cleared (no date).
     if (start && end) {
       setQueryRange(dateRange);
     }
@@ -59,7 +57,14 @@ export default function JobStatusReport() {
     isError,
     error,
   } = useJobStatusReport(queryRange);
-
+  const memoizedPreview = useMemo(
+    () => (
+      <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
+        <JobStatusPdf data={reportData || []} />
+      </PDFViewer>
+    ),
+    [reportData]
+  );
   const handleExport = () => {
     if (!reportData) return;
 
@@ -156,9 +161,7 @@ export default function JobStatusReport() {
               <Text c="red">Error: {(error as Error).message}</Text>
             </Center>
           ) : reportData && reportData.length > 0 ? (
-            <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
-              <JobStatusPdf data={reportData} />
-            </PDFViewer>
+            memoizedPreview
           ) : (
             <Center h="100%">
               <Stack align="center" gap="xs">
