@@ -98,6 +98,21 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     is_made_in_house: false,
   });
 
+  const [viewGst, setViewGst] = useState(false);
+  const [viewPst, setViewPst] = useState(false);
+
+  const getInclusiveTotal = () => {
+    const base = form.values.total || 0;
+    let multiplier = 1;
+    if (viewGst) multiplier += 0.05;
+    if (viewPst) multiplier += 0.07;
+
+    return (base * multiplier).toLocaleString("en-CA", {
+      style: "currency",
+      currency: "CAD",
+    });
+  };
+
   const [
     speciesModalOpened,
     { open: openSpeciesModal, close: closeSpeciesModal },
@@ -1193,25 +1208,94 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
                 <Fieldset legend="Financials" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
-                    <NumberInput
-                      label="Total Amount"
-                      prefix="$"
-                      min={0}
-                      {...form.getInputProps("total")}
-                    />
+                    <Stack gap={6}>
+                      <NumberInput
+                        label="Total Amount"
+                        placeholder="0.00"
+                        prefix="$"
+                        min={0}
+                        thousandSeparator=","
+                        decimalScale={2}
+                        fixedDecimalScale
+                        {...form.getInputProps(`total`)}
+                        styles={{ input: { fontWeight: 700 } }}
+                      />
+
+                      <Group justify="space-between" align="center" h={24}>
+                        <Group gap="sm">
+                          <Checkbox
+                            size="xs"
+                            label="GST"
+                            color="#4A00E0"
+                            checked={viewGst}
+                            onChange={(e) =>
+                              setViewGst(e.currentTarget.checked)
+                            }
+                            styles={{
+                              label: { fontWeight: 500, cursor: "pointer" },
+                              input: { cursor: "pointer" },
+                            }}
+                          />
+                          <Checkbox
+                            size="xs"
+                            label="PST"
+                            color="#4A00E0"
+                            checked={viewPst}
+                            onChange={(e) =>
+                              setViewPst(e.currentTarget.checked)
+                            }
+                            styles={{
+                              label: { fontWeight: 500, cursor: "pointer" },
+                              input: { cursor: "pointer" },
+                            }}
+                          />
+                        </Group>
+                        <Collapse
+                          in={viewGst || viewPst}
+                          transitionDuration={50}
+                        >
+                          <Text size="sm" fw={700} c="violet">
+                            Incl: {getInclusiveTotal()}
+                          </Text>
+                        </Collapse>
+                      </Group>
+                    </Stack>
+
                     <NumberInput
                       label="Deposit"
+                      placeholder="0.00"
                       prefix="$"
                       min={0}
-                      {...form.getInputProps("deposit")}
+                      thousandSeparator=","
+                      decimalScale={2}
+                      fixedDecimalScale
+                      {...form.getInputProps(`deposit`)}
                     />
+
                     <TextInput
                       label="Balance"
                       readOnly
-                      value={`$${
-                        (form.values.total || 0) - (form.values.deposit || 0)
-                      }`}
                       variant="filled"
+                      value={
+                        (form.values.total || 0) - (form.values.deposit || 0)
+                          ? `$${(
+                              (form.values.total || 0) -
+                              (form.values.deposit || 0)
+                            ).toLocaleString("en-CA", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}`
+                          : "$0.00"
+                      }
+                      styles={{
+                        input: {
+                          fontWeight: 700,
+                          color:
+                            form.values.total - form.values.deposit > 0
+                              ? "#d6336c"
+                              : "#0ca678",
+                        },
+                      }}
                     />
                   </SimpleGrid>
                 </Fieldset>

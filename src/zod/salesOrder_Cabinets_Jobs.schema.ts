@@ -25,8 +25,8 @@ export const ShippingSchema = z.object({
   shipping_zip: z.string().optional(),
   shipping_phone_1: z.string().optional(),
   shipping_phone_2: z.string().optional(),
-  shipping_email_1: z.email().or(z.literal("")).optional(),
-  shipping_email_2: z.email().or(z.literal("")).optional(),
+  shipping_email_1: z.string().optional(),
+  shipping_email_2: z.string().optional(),
 });
 
 export const MasterOrderSchema = z.object({
