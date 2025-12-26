@@ -21,21 +21,29 @@ export const InteriorOptions = [
   "ALMOND",
 ];
 export const DrawerBoxOptions = [
-  "STD",
-  "METAL BOX",
-  "MPL DOVE",
-  "N/A",
-  "DBL WALL",
-  "BIRCH F/J",
+  "Std Melamine",
+  "White Metal",
+  "Grey Metal",
+  "Dovetail",
+  "Custom",
 ];
 export const DrawerHardwareOptions = [
-  "SC Under",
-  "Metal Box",
-  "Std",
   "Soft Close",
-  "Dbl Wall",
-  "F/X Side",
+  "White Metal",
+  "Grey Metal",
+  "Std",
+  "Custom",
 ];
+export const HARDWARE_MAPPING: Record<string, string[]> = {
+  "Std Melamine": ["Soft Close", "Std", "Custom"],
+  "White Metal": ["White Metal"],
+  "Grey Metal": ["Grey Metal"],
+  "Dovetail": ["Soft Close", "Custom"],
+  "Custom": ["Soft Close", "White Metal", "Grey Metal", "Std", "Custom"],
+};
+
+
+
 export const DeliveryTypeOptions = ["Pickup", "Delivery"];
 export const flooringTypeOptions = [
   "Other",
