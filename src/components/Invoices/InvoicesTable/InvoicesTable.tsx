@@ -559,6 +559,7 @@ export default function InvoicesTable() {
                     { value: "all", label: "All" },
                     { value: "paid", label: "Paid" },
                     { value: "pending", label: "Pending" },
+                    { value: "noCharge", label: "No Charge" },
                   ]}
                   value={(getInputFilterValue("status") as string) || "all"}
                   onChange={(val) =>

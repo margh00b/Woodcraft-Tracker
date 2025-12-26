@@ -87,6 +87,8 @@ export function useInvoicesTable({
               query = query.not("paid_at", "is", null);
             } else if (valStr === "pending") {
               query = query.is("paid_at", null);
+            } else if (valStr === "noCharge") {
+              query = query.is("no_charge", true);
             }
             break;
         }
