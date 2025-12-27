@@ -31,7 +31,7 @@ export default function ClerkTokenProvider({
       try {
         const supabaseToken = await getToken({
           template: process.env.NEXT_PUBLIC_CLERK_SUPABASE_TEMPLATE,
-          skipCache: true,
+          //skipCache: true,
         });
 
         if (supabaseToken) {

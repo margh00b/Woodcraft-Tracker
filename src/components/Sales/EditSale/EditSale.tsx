@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
@@ -24,9 +24,7 @@ import {
   Switch,
   Loader,
   Center,
-  Badge,
   Divider,
-  Box,
   Autocomplete,
   Modal,
   Checkbox,
@@ -45,6 +43,7 @@ import {
   DeliveryTypeOptions,
   DrawerBoxOptions,
   DrawerHardwareOptions,
+  HARDWARE_MAPPING,
   flooringClearanceOptions,
   flooringTypeOptions,
   InteriorOptions,
@@ -172,6 +171,37 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     },
     validate: zodResolver(MasterOrderSchema),
   });
+
+  const getSafeOptions = (
+    options: string[],
+    currentValue: string | null | undefined
+  ) => {
+    if (currentValue && !options.includes(currentValue)) {
+      return [...options, currentValue];
+    }
+    return options;
+  };
+
+  const getInputPropsWithDefault = (path: string, defaultValue: string) => {
+    const props = form.getInputProps(path);
+
+    return {
+      ...props,
+      placeholder: props.value ? undefined : `${defaultValue} (Default)`,
+      onBlur: (e: any) => {
+        props.onBlur?.(e);
+        const currentValue = props.value;
+        const isEmpty =
+          currentValue === "" ||
+          currentValue === null ||
+          currentValue === undefined;
+
+        if (isEmpty) {
+          form.setFieldValue(path, defaultValue);
+        }
+      },
+    };
+  };
 
   const {
     options: clientOptions,
@@ -589,7 +619,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         }}
       >
         <Stack gap={5}>
-          {}
+          {/* Top Section */}
           <Paper p="md" radius="md" shadow="xl" withBorder>
             <SimpleGrid cols={3}>
               <Group align="end">
@@ -809,7 +839,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </SimpleGrid>
           </Paper>
 
-          {}
+          {/* Billing & Shipping Section */}
           {selectedClientData ? (
             <SimpleGrid
               cols={{ base: 1, lg: 2 }}
@@ -955,10 +985,10 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             </Center>
           )}
 
-          {}
+          {/* Main Form Area */}
           <Paper p="md" withBorder bg={"gray.1"}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
-              {}
+              {/* Left Column */}
               <Stack>
                 <Fieldset
                   legend="Basic Information"
@@ -1066,23 +1096,41 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       }
                       {...form.getInputProps(`cabinet.door_style`)}
                     />
+
                     <Autocomplete
                       label="Top Drawer Front"
-                      placeholder="Select or type Top Drawer Front"
                       data={TopDrawerFrontOptions}
-                      {...form.getInputProps(`cabinet.top_drawer_front`)}
+                      {...getInputPropsWithDefault(
+                        "cabinet.top_drawer_front",
+                        "Matching"
+                      )}
                     />
-                    <Autocomplete
+
+                    <Select
                       label="Interior Material"
-                      placeholder="Select Interior Material"
-                      data={InteriorOptions}
-                      {...form.getInputProps(`cabinet.interior`)}
+                      searchable
+                      data={getSafeOptions(
+                        InteriorOptions,
+                        form.values.cabinet.interior
+                      )}
+                      {...getInputPropsWithDefault(
+                        "cabinet.interior",
+                        "WHITE MEL"
+                      )}
                     />
-                    <Autocomplete
+
+                    <Select
                       label="Drawer Box"
-                      placeholder="Select Drawer Box"
-                      data={DrawerBoxOptions}
-                      {...form.getInputProps(`cabinet.drawer_box`)}
+                      data={getSafeOptions(
+                        DrawerBoxOptions,
+                        form.values.cabinet.drawer_box
+                      )}
+                      {...form.getInputProps("cabinet.drawer_box")}
+                      onChange={(val) => {
+                        form.setFieldValue("cabinet.drawer_box", val || "");
+                        form.setFieldValue("cabinet.drawer_hardware", "");
+                      }}
+                      allowDeselect={false}
                     />
                   </SimpleGrid>
 
@@ -1092,11 +1140,25 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       data={[]}
                       {...form.getInputProps(`cabinet.box`)}
                     />
-                    <Autocomplete
+                    {/* Drawer Hardware Select with Legacy Support */}
+                    <Select
                       label="Drawer Hardware"
-                      placeholder="Select Drawer Hardware"
-                      data={DrawerHardwareOptions}
-                      {...form.getInputProps(`cabinet.drawer_hardware`)}
+                      key={form.values.cabinet.drawer_box} // Force re-render on box change
+                      placeholder={
+                        form.values.cabinet.drawer_box
+                          ? "Select Hardware"
+                          : "Select Box First"
+                      }
+                      data={getSafeOptions(
+                        form.values.cabinet.drawer_box
+                          ? HARDWARE_MAPPING[form.values.cabinet.drawer_box] ||
+                              []
+                          : [],
+                        form.values.cabinet.drawer_hardware
+                      )}
+                      {...form.getInputProps("cabinet.drawer_hardware")}
+                      value={form.values.cabinet.drawer_hardware || null} // Handle empty string correctly
+                      disabled={!form.values.cabinet.drawer_box}
                     />
                     <Autocomplete
                       label="Flooring Type"
@@ -1173,7 +1235,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Fieldset>
               </Stack>
 
-              {}
+              {/* Right Column */}
               <Stack>
                 <Fieldset legend="Details" variant="filled" bg={"white"}>
                   <Textarea
@@ -1208,58 +1270,17 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
                 <Fieldset legend="Financials" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
-                    <Stack gap={6}>
-                      <NumberInput
-                        label="Total Amount"
-                        placeholder="0.00"
-                        prefix="$"
-                        min={0}
-                        thousandSeparator=","
-                        decimalScale={2}
-                        fixedDecimalScale
-                        {...form.getInputProps(`total`)}
-                        styles={{ input: { fontWeight: 700 } }}
-                      />
-
-                      <Group justify="space-between" align="center" h={24}>
-                        <Group gap="sm">
-                          <Checkbox
-                            size="xs"
-                            label="GST"
-                            color="#4A00E0"
-                            checked={viewGst}
-                            onChange={(e) =>
-                              setViewGst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                          <Checkbox
-                            size="xs"
-                            label="PST"
-                            color="#4A00E0"
-                            checked={viewPst}
-                            onChange={(e) =>
-                              setViewPst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                        </Group>
-                        <Collapse
-                          in={viewGst || viewPst}
-                          transitionDuration={50}
-                        >
-                          <Text size="sm" fw={700} c="violet">
-                            Incl: {getInclusiveTotal()}
-                          </Text>
-                        </Collapse>
-                      </Group>
-                    </Stack>
+                    <NumberInput
+                      label="Total Amount"
+                      placeholder="0.00"
+                      prefix="$"
+                      min={0}
+                      thousandSeparator=","
+                      decimalScale={2}
+                      fixedDecimalScale
+                      {...form.getInputProps(`total`)}
+                      styles={{ input: { fontWeight: 700 } }}
+                    />
 
                     <NumberInput
                       label="Deposit"
@@ -1298,6 +1319,37 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                       }}
                     />
                   </SimpleGrid>
+                  <Group h={35}>
+                    <Group gap="sm">
+                      <Checkbox
+                        size="xs"
+                        label="+ GST"
+                        color="#4A00E0"
+                        checked={viewGst}
+                        onChange={(e) => setViewGst(e.currentTarget.checked)}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                      />
+                      <Checkbox
+                        size="xs"
+                        label="+ PST"
+                        color="#4A00E0"
+                        checked={viewPst}
+                        onChange={(e) => setViewPst(e.currentTarget.checked)}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                      />
+                    </Group>
+                    <Collapse in={viewGst || viewPst} transitionDuration={50}>
+                      <Text size="sm" fw={700} c="violet">
+                        Incl: {getInclusiveTotal()}
+                      </Text>
+                    </Collapse>
+                  </Group>
                 </Fieldset>
               </Stack>
             </SimpleGrid>
@@ -1348,7 +1400,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         </Stack>
       </form>
 
-      {}
+      {/* Modals */}
       <Modal
         opened={speciesModalOpened}
         onClose={closeSpeciesModal}

@@ -46,6 +46,7 @@ import {
   DeliveryTypeOptions,
   DrawerBoxOptions,
   DrawerHardwareOptions,
+  HARDWARE_MAPPING,
   flooringClearanceOptions,
   flooringTypeOptions,
   InteriorOptions,
@@ -943,18 +944,22 @@ export default function NewSale() {
                         "Matching"
                       )}
                     />
-                    <Autocomplete
+                    <Select
                       label="Interior Material"
                       data={InteriorOptions}
                       {...getInputPropsWithDefault(
                         "cabinet.interior",
-                        "White Mel"
+                        "WHITE MEL"
                       )}
                     />
-                    <Autocomplete
+                    <Select
                       label="Drawer Box"
                       data={DrawerBoxOptions}
-                      {...getInputPropsWithDefault("cabinet.drawer_box", "STD")}
+                      {...form.getInputProps("cabinet.drawer_box")}
+                      onChange={(val) => {
+                        form.setFieldValue("cabinet.drawer_box", val || "");
+                        form.setFieldValue("cabinet.drawer_hardware", null);
+                      }}
                     />
                   </SimpleGrid>
 
@@ -965,13 +970,15 @@ export default function NewSale() {
                       {...form.getInputProps(`cabinet.box`)}
                     />
 
-                    <Autocomplete
+                    <Select
                       label="Drawer Hardware"
-                      data={DrawerHardwareOptions}
-                      {...getInputPropsWithDefault(
-                        "cabinet.drawer_hardware",
-                        "STD"
-                      )}
+                      data={
+                        form.values.cabinet.drawer_box
+                          ? HARDWARE_MAPPING[form.values.cabinet.drawer_box]
+                          : []
+                      }
+                      {...form.getInputProps("cabinet.drawer_hardware")}
+                      disabled={!form.values.cabinet.drawer_box}
                     />
                     <Autocomplete
                       label="Flooring Type"
@@ -1134,7 +1141,7 @@ export default function NewSale() {
                     <Group gap="sm">
                       <Checkbox
                         size="xs"
-                        label="GST"
+                        label="+ GST"
                         color="#4A00E0"
                         checked={viewGst}
                         onChange={(e) => setViewGst(e.currentTarget.checked)}
@@ -1145,7 +1152,7 @@ export default function NewSale() {
                       />
                       <Checkbox
                         size="xs"
-                        label="PST"
+                        label="+ PST"
                         color="#4A00E0"
                         checked={viewPst}
                         onChange={(e) => setViewPst(e.currentTarget.checked)}
