@@ -1081,58 +1081,17 @@ export default function NewSale() {
                 </Fieldset>
                 <Fieldset legend="Financials" variant="filled" bg={"white"}>
                   <SimpleGrid cols={3}>
-                    <Stack gap={6}>
-                      <NumberInput
-                        label="Total Amount"
-                        placeholder="0.00"
-                        prefix="$"
-                        min={0}
-                        thousandSeparator=","
-                        decimalScale={2}
-                        fixedDecimalScale
-                        {...form.getInputProps(`total`)}
-                        styles={{ input: { fontWeight: 700 } }}
-                      />
-
-                      <Group justify="space-between" align="center" h={24}>
-                        <Group gap="sm">
-                          <Checkbox
-                            size="xs"
-                            label="GST"
-                            color="#4A00E0"
-                            checked={viewGst}
-                            onChange={(e) =>
-                              setViewGst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                          <Checkbox
-                            size="xs"
-                            label="PST"
-                            color="#4A00E0"
-                            checked={viewPst}
-                            onChange={(e) =>
-                              setViewPst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                        </Group>
-                        <Collapse
-                          in={viewGst || viewPst}
-                          transitionDuration={50}
-                        >
-                          <Text size="sm" fw={700} c="violet">
-                            Incl: {getInclusiveTotal()}
-                          </Text>
-                        </Collapse>
-                      </Group>
-                    </Stack>
+                    <NumberInput
+                      label="Total Amount"
+                      placeholder="0.00"
+                      prefix="$"
+                      min={0}
+                      thousandSeparator=","
+                      decimalScale={2}
+                      fixedDecimalScale
+                      {...form.getInputProps(`total`)}
+                      styles={{ input: { fontWeight: 700 } }}
+                    />
 
                     <NumberInput
                       label="Deposit"
@@ -1171,6 +1130,37 @@ export default function NewSale() {
                       }}
                     />
                   </SimpleGrid>
+                  <Group h={35}>
+                    <Group gap="sm">
+                      <Checkbox
+                        size="xs"
+                        label="GST"
+                        color="#4A00E0"
+                        checked={viewGst}
+                        onChange={(e) => setViewGst(e.currentTarget.checked)}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                      />
+                      <Checkbox
+                        size="xs"
+                        label="PST"
+                        color="#4A00E0"
+                        checked={viewPst}
+                        onChange={(e) => setViewPst(e.currentTarget.checked)}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                      />
+                    </Group>
+                    <Collapse in={viewGst || viewPst} transitionDuration={50}>
+                      <Text size="sm" fw={700} c="violet">
+                        Incl: {getInclusiveTotal()}
+                      </Text>
+                    </Collapse>
+                  </Group>
                 </Fieldset>
               </Stack>
             </SimpleGrid>
