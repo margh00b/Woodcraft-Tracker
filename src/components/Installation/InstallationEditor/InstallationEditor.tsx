@@ -59,11 +59,11 @@ import RelatedBackorders from "@/components/Shared/RelatedBO/RelatedBO";
 import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
 import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
+import { zodResolver } from "@/utils/zodResolver/zodResolver";
+import { installationSchema } from "@/zod/install.schema";
 
 dayjs.extend(utc);
-type InstallationType = Tables<"installation"> & {
-  partially_shipped?: boolean;
-};
+type InstallationType = Tables<"installation">;
 type ProductionScheduleType = Tables<"production_schedule">;
 
 type CombinedInstallFormValues = Omit<
@@ -73,31 +73,32 @@ type CombinedInstallFormValues = Omit<
   wrap_date: Date | null;
   installation_date: Date | null;
   inspection_date: Date | null;
+
   prod_id: number;
   ship_schedule: Date | null;
-  ship_status: "unprocessed" | "tentative" | "confirmed";
-  partially_shipped?: boolean;
-  installation_report_received?: string | null;
-  in_warehouse?: string | null;
+  ship_status: Tables<"production_schedule">["ship_status"];
 };
 
-type InstallerLookup = Tables<"installers">;
-
+type InstallerLookup = Pick<
+  Tables<"installers">,
+  "installer_id" | "company_name" | "first_name" | "last_name"
+>;
 type JoinedCabinet = Tables<"cabinets"> & {
-  door_styles: { name: string } | null;
-  species: { Species: string } | null;
-  colors: { Name: string } | null;
+  door_styles: { name: string } | null | undefined;
+  species: { Species: string } | null | undefined;
+  colors: { Name: string } | null | undefined;
 };
 
 type JobData = Tables<"jobs"> & {
   installation: InstallationType | null;
-  production_schedule: ProductionScheduleType | null;
-  sales_orders: Tables<"sales_orders"> & {
-    client: Tables<"client"> | null;
-    cabinet: JoinedCabinet | null;
-  };
+  production_schedule: Tables<"production_schedule"> | null;
+  sales_orders:
+    | (Tables<"sales_orders"> & {
+        client: Tables<"client"> | null;
+        cabinet: JoinedCabinet | null;
+      })
+    | null;
 };
-
 export default function InstallationEditor({ jobId }: { jobId: number }) {
   const router = useRouter();
   const { supabase, isAuthenticated } = useSupabase();
@@ -212,7 +213,10 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       ship_status: "unprocessed",
       installation_report_received: null,
       in_warehouse: null,
+      trade_30days: null,
+      trade_6months: null,
     },
+    validate: zodResolver(installationSchema),
   });
 
   const { setIsDirty } = useNavigationGuard();
@@ -253,6 +257,8 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           ship_status: prod?.ship_status || "unprocessed",
           installation_report_received: install.installation_report_received,
           in_warehouse: install.in_warehouse,
+          trade_30days: install.trade_30days,
+          trade_6months: install.trade_6months,
         });
         form.resetDirty();
       }
@@ -893,6 +899,54 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             {form.values.in_warehouse && (
                               <Text c="dimmed" size="xs">
                                 {dayjs(form.values.in_warehouse).format(
+                                  "YYYY-MM-DD"
+                                )}
+                              </Text>
+                            )}
+                          </Group>
+                          <Divider variant="dashed" />
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="Trade day (30 days)"
+                              checked={!!form.values.trade_30days}
+                              onChange={(event) => {
+                                const isChecked = event.currentTarget.checked;
+                                form.setFieldValue(
+                                  "trade_30days",
+                                  isChecked ? dayjs().toISOString() : null
+                                );
+                              }}
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.trade_30days && (
+                              <Text c="dimmed" size="xs">
+                                {dayjs(form.values.trade_30days).format(
+                                  "YYYY-MM-DD"
+                                )}
+                              </Text>
+                            )}
+                          </Group>
+                          <Divider variant="dashed" />
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="Trade day (6 months)"
+                              checked={!!form.values.trade_6months}
+                              onChange={(event) => {
+                                const isChecked = event.currentTarget.checked;
+                                form.setFieldValue(
+                                  "trade_6months",
+                                  isChecked ? dayjs().toISOString() : null
+                                );
+                              }}
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.trade_6months && (
+                              <Text c="dimmed" size="xs">
+                                {dayjs(form.values.trade_6months).format(
                                   "YYYY-MM-DD"
                                 )}
                               </Text>
