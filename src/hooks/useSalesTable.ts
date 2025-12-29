@@ -29,6 +29,20 @@ export function useSalesTable({
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
+        if (id === "ship_schedule" && Array.isArray(value)) {
+          const [start, end] = value;
+          if (start)
+            query = query.gte(
+              "ship_schedule",
+              dayjs(start).startOf("day").toISOString()
+            );
+          if (end)
+            query = query.lte(
+              "ship_schedule",
+              dayjs(end).endOf("day").toISOString()
+            );
+          return;
+        }
 
         if (id === "created_at" && Array.isArray(value)) {
           const [start, end] = value;

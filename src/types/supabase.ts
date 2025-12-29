@@ -1725,6 +1725,7 @@ export type Database = {
           job_id: number | null
           job_number: string | null
           sales_order_number: string | null
+          ship_schedule: string | null
           shipping_city: string | null
           shipping_client_name: string | null
           shipping_province: string | null

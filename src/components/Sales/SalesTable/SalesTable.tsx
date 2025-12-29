@@ -243,6 +243,14 @@ export default function SalesTable() {
         size: 100,
         cell: (info) => `$${(info.getValue() as number)?.toFixed(2) || "0.00"}`,
       }),
+      columnHelper.accessor("ship_schedule", {
+        header: "Ship Date",
+        size: 100,
+        cell: (info) => {
+          const date = info.getValue<string>();
+          return date ? dayjs.utc(date).format("YYYY-MM-DD") : "(TBD)";
+        },
+      }),
       columnHelper.accessor("created_at", {
         header: "Created",
         size: 100,
@@ -336,11 +344,7 @@ export default function SalesTable() {
             Search Filters
           </Accordion.Control>
           <Accordion.Panel>
-            <SimpleGrid
-              cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
-              mt="sm"
-              spacing="xs"
-            >
+            <SimpleGrid cols={4} mt="sm" spacing="xs">
               <TextInput
                 label="Job Number"
                 placeholder="e.g. 202401"
@@ -380,6 +384,22 @@ export default function SalesTable() {
               <DatePickerInput
                 type="range"
                 allowSingleDateInRange
+                label="Ship Date"
+                placeholder="Filter by Date Range"
+                clearable
+                value={
+                  (getInputFilterValue("ship_schedule") as [
+                    Date | null,
+                    Date | null
+                  ]) || [null, null]
+                }
+                onChange={(value) => {
+                  setInputFilterValue("ship_schedule", value as any);
+                }}
+              />
+              <DatePickerInput
+                type="range"
+                allowSingleDateInRange
                 label="Created Date"
                 placeholder="Filter by Date Range"
                 clearable
@@ -393,8 +413,6 @@ export default function SalesTable() {
                   setInputFilterValue("created_at", value as any);
                 }}
               />
-            </SimpleGrid>
-            <Group justify="space-between" mt="md" align="flex-end">
               <Switch
                 label="My Jobs"
                 size="md"
@@ -416,6 +434,11 @@ export default function SalesTable() {
                   setActiveFilters(newActiveFilters);
                 }}
                 styles={{
+                  root: {
+                    display: "flex",
+                    alignItems: "flex-end",
+                    paddingBottom: "6px",
+                  },
                   track: {
                     cursor: "pointer",
                     background: getInputFilterValue("my_jobs")
@@ -429,22 +452,23 @@ export default function SalesTable() {
                   },
                 }}
               />
-              <Group>
-                <Button variant="default" color="gray" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-                <Button
-                  variant="filled"
-                  color="blue"
-                  leftSection={<FaSearch size={14} />}
-                  onClick={handleSearch}
-                  style={{
-                    background: linearGradients.primary,
-                  }}
-                >
-                  Apply Filters
-                </Button>
-              </Group>
+            </SimpleGrid>
+
+            <Group justify="flex-end">
+              <Button variant="default" color="gray" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                leftSection={<FaSearch size={14} />}
+                onClick={handleSearch}
+                style={{
+                  background: linearGradients.primary,
+                }}
+              >
+                Apply Filters
+              </Button>
             </Group>
           </Accordion.Panel>
         </Accordion.Item>
