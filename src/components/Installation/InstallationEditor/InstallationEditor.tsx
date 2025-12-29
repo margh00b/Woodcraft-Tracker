@@ -1046,7 +1046,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                 display={"flex"}
                 style={{ alignItems: "center" }}
               >
-                <FaCalendarCheck style={{ marginRight: 8 }} /> Actual Progress
+                <FaCalendarCheck style={{ marginRight: 8 }} /> Plant Progress
               </Text>
               <Paper p="md" radius="md" w={"100%"}>
                 <Timeline

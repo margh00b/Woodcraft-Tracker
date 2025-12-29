@@ -330,7 +330,7 @@ export default function EditServiceOrder({
       queryClient.invalidateQueries({
         queryKey: ["service_order", serviceOrderId],
       });
-      router.push("/dashboard/serviceorders");
+      router.refresh();
     },
     onError: (err: any) => {
       notifications.show({

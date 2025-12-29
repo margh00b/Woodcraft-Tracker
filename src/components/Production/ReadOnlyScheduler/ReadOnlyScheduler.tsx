@@ -459,7 +459,7 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
             <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
               <SectionTitle
                 icon={FaCalendarCheck}
-                title="Actual Progress"
+                title="Plant Progress"
                 color="green"
               />
               <Timeline bulletSize={24} lineWidth={2} active={-1} mt="md">

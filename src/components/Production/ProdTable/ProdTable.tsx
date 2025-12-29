@@ -277,7 +277,7 @@ export default function ProdTable() {
     }),
     columnHelper.display({
       id: "production_status",
-      header: "Progress Steps",
+      header: "Plant Progress",
       size: 500,
       minSize: 500,
       cell: (info) => {

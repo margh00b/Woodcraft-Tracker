@@ -678,7 +678,7 @@ export default function EditProductionSchedulePage({
                     display={"flex"}
                     style={{ alignItems: "center" }}
                   >
-                    <FaCalendarCheck style={{ marginRight: 8 }} /> Actual
+                    <FaCalendarCheck style={{ marginRight: 8 }} /> Plant
                     Progress
                   </Text>
                 </Center>
