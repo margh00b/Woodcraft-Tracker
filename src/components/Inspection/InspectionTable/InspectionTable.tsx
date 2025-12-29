@@ -314,9 +314,11 @@ export default function InspectionTable() {
             <Text size="sm" lineClamp={1}>
               {row.installer_first_name} {row.installer_last_name}
             </Text>
-            <Text size="xs" c="dimmed">
-              ({row.installer_company || "Indep."})
-            </Text>
+            {row.installer_company && (
+              <Text size="xs" c="dimmed">
+                ({row.installer_company})
+              </Text>
+            )}
           </Group>
         );
       },

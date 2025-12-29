@@ -30,6 +30,7 @@ import {
   ActionIcon,
   Stack,
   Collapse,
+  Fieldset,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { DateInput } from "@mantine/dates";
@@ -365,11 +366,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         ship_status: ship_status,
       };
 
-      if (
-        (installValues.has_shipped && !installValues.partially_shipped) ||
-        finalWrapCompleted
-      ) {
+      if (installValues.has_shipped && !installValues.partially_shipped) {
         const autoCompleteFields = [
+          "in_plant_actual",
           "doors_completed_actual",
           "cut_finish_completed_actual",
           "custom_finish_completed_actual",
@@ -421,7 +420,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       queryClient.invalidateQueries({
         queryKey: ["installation_table_view"],
       });
-      router.push(`/dashboard/installation`);
+      router.push(`/dashboard/installation/${jobId}`);
     },
     onError: (err: any) =>
       notifications.show({
@@ -695,306 +694,242 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
             <Paper bg={"gray.1"} p="md" radius="md">
               <Paper p="md" radius="md" pb={30}>
                 <Stack gap="xl">
+                  {/* Removed the separate sections for installer and shipping management */}
+                  {/* Replaced with a unified section below */}
+
                   <Box>
-                    <Group mb={8} style={{ color: "#4A00E0" }}>
+                    <Group mb="md" style={{ color: "#4A00E0" }}>
                       <FaTools size={18} />
-                      <Text fw={600}>Installer & Key Dates</Text>
-                    </Group>
-                    <SimpleGrid cols={3} spacing="md">
-                      <Group align="flex-end" gap="xs">
-                        <Select
-                          styles={{
-                            label: {
-                              fontWeight: "bold",
-                            },
-                          }}
-                          label="Assigned Installer"
-                          placeholder="Select Installer"
-                          data={installerOptions}
-                          searchable
-                          clearable
-                          value={String(form.values.installer_id)}
-                          onChange={(val) =>
-                            form.setFieldValue(
-                              "installer_id",
-                              val ? Number(val) : null
-                            )
-                          }
-                          style={{ flex: 1 }}
-                        />
-                        <Tooltip label="Create New Installer">
-                          <ActionIcon
-                            variant="filled"
-                            color="#4A00E0"
-                            size="lg"
-                            mb={2}
-                            onClick={openAddInstaller}
-                          >
-                            <FaPlus size={12} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                      <DateInput
-                        styles={{
-                          label: {
-                            fontWeight: "bold",
-                          },
-                        }}
-                        label="Scheduled Installation Date"
-                        placeholder="Installation Date"
-                        clearable
-                        valueFormat="YYYY-MM-DD"
-                        {...form.getInputProps("installation_date")}
-                      />
-                      <DateInput
-                        styles={{
-                          label: {
-                            fontWeight: "bold",
-                          },
-                        }}
-                        label="Scheduled Inspection Date"
-                        placeholder="Inspection Date"
-                        clearable
-                        valueFormat="YYYY-MM-DD"
-                        {...form.getInputProps("inspection_date")}
-                      />
-                    </SimpleGrid>
-                  </Box>
-
-                  <Divider />
-
-                  <Box>
-                    <Group mb="md" style={{ color: "#218838" }}>
-                      <FaTruckLoading size={18} />
-                      <Text fw={600}>Shipping Management</Text>
+                      <Text fw={600}>Installation & Loading Logistics</Text>
                     </Group>
 
-                    <Stack gap="lg">
-                      <SimpleGrid cols={{ base: 1, sm: 5 }} spacing="md">
-                        <DateInput
-                          styles={{
-                            label: {
-                              fontWeight: "bold",
-                            },
-                          }}
-                          label="Wrap Date"
-                          placeholder="Wrap Date"
-                          clearable
-                          valueFormat="YYYY-MM-DD"
-                          {...form.getInputProps("wrap_date")}
-                        />
-                        <Box style={{ alignSelf: "flex-end" }}>
-                          <Switch
-                            size="xl"
-                            onLabel="WRAPPED"
-                            offLabel="Not Wrapped"
-                            thumbIcon={<FaBoxOpen size={12} />}
-                            checked={!!form.values.wrap_completed}
-                            onChange={(e) =>
+                    <Grid gutter="xl">
+                      {/* LEFT COLUMN: All Inputs */}
+                      <Grid.Col span={{ base: 12, md: 8 }}>
+                        <SimpleGrid cols={2} spacing="md">
+                          <Select
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label="Assigned Installer"
+                            placeholder="Select Installer"
+                            data={installerOptions}
+                            searchable
+                            clearable
+                            value={String(form.values.installer_id)}
+                            onChange={(val) =>
                               form.setFieldValue(
-                                "wrap_completed",
-                                e.currentTarget.checked
-                                  ? new Date().toISOString()
-                                  : null
+                                "installer_id",
+                                val ? Number(val) : null
                               )
                             }
-                            styles={{
-                              track: {
-                                padding: "0 12px",
-                                height: "36px",
-                                cursor: "pointer",
-                                border: "none",
-                                backgroundColor: form.values.wrap_completed
-                                  ? undefined
-                                  : "#e9ecef",
-                                backgroundImage: form.values.wrap_completed
-                                  ? "linear-gradient(135deg, #ae3ec9 0%, #7048e8 100%)"
-                                  : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
-                                transition: "background 200ms ease",
-                              },
-                              thumb: {
-                                height: "28px",
-                                width: "28px",
-                                backgroundColor: "#fff",
-                                color: form.values.wrap_completed
-                                  ? "#ae3ec9"
-                                  : "#adb5bd",
-                              },
-                              trackLabel: {
-                                color: form.values.wrap_completed
-                                  ? "white"
-                                  : "gray",
-                                fontWeight: 600,
-                                fontSize: "12px",
-                              },
-                            }}
                           />
-                        </Box>
-                        <DateInput
-                          styles={{
-                            label: {
-                              fontWeight: "bold",
-                            },
-                          }}
-                          label="Scheduled Ship Date"
-                          placeholder="Ship Date"
-                          clearable
-                          valueFormat="YYYY-MM-DD"
-                          {...form.getInputProps("ship_schedule")}
-                        />
+                          <DateInput
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label="Wrap Date"
+                            placeholder="Select Date"
+                            clearable
+                            valueFormat="YYYY-MM-DD"
+                            {...form.getInputProps("wrap_date")}
+                          />
 
-                        <Select
-                          styles={{
-                            label: {
-                              fontWeight: "bold",
-                            },
-                          }}
-                          label="Shipping Date Status"
-                          data={[
-                            { value: "unprocessed", label: "Unprocessed" },
-                            { value: "tentative", label: "Tentative" },
-                            { value: "confirmed", label: "Confirmed" },
-                          ]}
-                          {...form.getInputProps("ship_status")}
-                          rightSection={
-                            form.values.ship_status === "confirmed" ? (
-                              <FaCheckCircle size={12} color="green" />
-                            ) : null
-                          }
-                        />
+                          <DateInput
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label="Scheduled Ship Date"
+                            placeholder="Select Date"
+                            clearable
+                            valueFormat="YYYY-MM-DD"
+                            {...form.getInputProps("ship_schedule")}
+                          />
 
-                        <Box style={{ alignSelf: "flex-end" }}>
-                          <Switch
-                            size="xl"
-                            onLabel="SHIPPED"
-                            offLabel={
-                              form.values.partially_shipped
-                                ? "Partially Shipped"
-                                : "Not Shipped"
+                          <Select
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label="Shipping Date Status"
+                            placeholder="Status"
+                            data={[
+                              { value: "unprocessed", label: "Unprocessed" },
+                              { value: "tentative", label: "Tentative" },
+                              { value: "confirmed", label: "Confirmed" },
+                            ]}
+                            {...form.getInputProps("ship_status")}
+                            rightSection={
+                              form.values.ship_status === "confirmed" ? (
+                                <FaCheckCircle size={12} color="green" />
+                              ) : null
                             }
-                            thumbIcon={<FaTruckLoading size={12} />}
+                          />
+
+                          <DateInput
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label="Scheduled Installation Date"
+                            placeholder="Select Date"
+                            clearable
+                            valueFormat="YYYY-MM-DD"
+                            {...form.getInputProps("installation_date")}
+                          />
+
+                          <DateInput
+                            styles={{ label: { fontWeight: "bold" } }}
+                            label={
+                              <Group gap="xs">
+                                Scheduled Inspection Date
+                                {form.values.inspection_completed && (
+                                  <Badge
+                                    color="green"
+                                    size="xs"
+                                    variant="filled"
+                                  >
+                                    Completed
+                                  </Badge>
+                                )}
+                              </Group>
+                            }
+                            placeholder="Select Date"
+                            clearable
+                            valueFormat="YYYY-MM-DD"
+                            {...form.getInputProps("inspection_date")}
+                          />
+                        </SimpleGrid>
+                      </Grid.Col>
+
+                      {/* RIGHT COLUMN: Switches */}
+                      <Grid.Col
+                        span={{ base: 12, md: 4 }}
+                        style={{ borderLeft: "1px solid #eee" }}
+                      >
+                        <Stack gap="md">
+                          <Text size="sm" fw={700} c="dimmed" mb={-8}>
+                            Status Updates
+                          </Text>
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="Wrapped"
+                              checked={!!form.values.wrap_completed}
+                              onChange={(e) =>
+                                form.setFieldValue(
+                                  "wrap_completed",
+                                  e.currentTarget.checked
+                                    ? new Date().toISOString()
+                                    : null
+                                )
+                              }
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.wrap_completed && (
+                              <Text c="dimmed" size="xs">
+                                {dayjs(form.values.wrap_completed).format(
+                                  "YYYY-MM-DD"
+                                )}
+                              </Text>
+                            )}
+                          </Group>
+                          <Divider variant="dashed" />
+                          <Switch
+                            size="md"
+                            color="green"
+                            label={
+                              form.values.partially_shipped
+                                ? "Shipped (Partial)"
+                                : "Shipped"
+                            }
                             checked={form.values.has_shipped}
                             onChange={(e) =>
                               handleShippedChange(e.currentTarget.checked)
                             }
                             styles={{
-                              track: {
-                                padding: "0 12px",
-                                height: "36px",
-                                cursor: "pointer",
-                                border: "none",
-                                backgroundColor: form.values.has_shipped
-                                  ? undefined
-                                  : "#e9ecef",
-                                backgroundImage: form.values.has_shipped
-                                  ? "linear-gradient(135deg, #00851fff 0%, #218838 100%)"
-                                  : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
-                                transition: "background 200ms ease",
-                              },
-                              thumb: {
-                                height: "28px",
-                                width: "28px",
-                                backgroundColor: "#fff",
-                                color: form.values.has_shipped
-                                  ? "#218838"
-                                  : "#adb5bd",
-                              },
-                              trackLabel: {
-                                color: form.values.has_shipped
-                                  ? "white"
-                                  : form.values.partially_shipped
-                                  ? "red"
-                                  : "gray",
-                                fontWeight: 600,
-                                fontSize: "12px",
+                              label: {
+                                fontWeight: 500,
+                                color: form.values.partially_shipped
+                                  ? "orange"
+                                  : undefined,
                               },
                             }}
                           />
-                        </Box>
-                      </SimpleGrid>
-                    </Stack>
-                  </Box>
-                  <Group gap={50}>
-                    <Stack gap={10}>
-                      <Switch
-                        size="md"
-                        color="violet"
-                        label="Installation Report Received"
-                        checked={!!form.values.installation_report_received}
-                        onChange={(event) => {
-                          const isChecked = event.currentTarget.checked;
-                          form.setFieldValue(
-                            "installation_report_received",
-                            isChecked ? dayjs().toISOString() : null
-                          );
-                        }}
-                        styles={{
-                          label: {
-                            fontWeight: "bold",
-                            fontSize: "14px",
-                          },
-                          track: {
-                            cursor: "pointer",
-                          },
-                        }}
-                      />
-                      <Box style={{ minHeight: 20 }}>
-                        <Collapse
-                          in={!!form.values.installation_report_received}
-                        >
-                          <Text
-                            c="dimmed"
-                            style={{ textAlign: "center", fontSize: "12px" }}
-                          >
-                            (Received on :{" "}
-                            {dayjs(
-                              form.values.installation_report_received
-                            ).format("YYYY-MM-DD")}
-                            )
-                          </Text>
-                        </Collapse>
-                      </Box>
-                    </Stack>
-                    <Stack gap={10}>
-                      <Switch
-                        size="md"
-                        color="violet"
-                        label="In Warehouse"
-                        checked={!!form.values.in_warehouse}
-                        onChange={(event) => {
-                          const isChecked = event.currentTarget.checked;
-                          form.setFieldValue(
-                            "in_warehouse",
-                            isChecked ? dayjs().toISOString() : null
-                          );
-                        }}
-                        styles={{
-                          label: {
-                            fontWeight: "bold",
-                            fontSize: "14px",
-                          },
-                          track: {
-                            cursor: "pointer",
-                          },
-                        }}
-                      />
-                      <Box style={{ minHeight: 20 }}>
-                        <Collapse in={!!form.values.in_warehouse}>
-                          <Text
-                            c="dimmed"
-                            style={{ textAlign: "center", fontSize: "12px" }}
-                          >
-                            (Sent on :{" "}
-                            {dayjs(form.values.in_warehouse).format(
-                              "YYYY-MM-DD"
+                          <Divider variant="dashed" />
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="Installation Completed"
+                              checked={!!form.values.installation_completed}
+                              onChange={() =>
+                                handleCompletionToggle("installation_completed")
+                              }
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.installation_completed && (
+                              <Text c="dimmed" size="xs">
+                                {form.values.installation_completed ===
+                                "1999-09-19T00:00:00+00:00"
+                                  ? "Marked Complete"
+                                  : dayjs(
+                                      form.values.installation_completed
+                                    ).format("YYYY-MM-DD")}
+                              </Text>
                             )}
-                            )
-                          </Text>
-                        </Collapse>
-                      </Box>
-                    </Stack>
-                  </Group>
-                  <Divider />
+                          </Group>
+                          <Divider variant="dashed" />
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="Report Received"
+                              checked={
+                                !!form.values.installation_report_received
+                              }
+                              onChange={(event) => {
+                                const isChecked = event.currentTarget.checked;
+                                form.setFieldValue(
+                                  "installation_report_received",
+                                  isChecked ? dayjs().toISOString() : null
+                                );
+                              }}
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.installation_report_received && (
+                              <Text c="dimmed" size="xs">
+                                {dayjs(
+                                  form.values.installation_report_received
+                                ).format("YYYY-MM-DD")}
+                              </Text>
+                            )}
+                          </Group>
+                          {/* In Warehouse switch remains below, assumed to follow naturally */}
+                          <Divider variant="dashed" />
+                          <Group justify="space-between">
+                            <Switch
+                              size="md"
+                              color="violet"
+                              label="In Warehouse"
+                              checked={!!form.values.in_warehouse}
+                              onChange={(event) => {
+                                const isChecked = event.currentTarget.checked;
+                                form.setFieldValue(
+                                  "in_warehouse",
+                                  isChecked ? dayjs().toISOString() : null
+                                );
+                              }}
+                              styles={{ label: { fontWeight: 500 } }}
+                            />
+                            {form.values.in_warehouse && (
+                              <Text c="dimmed" size="xs">
+                                {dayjs(form.values.in_warehouse).format(
+                                  "YYYY-MM-DD"
+                                )}
+                              </Text>
+                            )}
+                          </Group>
+                        </Stack>
+                      </Grid.Col>
+                    </Grid>
+                  </Box>
+
+                  {/* Removed the old sidebar timeline content by not including it in the replacement range, or rather, targeting the range to include the sidebar removal if possible, but the tools are line-based. */}
+                  {/* The instruction says to remove the timeline from the right sidebar too. I will target the main content first. */}
+                  {/* Wait, I can target a large block that covers both if they are contiguous, but they are not (Main vs Sidebar column). */}
+                  {/* I should stick to editing the Main content first (lines 699-916) and then do a second edit for the Sidebar. */}
+                  {/* But I can't do parallel edits on the same file with separate tools. I must do ONE edit if possible, or sequential. */}
+                  {/* The user wants me to do it. I'll replace the Main Content block first. */}
 
                   <Box>
                     <Group mb={8}>
@@ -1083,138 +1018,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           </Grid.Col>
 
           <Grid.Col span={2} style={{ borderLeft: "1px solid #ccc" }}>
-            <Box pt="md" pos="sticky" style={{ justifyItems: "center" }}>
-              <Text
-                fw={600}
-                size="lg"
-                mb="md"
-                c="violet"
-                display={"flex"}
-                style={{ alignItems: "center" }}
-              >
-                <FaTools size={14} style={{ marginRight: "4px" }} />
-                Installation Phase
-              </Text>
-              <Paper p="md" radius="md" w={"100%"}>
-                <Timeline
-                  bulletSize={24}
-                  lineWidth={2}
-                  active={-1}
-                  styles={{ root: { "--tl-color": "green" } }}
-                >
-                  <TimelineItem
-                    title="Installation Complete"
-                    lineVariant="solid"
-                    bullet={
-                      <Box
-                        style={{
-                          backgroundColor: form.values.installation_completed
-                            ? "#00851fff"
-                            : "#6b6b6b",
-                          borderRadius: "50%",
-                          width: 24,
-                          height: 24,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          aspectRatio: "1 / 1",
-                        }}
-                      >
-                        <FaCheckCircle size={10} color="white" />
-                      </Box>
-                    }
-                    styles={{
-                      item: {
-                        "--tl-color": form.values.installation_completed
-                          ? "#00851fff"
-                          : "#e0e0e0",
-                      },
-                      itemTitle: {
-                        color: form.values.installation_completed
-                          ? "#00851fff"
-                          : "#6b6b6b",
-                        fontSize: "12px",
-                      },
-                    }}
-                  >
-                    <Text size="xs" c="dimmed">
-                      {form.values.installation_completed
-                        ? "Signed Off:"
-                        : "Pending Sign-off"}
-                    </Text>
-                    <Text size="xs" fw={500}>
-                      {form.values.installation_completed
-                        ? form.values.installation_completed ===
-                          "1999-09-19T00:00:00+00:00"
-                          ? "Completed"
-                          : dayjs(form.values.installation_completed).format(
-                              "YYYY-MM-DD"
-                            )
-                        : "—"}
-                    </Text>
-                    <Button
-                      size="xs"
-                      mt={2}
-                      variant="light"
-                      color={
-                        form.values.installation_completed ? "red" : "green"
-                      }
-                      onClick={() =>
-                        handleCompletionToggle("installation_completed")
-                      }
-                    >
-                      {form.values.installation_completed
-                        ? "Reset"
-                        : "Complete"}
-                    </Button>
-                  </TimelineItem>
-
-                  <TimelineItem
-                    title="Inspection Date"
-                    lineVariant="solid"
-                    bullet={
-                      <Box
-                        style={{
-                          backgroundColor: form.values.inspection_completed
-                            ? "#00851fff"
-                            : "#6b6b6b",
-                          borderRadius: "50%",
-                          width: 24,
-                          height: 24,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          aspectRatio: "1 / 1",
-                        }}
-                      >
-                        <FaCheckCircle size={10} color="white" />
-                      </Box>
-                    }
-                    styles={{
-                      item: {
-                        "--tl-color": form.values.inspection_completed
-                          ? "#00851fff"
-                          : "#e0e0e0",
-                      },
-                      itemTitle: {
-                        color: form.values.inspection_completed
-                          ? "#00851fff"
-                          : "#6b6b6b",
-                        fontSize: "12px",
-                      },
-                    }}
-                  >
-                    <Text size="xs" fw={500}>
-                      {form.values.inspection_date
-                        ? dayjs(form.values.inspection_date).format(
-                            "YYYY-MM-DD"
-                          )
-                        : "—"}
-                    </Text>
-                  </TimelineItem>
-                </Timeline>
-              </Paper>
-            </Box>
+            {/* Removed Installation Phase timeline as items moved to main form */}
             <Box pt="md" style={{ justifyItems: "center" }}>
               <Text
                 fw={600}
