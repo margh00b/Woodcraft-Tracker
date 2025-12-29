@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { useSupabase } from "@/hooks/useSupabase";
 import { Tables, TablesUpdate } from "@/types/db";
+import utc from "dayjs/plugin/utc";
 import {
   Container,
   Paper,
@@ -59,6 +60,7 @@ import AddInstaller from "@/components/Installers/AddInstaller/AddInstaller";
 import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
+dayjs.extend(utc);
 type InstallationType = Tables<"installation"> & {
   partially_shipped?: boolean;
 };
@@ -795,9 +797,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             />
                             {form.values.wrap_completed && (
                               <Text c="dimmed" size="xs">
-                                {dayjs(form.values.wrap_completed).format(
-                                  "YYYY-MM-DD"
-                                )}
+                                {dayjs
+                                  .utc(form.values.wrap_completed)
+                                  .format("YYYY-MM-DD")}
                               </Text>
                             )}
                           </Group>
@@ -840,9 +842,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                                 {form.values.installation_completed ===
                                 "1999-09-19T00:00:00+00:00"
                                   ? "Marked Complete"
-                                  : dayjs(
-                                      form.values.installation_completed
-                                    ).format("YYYY-MM-DD")}
+                                  : dayjs
+                                      .utc(form.values.installation_completed)
+                                      .format("YYYY-MM-DD")}
                               </Text>
                             )}
                           </Group>
