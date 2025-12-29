@@ -397,6 +397,8 @@ export type Database = {
           installer_id: number | null
           legacy_ref: string | null
           partially_shipped: boolean | null
+          site_changes: string | null
+          site_changes_detail: string | null
           trade_30days: string | null
           trade_6months: string | null
           wrap_completed: string | null
@@ -416,6 +418,8 @@ export type Database = {
           installer_id?: number | null
           legacy_ref?: string | null
           partially_shipped?: boolean | null
+          site_changes?: string | null
+          site_changes_detail?: string | null
           trade_30days?: string | null
           trade_6months?: string | null
           wrap_completed?: string | null
@@ -435,6 +439,8 @@ export type Database = {
           installer_id?: number | null
           legacy_ref?: string | null
           partially_shipped?: boolean | null
+          site_changes?: string | null
+          site_changes_detail?: string | null
           trade_30days?: string | null
           trade_6months?: string | null
           wrap_completed?: string | null

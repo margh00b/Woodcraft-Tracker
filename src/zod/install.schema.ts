@@ -16,6 +16,8 @@ export const installationSchema = z.object({
   in_warehouse: z.string().nullable(),
   trade_30days: z.string().nullable(),
   trade_6months: z.string().nullable(),
+  site_changes: z.string().nullable(),
+  site_changes_detail: z.string().nullable(),
 });
 
 export type InstallationType = z.infer<typeof installationSchema>;
