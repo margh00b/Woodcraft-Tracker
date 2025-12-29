@@ -142,7 +142,7 @@ export default function BulkScheduleModal({
         size="lg"
       >
         <Stack gap="lg">
-                    <Box>
+          <Box>
             <Text size="sm" fw={500} mb={4}>
               Selected Jobs:
             </Text>
@@ -161,7 +161,7 @@ export default function BulkScheduleModal({
             Adjust fields below. Leave empty to keep existing values.
           </Text>
 
-                    <Box>
+          <Box>
             <Group mb="xs" c="violet.9">
               <FaTools />{" "}
               <Text fw={600} size="sm">
@@ -198,7 +198,7 @@ export default function BulkScheduleModal({
 
           <Divider />
 
-                    <Box>
+          <Box>
             <Group mb="xs" c="green.9">
               <FaTruckLoading />{" "}
               <Text fw={600} size="sm">
@@ -221,14 +221,14 @@ export default function BulkScheduleModal({
                 onChange={(val) => handleUpdate("ship_schedule", val)}
               />
               <Select
-                label="Shipping Status"
+                label="Shipping Date Status"
                 placeholder="No Change"
                 data={["unprocessed", "tentative", "confirmed"]}
                 onChange={(val) => handleUpdate("ship_status", val)}
               />
             </SimpleGrid>
             <Group mt="md" grow>
-                            <Box>
+              <Box>
                 <Switch
                   size="md"
                   label="Mark as Wrapped"
@@ -254,7 +254,7 @@ export default function BulkScheduleModal({
                 </Text>
               </Box>
 
-                            <Box>
+              <Box>
                 <Switch
                   size="md"
                   label="Mark as Shipped"
@@ -278,7 +278,7 @@ export default function BulkScheduleModal({
 
           <Divider />
 
-                    <Box>
+          <Box>
             <Group mb="xs" c="blue.9">
               <FaCheckCircle />{" "}
               <Text fw={600} size="sm">
@@ -328,7 +328,7 @@ export default function BulkScheduleModal({
         </Stack>
       </Modal>
 
-            <Modal
+      <Modal
         opened={completionModalOpen}
         onClose={() => setCompletionModalOpen(false)}
         title="Set Completion Date"
