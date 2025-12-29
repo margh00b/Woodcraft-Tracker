@@ -10,6 +10,7 @@ import {
   PaginationState,
   ColumnFiltersState,
   SortingState,
+  RowSelectionState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -31,6 +32,9 @@ import {
   Title,
   Button,
   Anchor,
+  Checkbox,
+  Paper,
+  Transition,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -40,6 +44,7 @@ import {
   FaFire,
   FaCheckCircle,
   FaRegCircle,
+  FaCalendarCheck,
 } from "react-icons/fa";
 import { FaGears } from "react-icons/fa6";
 import dayjs from "dayjs";
@@ -48,11 +53,14 @@ import { useProdTable } from "@/hooks/useProdTable";
 import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import BulkProductionScheduleModal from "../BulkProductionScheduleModal/BulkProductionScheduleModal";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type ProductionListView = Views<"prod_table_view">;
 
 export default function ProdTable() {
   const router = useRouter();
+  const permissions = usePermissions();
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -64,6 +72,10 @@ export default function ProdTable() {
   const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
   const [drawerJobId, setDrawerJobId] = useState<number | null>(null);
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
+    useDisclosure(false);
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [bulkModalOpen, { open: openBulkModal, close: closeBulkModal }] =
     useDisclosure(false);
 
   const handleJobClick = (id: number) => {
@@ -105,9 +117,51 @@ export default function ProdTable() {
   const totalCount = data?.count || 0;
   const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
+  // Debug logging
+  if (typeof window !== "undefined" && tableData.length > 0) {
+    console.log("ProdTable Row Data Sample:", tableData[0]);
+  }
+
   const columnHelper = createColumnHelper<ProductionListView>();
 
   const columns = [
+    ...(permissions.isAdmin || permissions.isScheduler
+      ? [
+          {
+            id: "select",
+            enableSorting: false,
+            header: ({ table }: any) => (
+              <Checkbox
+                color="violet"
+                styles={{ input: { cursor: "pointer" } }}
+                checked={table.getIsAllPageRowsSelected()}
+                indeterminate={table.getIsSomePageRowsSelected()}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  table.getToggleAllPageRowsSelectedHandler()(e);
+                }}
+              />
+            ),
+            cell: ({ row }: any) => (
+              <Center
+                style={{ width: "100%", height: "100%" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox
+                  color="violet"
+                  styles={{ input: { cursor: "pointer" } }}
+                  checked={row.getIsSelected()}
+                  disabled={!row.getCanSelect()}
+                  onChange={(e) => {
+                    row.getToggleSelectedHandler()(e);
+                  }}
+                />
+              </Center>
+            ),
+            size: 40,
+          },
+        ]
+      : []),
     columnHelper.accessor("job_number", {
       header: "Job No.",
       size: 150,
@@ -355,13 +409,17 @@ export default function ProdTable() {
       pagination,
       sorting,
       columnFilters: activeFilters,
+      rowSelection,
     },
+    enableRowSelection: true,
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => String(row.prod_id),
   });
 
   if (isLoading) {
@@ -518,6 +576,64 @@ export default function ProdTable() {
         </Accordion.Item>
       </Accordion>
 
+      {/* Floating Action Bar */}
+      <Transition
+        mounted={Object.keys(rowSelection).length > 1}
+        transition="slide-up"
+        duration={200}
+        timingFunction="ease"
+      >
+        {(styles) => (
+          <Paper
+            shadow="xl"
+            radius="md"
+            withBorder
+            p="md"
+            style={{
+              ...styles,
+              position: "fixed",
+              bottom: rem(80),
+              left: rem(250),
+              right: 0,
+              marginInline: "auto",
+              width: "fit-content",
+              zIndex: 200,
+              backgroundColor: "var(--mantine-color-violet-0)",
+              borderColor: "var(--mantine-color-violet-2)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: rem(20),
+            }}
+          >
+            <Group>
+              <ThemeIcon color="violet" variant="light" size="lg">
+                <FaCheckCircle />
+              </ThemeIcon>
+              <Text fw={500} c="violet.9">
+                {Object.keys(rowSelection).length} jobs selected
+              </Text>
+            </Group>
+            <Group>
+              <Button
+                variant="white"
+                color="red"
+                onClick={() => setRowSelection({})}
+              >
+                Clear Selection
+              </Button>
+              <Button
+                color="violet"
+                onClick={openBulkModal}
+                leftSection={<FaCalendarCheck />}
+              >
+                Bulk Schedule
+              </Button>
+            </Group>
+          </Paper>
+        )}
+      </Transition>
+
       <ScrollArea
         style={{
           flex: 1,
@@ -551,7 +667,9 @@ export default function ProdTable() {
                     style={{
                       position: "relative",
                       width: header.getSize(),
-                      cursor: "pointer",
+                      cursor: header.column.getCanSort()
+                        ? "pointer"
+                        : "default",
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -559,11 +677,17 @@ export default function ProdTable() {
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    <span className="inline-block ml-1">
-                      {header.column.getIsSorted() === "asc" && <FaSortUp />}
-                      {header.column.getIsSorted() === "desc" && <FaSortDown />}
-                      {!header.column.getIsSorted() && <FaSort opacity={0.1} />}
-                    </span>
+                    {header.column.getCanSort() && (
+                      <span className="inline-block ml-1">
+                        {header.column.getIsSorted() === "asc" && <FaSortUp />}
+                        {header.column.getIsSorted() === "desc" && (
+                          <FaSortDown />
+                        )}
+                        {!header.column.getIsSorted() && (
+                          <FaSort opacity={0.1} />
+                        )}
+                      </span>
+                    )}
                   </Table.Th>
                 ))}
               </Table.Tr>
@@ -648,6 +772,12 @@ export default function ProdTable() {
         jobId={drawerJobId}
         opened={drawerOpened}
         onClose={closeDrawer}
+      />
+      <BulkProductionScheduleModal
+        opened={bulkModalOpen}
+        onClose={closeBulkModal}
+        selectedRows={table.getSelectedRowModel().rows}
+        clearSelection={() => setRowSelection({})}
       />
     </Box>
   );
