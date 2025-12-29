@@ -60,6 +60,10 @@ export function useInstallationTable({
           case "has_shipped":
             query = query.eq("has_shipped", valStr === "false");
             break;
+          case "ship_status":
+            if (valStr !== "all") {
+              query = query.eq("ship_status", `%${valStr}%`);
+            }
           case "rush":
             query = query.eq("rush", valStr === "true");
             break;

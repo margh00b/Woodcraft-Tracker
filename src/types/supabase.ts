@@ -1505,6 +1505,7 @@ export type Database = {
           rush: boolean | null
           sales_order_id: number | null
           ship_schedule: string | null
+          ship_status: Database["public"]["Enums"]["ShippingStatus"] | null
           shipping_client_name: string | null
           site_address: string | null
           wrap_date: string | null

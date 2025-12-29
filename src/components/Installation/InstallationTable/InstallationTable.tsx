@@ -37,6 +37,7 @@ import {
   UnstyledButton,
   Transition,
   Checkbox,
+  Select,
 } from "@mantine/core";
 import {
   FaSearch,
@@ -50,6 +51,7 @@ import {
   FaShippingFast,
   FaFilter,
 } from "react-icons/fa";
+import { IoIosWarning } from "react-icons/io";
 import dayjs from "dayjs";
 import { DatePickerInput } from "@mantine/dates";
 import { useInstallationTable } from "@/hooks/useInstallationTable";
@@ -174,12 +176,15 @@ export default function InstallationTable() {
   const CellWrapper = ({
     children,
     onContextMenu,
+    style,
   }: {
     children: React.ReactNode;
     onContextMenu?: (e: React.MouseEvent) => void;
+    style?: React.CSSProperties;
   }) => (
     <Box
       style={{
+        ...style,
         width: "100%",
         height: "100%",
         display: "flex",
@@ -226,7 +231,7 @@ export default function InstallationTable() {
       : []),
     columnHelper.accessor("job_number", {
       header: "Job No.",
-      size: 150,
+      size: 100,
       minSize: 100,
       cell: (info) => (
         <Anchor
@@ -270,35 +275,54 @@ export default function InstallationTable() {
         </CellWrapper>
       ),
     }),
+    columnHelper.accessor("site_address", {
+      header: "Site Address",
+      size: 300,
+      minSize: 300,
+      cell: (info) => (
+        <CellWrapper
+          onContextMenu={(e) =>
+            handleContextMenu(e, "site_address", info.getValue() as string)
+          }
+        >
+          <Text size="sm">{info.getValue() ?? "—"}</Text>
+        </CellWrapper>
+      ),
+    }),
 
     columnHelper.accessor("installer_company", {
       id: "installer",
       header: "Installer",
-      size: 200,
+      size: 150,
       minSize: 150,
       cell: (info) => {
         const row = info.row.original;
-        const filterValue =
-          row.installer_company || row.installer_first_name || "";
 
-        if (!row.installer_id && !row.installer_first_name)
+        const firstName = row.installer_first_name || "";
+        const lastName = row.installer_last_name || "";
+        const company = row.installer_company || "";
+
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        const displayText = fullName || company;
+
+        if (!displayText) {
           return <Text c="orange">TBD</Text>;
+        }
 
         return (
           <CellWrapper
             onContextMenu={(e) =>
-              handleContextMenu(e, "installer", filterValue)
+              handleContextMenu(e, "installer", displayText)
             }
           >
-            <Group gap={4} wrap="nowrap">
-              {row.installer_company ? (
-                <Tooltip label={`${row.installer_company} `}>
-                  <Text size="sm">{row.installer_first_name}</Text>
-                </Tooltip>
-              ) : (
-                <Text size="sm">{row.installer_first_name}</Text>
-              )}
-            </Group>
+            {fullName && company ? (
+              <Tooltip label={company}>
+                <Text size="sm">{displayText}</Text>
+              </Tooltip>
+            ) : (
+              <Text size="sm">{displayText}</Text>
+            )}
           </CellWrapper>
         );
       },
@@ -306,7 +330,7 @@ export default function InstallationTable() {
 
     columnHelper.accessor("wrap_date", {
       header: "Wrap Date",
-      size: 150,
+      size: 120,
       minSize: 120,
       cell: (info) => {
         const date = info.getValue();
@@ -332,17 +356,40 @@ export default function InstallationTable() {
       minSize: 120,
       cell: (info) => {
         const date = info.getValue();
-        if (!date) return <Text c="orange">TBD</Text>;
+        const row = info.row.original;
+
+        if (!date)
+          return (
+            <Center>
+              <Text c="orange">TBD</Text>
+            </Center>
+          );
 
         const dateObj = dayjs(date).toDate();
+        const status = (row as any).ship_status;
 
         return (
           <CellWrapper
             onContextMenu={(e) =>
               handleContextMenu(e, "ship_schedule", [dateObj, dateObj])
             }
+            style={{ justifyContent: "center" }}
           >
-            {dayjs(date).format("YYYY-MM-DD")}
+            <Group gap={6} wrap="nowrap" justify="center">
+              {dayjs(date).format("YYYY-MM-DD")}
+
+              {status === "confirmed" && (
+                <Tooltip label="Confirmed">
+                  <FaCheckCircle size={16} color="green" />
+                </Tooltip>
+              )}
+
+              {status === "tentative" && (
+                <Tooltip label="Tentative">
+                  <IoIosWarning size={16} color="orange" />
+                </Tooltip>
+              )}
+            </Group>
           </CellWrapper>
         );
       },
@@ -426,8 +473,8 @@ export default function InstallationTable() {
     }),
     columnHelper.accessor("installation_completed", {
       header: "Installation",
-      size: 180,
-      minSize: 180,
+      size: 120,
+      minSize: 120,
       cell: (info) => {
         const date = info.getValue();
         return (
@@ -471,8 +518,8 @@ export default function InstallationTable() {
     }),
     columnHelper.accessor("inspection_completed", {
       header: "Inspection",
-      size: 160,
-      minSize: 140,
+      size: 120,
+      minSize: 120,
       cell: (info) => {
         const date = info.getValue();
         return (
@@ -510,20 +557,6 @@ export default function InstallationTable() {
           </CellWrapper>
         );
       },
-    }),
-    columnHelper.accessor("site_address", {
-      header: "Site Address",
-      size: 200,
-      minSize: 150,
-      cell: (info) => (
-        <CellWrapper
-          onContextMenu={(e) =>
-            handleContextMenu(e, "site_address", info.getValue() as string)
-          }
-        >
-          <Text size="sm">{info.getValue() ?? "—"}</Text>
-        </CellWrapper>
-      ),
     }),
   ];
 
@@ -663,6 +696,21 @@ export default function InstallationTable() {
                   setInputFilterValue("ship_schedule", value as any);
                 }}
                 valueFormat="YYYY-MM-DD"
+              />
+              <Select
+                label="Ship Date Status"
+                placeholder="Date Status"
+                data={[
+                  { label: "Confirmed", value: "confirmed" },
+                  { label: "Tentative", value: "tentative" },
+                  { label: "Unprocessed", value: "unprocessed" },
+                  { label: "All", value: "all" },
+                ]}
+                value={(getInputFilterValue("ship_status") as string) || "all"}
+                onChange={(val) => {
+                  setInputFilterValue("ship_status", val || "all");
+                }}
+                allowDeselect={false}
               />
               <Group
                 style={{
@@ -818,7 +866,6 @@ export default function InstallationTable() {
         style={{
           flex: 1,
           minHeight: 0,
-          padding: rem(10),
         }}
         styles={{
           thumb: {
