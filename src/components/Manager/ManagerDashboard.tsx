@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -10,7 +10,6 @@ import {
   Text,
   Title,
   Group,
-  RingProgress,
   rem,
   Loader,
   Center,
@@ -19,7 +18,6 @@ import {
   ThemeIcon,
   Divider,
   Tooltip,
-  Badge,
 } from "@mantine/core";
 import {
   FaChartBar,
@@ -54,7 +52,13 @@ type DashboardView =
   | "SERVICE"
   | "PLANT";
 
-type SalesTrendData = Pick<Tables<"sales_orders">, "designer" | "created_at">;
+// Modified type to include the nested jobs relation we will fetch
+type SalesTrendData = Pick<
+  Tables<"sales_orders">,
+  "designer" | "created_at"
+> & {
+  jobs?: { job_base_number: number }[] | { job_base_number: number } | null;
+};
 
 interface DashboardMetrics {
   totalQuotes?: number;
@@ -249,9 +253,42 @@ export default function ManagerDashboardClient() {
 
       const todayISO = dayjs().startOf("day").toISOString();
 
+      // Generic helper to count unique values in a dataset
+      const getUniqueCount = (data: any[], key: string, nestedKey?: string) => {
+        if (!data || data.length === 0) return 0;
+        const uniqueValues = new Set();
+        data.forEach((item) => {
+          let val;
+          const relation = item[key];
+
+          if (nestedKey && relation) {
+            // Handle array vs object relation
+            if (Array.isArray(relation)) {
+              // If multiple related items (e.g. split jobs), consider all
+              relation.forEach((relItem) => {
+                if (relItem[nestedKey])
+                  uniqueValues.add(String(relItem[nestedKey]));
+              });
+              return; // Skip default add
+            } else {
+              val = relation[nestedKey];
+            }
+          } else {
+            val = relation;
+          }
+
+          if (val !== undefined && val !== null && val !== "") {
+            uniqueValues.add(String(val));
+          }
+        });
+        return uniqueValues.size;
+      };
+
       const processSalesChart = (salesData: SalesTrendData[]) => {
         const monthlyCounts: Record<string, number> = {};
         const designerCounts: Record<string, number> = {};
+        const seenJobBaseNumbers = new Set<string>();
+
         let loopDate = dayjs(fiscalStartISO);
 
         const chartData = Array.from({ length: 12 }).map(() => {
@@ -263,6 +300,28 @@ export default function ManagerDashboardClient() {
         });
 
         salesData.forEach((s) => {
+          // Identify Job Base Number
+          let baseNumber: string | null = null;
+
+          if (s.jobs) {
+            if (Array.isArray(s.jobs) && s.jobs.length > 0) {
+              baseNumber = String(s.jobs[0].job_base_number);
+            } else if (
+              !Array.isArray(s.jobs) &&
+              (s.jobs as any).job_base_number
+            ) {
+              baseNumber = String((s.jobs as any).job_base_number);
+            }
+          }
+
+          // Fallback: If no job relation, use row ID as unique (mostly for quotes or error states, but this fn is for Sold)
+          const uniqueKey = baseNumber || `no-job-${s.created_at}`;
+
+          if (baseNumber && seenJobBaseNumbers.has(baseNumber)) {
+            return; // Skip duplicate base numbers
+          }
+          if (baseNumber) seenJobBaseNumbers.add(baseNumber);
+
           if (s.created_at) {
             const mKey = dayjs(s.created_at).format("YYYY-MM");
             if (monthlyCounts[mKey] !== undefined) monthlyCounts[mKey]++;
@@ -299,14 +358,16 @@ export default function ManagerDashboardClient() {
       if (currentView === "OVERVIEW") {
         const [quotes, sold, service, activeJobs, salesData, shipments] =
           await Promise.all([
+            // Quotes don't have base numbers yet
             supabase
               .from("sales_orders")
-              .select("*", { count: "exact", head: true })
+              .select("id", { count: "exact", head: true })
               .eq("stage", "QUOTE"),
 
+            // Total Sold: Fetch jobs relation for deduplication
             supabase
               .from("sales_orders")
-              .select("*", { count: "exact", head: true })
+              .select("id, jobs!inner(job_base_number)")
               .eq("stage", "SOLD")
               .gte("created_at", fiscalStartISO),
 
@@ -315,19 +376,20 @@ export default function ManagerDashboardClient() {
               .select("*", { count: "exact", head: true })
               .is("completed_at", null),
 
+            // Active Jobs: Already has base number
             supabase
               .from("jobs")
-              .select("id, installation!inner(wrap_completed, wrap_date)", {
-                count: "exact",
-                head: true,
-              })
+              .select(
+                "job_base_number, installation!inner(wrap_completed, wrap_date)"
+              )
               .eq("is_active", true)
               .not("installation.wrap_date", "is", null)
               .is("installation.wrap_completed", null),
 
+            // Sales Chart Data: Fetch jobs relation for deduplication
             supabase
               .from("sales_orders")
-              .select("created_at")
+              .select("designer, created_at, jobs!inner(job_base_number)")
               .eq("stage", "SOLD")
               .gte("created_at", fiscalStartISO),
 
@@ -338,15 +400,19 @@ export default function ManagerDashboardClient() {
               .order("ship_schedule", { ascending: true })
               .limit(5),
           ]);
+
         const { finalChartData, topDesigners } = processSalesChart(
-          (salesData.data as SalesTrendData[]) || []
+          (salesData.data as any[]) || []
         );
 
         return {
           totalQuotes: quotes.count || 0,
-          totalSold: sold.count || 0,
+          totalSold: getUniqueCount(sold.data || [], "jobs", "job_base_number"),
           openServiceOrders: service.count || 0,
-          prodTotalJobs: activeJobs.count || 0,
+          prodTotalJobs: getUniqueCount(
+            activeJobs.data || [],
+            "job_base_number"
+          ),
           fiscalLabel: fiscalYearLabel,
           monthlyChartData: finalChartData,
           topDesigners,
@@ -362,10 +428,7 @@ export default function ManagerDashboardClient() {
           await Promise.all([
             supabase
               .from("production_schedule")
-              .select("prod_id, jobs!inner()", {
-                count: "exact",
-                head: true,
-              })
+              .select("prod_id, jobs!inner(job_base_number)")
               .is("placement_date", null)
               .eq("jobs.is_active", true),
 
@@ -384,30 +447,42 @@ export default function ManagerDashboardClient() {
               .is("placement_date", null)
               .eq("jobs.is_active", true)
               .limit(5),
+
+            // Fetch job_base_number from purchasing view for deduplication
             supabase
               .from("purchasing_table_view")
               .select(
-                "doors_ordered_at, doors_received_at, glass_ordered_at, glass_received_at, handles_ordered_at, handles_received_at, acc_ordered_at, acc_received_at"
+                "job_base_number, doors_ordered_at, doors_received_at, glass_ordered_at, glass_received_at, handles_ordered_at, handles_received_at, acc_ordered_at, acc_received_at"
               )
               .gte("ship_schedule", startOfWeek)
               .lte("ship_schedule", endOfWeek),
           ]);
 
-        const pendingOrdersCount = (pendingOrders.data || []).filter((row) => {
-          const isPending = (ordered: string | null, received: string | null) =>
-            ordered && !received;
+        // Filter for pending, then count unique base numbers
+        const pendingOrdersUniqueCount = (() => {
+          const rawPending = (pendingOrders.data || []).filter((row) => {
+            const isPending = (
+              ordered: string | null,
+              received: string | null
+            ) => ordered && !received;
 
-          return (
-            isPending(row.doors_ordered_at, row.doors_received_at) ||
-            isPending(row.glass_ordered_at, row.glass_received_at) ||
-            isPending(row.handles_ordered_at, row.handles_received_at) ||
-            isPending(row.acc_ordered_at, row.acc_received_at)
-          );
-        }).length;
+            return (
+              isPending(row.doors_ordered_at, row.doors_received_at) ||
+              isPending(row.glass_ordered_at, row.glass_received_at) ||
+              isPending(row.handles_ordered_at, row.handles_received_at) ||
+              isPending(row.acc_ordered_at, row.acc_received_at)
+            );
+          });
+          return getUniqueCount(rawPending, "job_base_number");
+        })();
 
         return {
-          prodTotalJobs: pendingCount.count || 0,
-          prodPendingOrders: pendingOrdersCount,
+          prodTotalJobs: getUniqueCount(
+            pendingCount.data || [],
+            "jobs",
+            "job_base_number"
+          ),
+          prodPendingOrders: pendingOrdersUniqueCount,
           upcomingShipments: flattenJobRelation(shipments.data || []),
           pendingPlacement: flattenJobRelation(pendingPlace.data || []),
         };
@@ -421,17 +496,16 @@ export default function ManagerDashboardClient() {
           [
             supabase
               .from("jobs")
-              .select("id, installation!inner(wrap_completed, wrap_date)", {
-                count: "exact",
-                head: true,
-              })
+              .select(
+                "job_base_number, installation!inner(wrap_completed, wrap_date)"
+              )
               .eq("is_active", true)
               .not("installation.wrap_date", "is", null)
               .is("installation.wrap_completed", null),
 
             supabase
               .from("production_schedule")
-              .select("*", { count: "exact", head: true })
+              .select("prod_id, jobs!inner(job_base_number)")
               .gte("ship_schedule", startOfMonth)
               .lte("ship_schedule", endOfMonth),
 
@@ -445,8 +519,15 @@ export default function ManagerDashboardClient() {
         );
 
         return {
-          plantActiveJobs: activeNotWrapped.count || 0,
-          plantShipmentsMonth: shipmentsMonth.count || 0,
+          plantActiveJobs: getUniqueCount(
+            activeNotWrapped.data || [],
+            "job_base_number"
+          ),
+          plantShipmentsMonth: getUniqueCount(
+            shipmentsMonth.data || [],
+            "jobs",
+            "job_base_number"
+          ),
           upcomingShipments: flattenJobRelation(shipments.data || []),
         };
       }
@@ -455,11 +536,11 @@ export default function ManagerDashboardClient() {
         const [pending, completedYear, active] = await Promise.all([
           supabase
             .from("installation")
-            .select("*", { count: "exact", head: true })
+            .select("id, jobs!inner(job_base_number)")
             .is("installation_date", null),
           supabase
             .from("installation")
-            .select("*", { count: "exact", head: true })
+            .select("id, jobs!inner(job_base_number)")
             .not("installation_completed", "is", null)
             .gte("installation_date", fiscalStartISO),
           supabase
@@ -469,8 +550,16 @@ export default function ManagerDashboardClient() {
         ]);
 
         return {
-          pendingInstalls: pending.count || 0,
-          completedInstallsYear: completedYear.count || 0,
+          pendingInstalls: getUniqueCount(
+            pending.data || [],
+            "jobs",
+            "job_base_number"
+          ),
+          completedInstallsYear: getUniqueCount(
+            completedYear.data || [],
+            "jobs",
+            "job_base_number"
+          ),
           activeInstallers: active.count || 0,
         };
       }
@@ -503,25 +592,29 @@ export default function ManagerDashboardClient() {
             .ilike("designer", `%${user?.username || ""}%`),
           supabase
             .from("sales_orders")
-            .select("*", { count: "exact", head: true })
+            .select("id, jobs!inner(job_base_number)")
             .eq("stage", "SOLD")
             .gte("created_at", fiscalStartISO)
             .ilike("designer", `%${user?.username || ""}%`),
           supabase
             .from("sales_orders")
-            .select("designer, created_at")
+            .select("designer, created_at, jobs!inner(job_base_number)")
             .eq("stage", "SOLD")
             .gte("created_at", fiscalStartISO)
             .ilike("designer", `%${user?.username || ""}%`),
         ]);
 
         const { finalChartData, topDesigners } = processSalesChart(
-          (salesData.data as SalesTrendData[]) || []
+          (salesData.data as any[]) || []
         );
 
         return {
           myTotalQuotes: quotes.count || 0,
-          myTotalSold: sold.count || 0,
+          myTotalSold: getUniqueCount(
+            sold.data || [],
+            "jobs",
+            "job_base_number"
+          ),
           fiscalLabel: fiscalYearLabel,
           monthlyChartData: finalChartData,
           topDesigners,
