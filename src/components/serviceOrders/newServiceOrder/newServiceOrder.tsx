@@ -314,16 +314,20 @@ export default function NewServiceOrder({
         values.homeowner_email ||
         values.homeowner_details
       ) {
-        await supabase.from("homeowners_info").upsert(
-          {
-            job_id: Number(values.job_id),
-            homeowner_name: values.homeowner_name,
-            homeowner_phone: values.homeowner_phone,
-            homeowner_email: values.homeowner_email,
-            homeowner_details: values.homeowner_details,
-          },
-          { onConflict: "job_id" }
-        );
+        const { error: hoError } = await supabase
+          .from("homeowners_info")
+          .upsert(
+            {
+              job_id: Number(values.job_id),
+              homeowner_name: values.homeowner_name,
+              homeowner_phone: values.homeowner_phone,
+              homeowner_email: values.homeowner_email,
+              homeowner_details: values.homeowner_details,
+            },
+            { onConflict: "job_id" }
+          );
+
+        if (hoError) throw hoError;
       }
 
       return newId;
