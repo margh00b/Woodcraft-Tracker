@@ -324,6 +324,11 @@ export default function ProdTable() {
             label: "Assembly",
             val: row.assembly_completed_actual,
           },
+          {
+            key: "has_shipped",
+            label: "Shipped",
+            val: row.has_shipped,
+          },
         ];
 
         return (
@@ -702,7 +707,8 @@ export default function ProdTable() {
             ) : (
               table.getRowModel().rows.map((row) => {
                 const bgColor =
-                  row.original.placement_date === null
+                  row.original.received_date === null &&
+                  !row.original.has_shipped
                     ? "#ffefefff"
                     : undefined;
                 return (

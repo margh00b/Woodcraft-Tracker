@@ -50,6 +50,8 @@ import {
   FaPlus,
   FaTruckLoading,
   FaBoxOpen,
+  FaExclamationTriangle,
+  FaClipboardList,
 } from "react-icons/fa";
 
 import CabinetSpecs from "@/components/Shared/CabinetSpecs/CabinetSpecs";
@@ -62,6 +64,7 @@ import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { installationSchema } from "@/zod/install.schema";
+import { colors, gradients } from "@/theme";
 
 dayjs.extend(utc);
 type InstallationType = Tables<"installation">;
@@ -104,9 +107,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
+  // Prompt state controls
   const [isBackorderPromptOpen, setIsBackorderPromptOpen] = useState(false);
   const [isAddBackorderModalOpen, setIsAddBackorderModalOpen] = useState(false);
-  const [isMarkingShipped, setIsMarkingShipped] = useState(false);
 
   const [
     isAddInstallerOpen,
@@ -340,6 +343,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       const timestamp = new Date().toISOString();
 
       let finalWrapCompleted = installValues.wrap_completed;
+      // Auto-complete wrap if fully shipped
       if (installValues.has_shipped && !installValues.partially_shipped) {
         finalWrapCompleted = finalWrapCompleted || timestamp;
       }
@@ -377,6 +381,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         ship_status: ship_status,
       };
 
+      // Auto-complete production steps if fully shipped
       if (installValues.has_shipped && !installValues.partially_shipped) {
         const autoCompleteFields = [
           "in_plant_actual",
@@ -474,26 +479,32 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
     );
   }
 
-  const handleBackorderPromptDecision = (isCompleteShipment: boolean) => {
-    setIsBackorderPromptOpen(false);
-
-    if (isCompleteShipment) {
-      setIsMarkingShipped(false);
-      form.setFieldValue("has_shipped", true);
-      form.setFieldValue("partially_shipped", false);
+  const handleShippedChange = (isChecked: boolean) => {
+    if (isChecked) {
+      setIsBackorderPromptOpen(true);
     } else {
-      setIsAddBackorderModalOpen(true);
+      form.setFieldValue("has_shipped", false);
+      form.setFieldValue("partially_shipped", false);
     }
   };
 
-  const handleShippedChange = (isChecked: boolean) => {
-    if (isChecked) {
-      setIsMarkingShipped(true);
-      setIsBackorderPromptOpen(true);
-    } else {
-      setIsMarkingShipped(false);
-      form.setFieldValue("has_shipped", false);
+  const handleBackorderDecision = (
+    type: "complete" | "partial-with-bo" | "partial-only"
+  ) => {
+    setIsBackorderPromptOpen(false);
+
+    if (type === "complete") {
+      form.setFieldValue("has_shipped", true);
       form.setFieldValue("partially_shipped", false);
+    } else {
+      // Both partial options set status to partial
+      form.setFieldValue("has_shipped", false);
+      form.setFieldValue("partially_shipped", true);
+
+      // Only one option triggers the modal
+      if (type === "partial-with-bo") {
+        setIsAddBackorderModalOpen(true);
+      }
     }
   };
 
@@ -619,7 +630,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                         size={48}
                         radius="md"
                         variant="gradient"
-                        gradient={{ from: "#8E2DE2", to: "#4A00E0", deg: 135 }}
+                        gradient={gradients.primary}
                       >
                         <FaTools size={22} />
                       </ThemeIcon>
@@ -842,13 +853,18 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                         <Divider variant="dashed" />
                         <Switch
                           size="md"
-                          color="violet"
+                          color={
+                            form.values.partially_shipped ? "orange" : "violet"
+                          }
                           label={
                             form.values.partially_shipped
                               ? "Shipped (Partial)"
                               : "Shipped"
                           }
-                          checked={form.values.has_shipped}
+                          checked={
+                            form.values.has_shipped ||
+                            !!form.values.partially_shipped
+                          }
                           onChange={(e) =>
                             handleShippedChange(e.currentTarget.checked)
                           }
@@ -1177,11 +1193,11 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           <ThemeIcon
             size={80}
             radius="100%"
-            variant="light"
-            color="blue"
-            style={{ border: "1px solid var(--mantine-color-blue-2)" }}
+            variant="gradient"
+            gradient={gradients.primary}
+            style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }}
           >
-            <FaTruckLoading size={40} />
+            <FaTruckLoading size={36} color="white" />
           </ThemeIcon>
           <Stack gap={4} align="center">
             <Text size="lg" fw={700} ta="center">
@@ -1191,28 +1207,52 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
               Is this a complete shipment, or are items missing?
             </Text>
           </Stack>
-          <Group w="100%" grow mt="md">
+          <Stack w="100%" gap="sm" mt="md">
             <Button
-              variant="outline"
-              color="orange"
-              size="md"
-              radius="md"
-              style={{ borderColor: "var(--mantine-color-orange-3)" }}
-              onClick={() => handleBackorderPromptDecision(false)}
-            >
-              Partial
-            </Button>
-            <Button
+              fullWidth
               variant="gradient"
-              gradient={{ from: "teal", to: "green", deg: 105 }}
+              gradient={gradients.success}
               size="md"
               radius="md"
               leftSection={<FaCheckCircle />}
-              onClick={() => handleBackorderPromptDecision(true)}
+              onClick={() => handleBackorderDecision("complete")}
+              styles={{ root: { transition: "transform 0.2s" } }}
             >
-              Complete
+              Complete Shipment
             </Button>
-          </Group>
+            <SimpleGrid cols={2}>
+              <Button
+                variant="outline"
+                color={colors.orange.primary}
+                size="sm"
+                radius="md"
+                leftSection={<FaClipboardList />}
+                style={{
+                  borderColor: colors.orange.primary,
+                  color: colors.orange.primary,
+                  fontSize: "12px",
+                }}
+                onClick={() => handleBackorderDecision("partial-with-bo")}
+              >
+                Partial (Log Backorder)
+              </Button>
+              <Button
+                variant="subtle"
+                color="gray"
+                size="sm"
+                radius="md"
+                leftSection={<FaExclamationTriangle />}
+                style={{
+                  borderColor: colors.gray.title,
+                  color: colors.gray.title,
+                  fontSize: "12px",
+                }}
+                onClick={() => handleBackorderDecision("partial-only")}
+              >
+                Partial (Mark Only)
+              </Button>
+            </SimpleGrid>
+          </Stack>
           <Text
             size="xs"
             c="dimmed"
@@ -1220,6 +1260,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
             onClick={() => {
               setIsBackorderPromptOpen(false);
               form.setFieldValue("has_shipped", false);
+              form.setFieldValue("partially_shipped", false);
             }}
           >
             Cancel
@@ -1234,25 +1275,15 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           jobId={String(jobData.id)}
           jobNumber={jobData.job_number}
           onSuccess={() => {
-            let shouldUpdate = false;
-            const updates: Partial<CombinedInstallFormValues> = {};
+            // Ensure status is updated to Partial if a backorder is added
+            const updates: Partial<CombinedInstallFormValues> = {
+              partially_shipped: true,
+              has_shipped: false,
+            };
 
-            if (isMarkingShipped) {
-              shouldUpdate = true;
-              updates.has_shipped = true;
-              updates.partially_shipped = true;
-              setIsMarkingShipped(false);
-            } else if (!form.values.has_shipped) {
-              shouldUpdate = true;
-              updates.has_shipped = true;
-              updates.partially_shipped = true;
-            }
-
-            if (shouldUpdate) {
-              const newValues = { ...form.values, ...updates };
-              form.setValues(newValues);
-              updateMutation.mutate(newValues);
-            }
+            const newValues = { ...form.values, ...updates };
+            form.setValues(newValues);
+            updateMutation.mutate(newValues);
           }}
         />
       )}

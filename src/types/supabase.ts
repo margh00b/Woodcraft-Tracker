@@ -1600,6 +1600,7 @@ export type Database = {
           cut_melamine_completed_actual: string | null
           doors_completed_actual: string | null
           drawer_completed_actual: string | null
+          has_shipped: boolean | null
           id: number | null
           in_plant_actual: string | null
           job_number: string | null
