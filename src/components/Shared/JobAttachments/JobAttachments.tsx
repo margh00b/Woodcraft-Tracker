@@ -15,7 +15,6 @@ import {
   UnstyledButton,
   Select,
   Badge,
-  rem,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Dropzone, PDF_MIME_TYPE } from "@mantine/dropzone";
@@ -50,7 +49,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   Sales: "cyan",
 };
 
-export default function JobAttachments({ jobId }: { jobId: number }) {
+export default function JobAttachments({
+  jobId,
+  full,
+}: {
+  jobId: number;
+  full?: boolean;
+}) {
   const { attachments, isLoading, uploadFile, isUploading, getPublicUrl } =
     useJobAttachments(jobId);
 
@@ -69,218 +74,460 @@ export default function JobAttachments({ jobId }: { jobId: number }) {
     });
   };
 
-  return (
-    <Paper p="sm" radius="md" withBorder shadow="sm" bg="white">
-      <UnstyledButton
-        onClick={toggle}
-        style={{ width: "100%", display: "block" }}
-      >
-        <Group justify="space-between" align="center" mb={opened ? "xs" : 0}>
-          <Group gap="xs">
-            <FaChevronRight
-              size={10}
-              style={{
-                transform: opened ? "rotate(90deg)" : "none",
-                transition: "transform 200ms ease",
-                color: "var(--mantine-color-dimmed)",
-              }}
-            />
-            <FaPaperclip
-              size={12}
-              style={{ color: "var(--mantine-color-dimmed)" }}
-            />
-            <Text fw={600} size="sm" c="dark">
-              Attachments
-            </Text>
-            <Text size="xs" c="dimmed" fw={500} style={{ opacity: 0.8 }}>
-              ({attachments?.length || 0})
-            </Text>
+  if (!full) {
+    return (
+      <Paper p="sm" radius="md" withBorder shadow="sm" bg="white">
+        <UnstyledButton
+          onClick={toggle}
+          style={{ width: "100%", display: "block" }}
+        >
+          {/* FIX 1: Removed conditional mb={opened ? "xs" : 0} */}
+          <Group justify="space-between" align="center">
+            <Group gap="xs">
+              <FaChevronRight
+                size={10}
+                style={{
+                  transform: opened ? "rotate(90deg)" : "none",
+                  transition: "transform 200ms ease",
+                  color: "var(--mantine-color-dimmed)",
+                }}
+              />
+              <FaPaperclip
+                size={12}
+                style={{ color: "var(--mantine-color-dimmed)" }}
+              />
+              <Text fw={600} size="sm" c="dark">
+                Attachments
+              </Text>
+              <Text size="xs" c="dimmed" fw={500} style={{ opacity: 0.8 }}>
+                ({attachments?.length || 0})
+              </Text>
+            </Group>
+            {isUploading && <Loader size={14} color="blue" type="dots" />}
           </Group>
-          {isUploading && <Loader size={14} color="blue" type="dots" />}
-        </Group>
-      </UnstyledButton>
+        </UnstyledButton>
 
-      <Collapse in={opened}>
-        <Stack gap="sm">
-          <ScrollArea.Autosize mah={220} type="hover" offsetScrollbars>
-            <Stack gap={4}>
-              {isLoading ? (
-                <Center p="sm">
-                  <Loader size="xs" color="gray" />
-                </Center>
-              ) : attachments && attachments.length > 0 ? (
-                attachments.map((file) => (
-                  <Group
-                    key={file.id}
-                    wrap="nowrap"
-                    justify="space-between"
-                    p={6}
-                    style={{
-                      borderRadius: "6px",
-                      border: "1px solid transparent",
-                      transition: "all 0.2s",
-                      cursor: "default",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "var(--mantine-color-gray-0)";
-                      e.currentTarget.style.borderColor =
-                        "var(--mantine-color-gray-2)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.borderColor = "transparent";
-                    }}
-                  >
+        <Collapse in={opened}>
+          {/* FIX 2: Added pt="xs" here so the spacing animates smoothly */}
+          <Stack gap="sm" pt="xs">
+            <ScrollArea.Autosize mah={220} type="hover" offsetScrollbars>
+              <Stack gap={4}>
+                {isLoading ? (
+                  <Center p="sm">
+                    <Loader size="xs" color="gray" />
+                  </Center>
+                ) : attachments && attachments.length > 0 ? (
+                  attachments.map((file) => (
                     <Group
-                      gap="xs"
-                      style={{ overflow: "hidden", flex: 1 }}
-                      align="center"
+                      key={file.id}
+                      wrap="nowrap"
+                      justify="space-between"
+                      p={6}
+                      style={{
+                        borderRadius: "6px",
+                        border: "1px solid transparent",
+                        transition: "all 0.2s",
+                        cursor: "default",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          "var(--mantine-color-gray-0)";
+                        e.currentTarget.style.borderColor =
+                          "var(--mantine-color-gray-2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
+                      }}
                     >
-                      <ThemeIcon
-                        color="red"
-                        variant="light"
-                        size="sm"
-                        radius="sm"
-                        style={{ minWidth: "20px", height: "20px" }}
+                      <Group
+                        gap="xs"
+                        style={{ overflow: "hidden", flex: 1 }}
+                        align="center"
                       >
-                        <FaFilePdf size={10} />
-                      </ThemeIcon>
+                        <ThemeIcon
+                          color="red"
+                          variant="light"
+                          size="sm"
+                          radius="sm"
+                          style={{ minWidth: "20px", height: "20px" }}
+                        >
+                          <FaFilePdf size={10} />
+                        </ThemeIcon>
 
-                      <Box style={{ overflow: "hidden" }}>
-                        <Group gap={6} wrap="nowrap">
-                          <Text size="xs" fw={600} truncate c="dark" lh={1.2}>
-                            {file.file_name}
+                        <Box style={{ overflow: "hidden" }}>
+                          <Group gap={6} wrap="nowrap">
+                            <Text size="xs" fw={600} truncate c="dark" lh={1.2}>
+                              {file.file_name}
+                            </Text>
+                            <Badge
+                              size="xs"
+                              variant="outline"
+                              color={CATEGORY_COLORS[file.category] || "gray"}
+                              radius="sm"
+                              style={{
+                                textTransform: "none",
+                                fontSize: "9px",
+                                height: "16px",
+                                padding: "0 4px",
+                              }}
+                            >
+                              {file.category}
+                            </Badge>
+                          </Group>
+                          <Text size="10px" c="dimmed" truncate lh={1.1}>
+                            {dayjs(file.created_at).format("MMM D, h:mm A")} •{" "}
+                            {((file.file_size ?? 0) / 1024).toFixed(0)}KB •{" "}
+                            {file.uploaded_by || "System"}
                           </Text>
-                          <Badge
-                            size="xs"
-                            variant="outline"
-                            color={CATEGORY_COLORS[file.category] || "gray"}
-                            radius="sm"
-                            style={{
-                              textTransform: "none",
-                              fontSize: "9px",
-                              height: "16px",
-                              padding: "0 4px",
-                            }}
-                          >
-                            {file.category}
-                          </Badge>
-                        </Group>
-                        <Text size="10px" c="dimmed" truncate lh={1.1}>
-                          {dayjs(file.created_at).format("MMM D, h:mm A")} •{" "}
-                          {((file.file_size ?? 0) / 1024).toFixed(0)}KB •{" "}
-                          {file.uploaded_by || "System"}
-                        </Text>
-                      </Box>
+                        </Box>
+                      </Group>
+
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        component="a"
+                        href={getPublicUrl(file.file_path)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Download"
+                      >
+                        <FaDownload size={10} />
+                      </ActionIcon>
                     </Group>
-
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="sm"
-                      component="a"
-                      href={getPublicUrl(file.file_path)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Download"
-                    >
-                      <FaDownload size={10} />
-                    </ActionIcon>
-                  </Group>
-                ))
-              ) : (
-                <Text c="dimmed" size="xs" fs="italic" ta="center" py="xs">
-                  No files attached.
-                </Text>
-              )}
-            </Stack>
-          </ScrollArea.Autosize>
-
-          <Stack gap={4}>
-            <Select
-              data={CATEGORIES}
-              value={category}
-              onChange={setCategory}
-              placeholder="Select Category (Required)"
-              size="xs"
-              variant="filled"
-              allowDeselect={false}
-              withAsterisk
-              comboboxProps={{ withinPortal: false }}
-              styles={{
-                input: {
-                  fontWeight: 600,
-                  color: category ? "#4A00E0" : undefined,
-                  borderColor: !category
-                    ? "var(--mantine-color-red-3)"
-                    : undefined,
-                },
-              }}
-            />
-
-            <Dropzone
-              onDrop={handleDrop}
-              onReject={() => console.log("File rejected")}
-              maxSize={5 * 1024 ** 2}
-              accept={PDF_MIME_TYPE}
-              loading={isUploading}
-              multiple
-              disabled={!category}
-              h={36}
-              p={0}
-              radius="sm"
-              style={{
-                border: "1px dashed",
-                borderColor: !category
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-gray-4)",
-                backgroundColor: !category
-                  ? "var(--mantine-color-gray-0)"
-                  : "var(--mantine-color-white)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: !category ? "not-allowed" : "pointer",
-                opacity: !category ? 0.6 : 1,
-                transition: "all 0.2s",
-              }}
-            >
-              <Group justify="center" gap={6} style={{ pointerEvents: "none" }}>
-                {!category ? (
-                  <FaExclamationCircle
-                    size={12}
-                    color="var(--mantine-color-dimmed)"
-                  />
+                  ))
                 ) : (
-                  <Dropzone.Idle>
-                    <FaCloudUploadAlt
+                  <Text c="dimmed" size="xs" fs="italic" ta="center" py="xs">
+                    No files attached.
+                  </Text>
+                )}
+              </Stack>
+            </ScrollArea.Autosize>
+
+            <Stack gap={4}>
+              <Select
+                data={CATEGORIES}
+                value={category}
+                onChange={setCategory}
+                placeholder="Select Category (Required)"
+                size="xs"
+                variant="filled"
+                allowDeselect={false}
+                withAsterisk
+                comboboxProps={{ withinPortal: false }}
+                styles={{
+                  input: {
+                    fontWeight: 600,
+                    color: category ? "#4A00E0" : undefined,
+                    borderColor: !category
+                      ? "var(--mantine-color-red-3)"
+                      : undefined,
+                  },
+                }}
+              />
+
+              <Dropzone
+                onDrop={handleDrop}
+                onReject={() => console.log("File rejected")}
+                maxSize={5 * 1024 ** 2}
+                accept={PDF_MIME_TYPE}
+                loading={isUploading}
+                multiple
+                disabled={!category}
+                h={36}
+                p={0}
+                radius="sm"
+                style={{
+                  border: "1px dashed",
+                  borderColor: !category
+                    ? "var(--mantine-color-gray-3)"
+                    : "var(--mantine-color-gray-4)",
+                  backgroundColor: !category
+                    ? "var(--mantine-color-gray-0)"
+                    : "var(--mantine-color-white)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: !category ? "not-allowed" : "pointer",
+                  opacity: !category ? 0.6 : 1,
+                  transition: "all 0.2s",
+                }}
+              >
+                <Group
+                  justify="center"
+                  gap={6}
+                  style={{ pointerEvents: "none" }}
+                >
+                  {!category ? (
+                    <FaExclamationCircle
                       size={12}
                       color="var(--mantine-color-dimmed)"
                     />
-                  </Dropzone.Idle>
-                )}
+                  ) : (
+                    <Dropzone.Idle>
+                      <FaCloudUploadAlt
+                        size={12}
+                        color="var(--mantine-color-dimmed)"
+                      />
+                    </Dropzone.Idle>
+                  )}
 
-                <Dropzone.Accept>
-                  <FaCloudUploadAlt
-                    size={12}
-                    color="var(--mantine-color-blue-6)"
-                  />
-                </Dropzone.Accept>
-                <Dropzone.Reject>
-                  <FaTimesCircle size={12} color="var(--mantine-color-red-6)" />
-                </Dropzone.Reject>
+                  <Dropzone.Accept>
+                    <FaCloudUploadAlt
+                      size={12}
+                      color="var(--mantine-color-blue-6)"
+                    />
+                  </Dropzone.Accept>
+                  <Dropzone.Reject>
+                    <FaTimesCircle
+                      size={12}
+                      color="var(--mantine-color-red-6)"
+                    />
+                  </Dropzone.Reject>
 
-                <Text size="xs" c="dimmed" fw={600}>
-                  {!category
-                    ? "Select category to upload"
-                    : `Drop ${category} PDF`}
-                </Text>
-              </Group>
-            </Dropzone>
+                  <Text size="xs" c="dimmed" fw={600}>
+                    {!category
+                      ? "Select category to upload"
+                      : `Drop ${category} PDF`}
+                  </Text>
+                </Group>
+              </Dropzone>
+            </Stack>
           </Stack>
-        </Stack>
-      </Collapse>
-    </Paper>
-  );
+        </Collapse>
+      </Paper>
+    );
+  } else {
+    // Full version (Accordion style)
+    return (
+      <Paper p="sm" radius="md" withBorder shadow="sm" bg="white">
+        <UnstyledButton
+          onClick={toggle}
+          style={{ width: "100%", display: "block" }}
+        >
+          {/* FIX 1: Removed conditional mb={opened ? "sm" : 0} */}
+          <Group justify="space-between" align="center">
+            <Group gap="xs">
+              <FaChevronRight
+                size={10}
+                style={{
+                  transform: opened ? "rotate(90deg)" : "none",
+                  transition: "transform 200ms ease",
+                  color: "var(--mantine-color-dimmed)",
+                }}
+              />
+              <FaPaperclip
+                size={14}
+                style={{ color: "var(--mantine-color-violet-6)" }}
+              />
+              <Text fw={700} size="sm" c="dark">
+                Attachments
+              </Text>
+              <Badge size="xs" variant="light" color="gray">
+                {attachments?.length || 0}
+              </Badge>
+            </Group>
+            {isUploading && <Loader size={16} color="blue" type="dots" />}
+          </Group>
+        </UnstyledButton>
+
+        <Collapse in={opened}>
+          {/* FIX 2: Added pt="sm" here so the spacing animates smoothly */}
+          <Stack gap="sm" pt="sm">
+            <ScrollArea.Autosize mah={300} type="hover" offsetScrollbars>
+              <Stack gap={4}>
+                {isLoading ? (
+                  <Center p="sm">
+                    <Loader size="xs" color="gray" />
+                  </Center>
+                ) : attachments && attachments.length > 0 ? (
+                  attachments.map((file) => (
+                    <Group
+                      key={file.id}
+                      wrap="nowrap"
+                      justify="space-between"
+                      p={6}
+                      style={{
+                        borderRadius: "6px",
+                        border: "1px solid transparent",
+                        transition: "all 0.2s",
+                        cursor: "default",
+                        backgroundColor: "var(--mantine-color-gray-0)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor =
+                          "var(--mantine-color-gray-3)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "transparent";
+                      }}
+                    >
+                      <Group
+                        gap="xs"
+                        style={{ overflow: "hidden", flex: 1 }}
+                        align="center"
+                      >
+                        <ThemeIcon
+                          color="red"
+                          variant="light"
+                          size="sm"
+                          radius="sm"
+                          style={{ minWidth: "24px", height: "24px" }}
+                        >
+                          <FaFilePdf size={12} />
+                        </ThemeIcon>
+
+                        <Box style={{ overflow: "hidden" }}>
+                          <Group gap={6} wrap="nowrap">
+                            <Text size="sm" fw={600} truncate c="dark" lh={1.2}>
+                              {file.file_name}
+                            </Text>
+                            <Badge
+                              size="xs"
+                              variant="outline"
+                              color={CATEGORY_COLORS[file.category] || "gray"}
+                              radius="sm"
+                              style={{
+                                textTransform: "none",
+                                fontSize: "10px",
+                                height: "18px",
+                                padding: "0 6px",
+                              }}
+                            >
+                              {file.category}
+                            </Badge>
+                          </Group>
+                          <Text size="xs" c="dimmed" truncate lh={1.1}>
+                            {dayjs(file.created_at).format("MMM D, h:mm A")} •{" "}
+                            {((file.file_size ?? 0) / 1024).toFixed(0)}KB •{" "}
+                            {file.uploaded_by || "System"}
+                          </Text>
+                        </Box>
+                      </Group>
+
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        component="a"
+                        href={getPublicUrl(file.file_path)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Download"
+                      >
+                        <FaDownload size={12} />
+                      </ActionIcon>
+                    </Group>
+                  ))
+                ) : (
+                  <Text c="dimmed" size="sm" fs="italic" ta="center" py="md">
+                    No files attached.
+                  </Text>
+                )}
+              </Stack>
+            </ScrollArea.Autosize>
+
+            <Stack gap={6}>
+              <Text size="xs" fw={700} c="dimmed" tt="uppercase">
+                Upload New File
+              </Text>
+              <Group align="stretch" gap={8}>
+                <Select
+                  data={CATEGORIES}
+                  value={category}
+                  onChange={setCategory}
+                  placeholder="Category"
+                  size="sm"
+                  variant="filled"
+                  allowDeselect={false}
+                  withAsterisk
+                  comboboxProps={{ withinPortal: false }}
+                  styles={{
+                    root: { flex: 1 },
+                    input: {
+                      fontWeight: 600,
+                      color: category ? "#4A00E0" : undefined,
+                    },
+                  }}
+                />
+
+                <Dropzone
+                  onDrop={handleDrop}
+                  onReject={() => console.log("File rejected")}
+                  maxSize={5 * 1024 ** 2}
+                  accept={PDF_MIME_TYPE}
+                  loading={isUploading}
+                  multiple
+                  disabled={!category}
+                  radius="sm"
+                  style={{
+                    flex: 2,
+                    border: "1px dashed",
+                    borderColor: !category
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-blue-4)",
+                    backgroundColor: !category
+                      ? "var(--mantine-color-gray-0)"
+                      : "var(--mantine-color-white)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    cursor: !category ? "not-allowed" : "pointer",
+                    opacity: !category ? 0.6 : 1,
+                    transition: "all 0.2s",
+                    padding: 0,
+                    minHeight: "36px",
+                  }}
+                >
+                  <Group
+                    justify="center"
+                    gap={6}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {!category ? (
+                      <FaExclamationCircle
+                        size={14}
+                        color="var(--mantine-color-dimmed)"
+                      />
+                    ) : (
+                      <Dropzone.Idle>
+                        <FaCloudUploadAlt
+                          size={16}
+                          color="var(--mantine-color-blue-6)"
+                        />
+                      </Dropzone.Idle>
+                    )}
+
+                    <Dropzone.Accept>
+                      <FaCloudUploadAlt
+                        size={16}
+                        color="var(--mantine-color-blue-6)"
+                      />
+                    </Dropzone.Accept>
+                    <Dropzone.Reject>
+                      <FaTimesCircle
+                        size={16}
+                        color="var(--mantine-color-red-6)"
+                      />
+                    </Dropzone.Reject>
+
+                    <Text
+                      size="xs"
+                      c={!category ? "dimmed" : "blue.8"}
+                      fw={600}
+                    >
+                      {!category
+                        ? "Select Category"
+                        : `Click / Drop ${category} Files`}
+                    </Text>
+                  </Group>
+                </Dropzone>
+              </Group>
+            </Stack>
+          </Stack>
+        </Collapse>
+      </Paper>
+    );
+  }
 }

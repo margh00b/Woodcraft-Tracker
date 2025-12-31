@@ -50,6 +50,7 @@ import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/Relat
 import AddBackorderModal from "@/components/Installation/AddBOModal/AddBOModal";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 import utc from "dayjs/plugin/utc";
+import JobAttachments from "@/components/Shared/JobAttachments/JobAttachments";
 
 dayjs.extend(utc);
 
@@ -185,7 +186,7 @@ export default function EditProductionSchedulePage({
 
   useEffect(() => {
     if (data?.production_schedule) {
-      form.setValues({
+      form.initialize({
         ...data.production_schedule,
         wrap_date: data.installation?.wrap_date || null,
       });
@@ -618,10 +619,12 @@ export default function EditProductionSchedulePage({
                       label="Production & Scheduling Comments"
                       placeholder="Enter notes, exceptions, or special instructions here..."
                       minRows={10}
+                      mb={"md"}
                       styles={{ input: { minHeight: "200px" } }}
                       {...form.getInputProps("production_comments")}
                       value={form.values.production_comments ?? ""}
                     />
+                    <JobAttachments jobId={jobId as number} full />
                   </Box>
                 </Paper>
               </Paper>

@@ -65,6 +65,7 @@ import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { installationSchema } from "@/zod/install.schema";
 import { colors, gradients } from "@/theme";
+import JobAttachments from "@/components/Shared/JobAttachments/JobAttachments";
 
 dayjs.extend(utc);
 type InstallationType = Tables<"installation">;
@@ -1033,16 +1034,15 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             <FaCalendarCheck size={18} />
                             <Text fw={600}>Site Changes Detail</Text>
                           </Group>
-                          <Stack>
-                            <Textarea
-                              minRows={10}
-                              styles={{ input: { minHeight: "100px" } }}
-                              placeholder="Document site changes..."
-                              {...form.getInputProps("site_changes_detail")}
-                            />
-                          </Stack>
+                          <Textarea
+                            minRows={10}
+                            styles={{ input: { minHeight: "100px" } }}
+                            placeholder="Document site changes..."
+                            {...form.getInputProps("site_changes_detail")}
+                          />
                         </Box>
                       </Collapse>
+                      <JobAttachments jobId={jobId as number} full />
                     </Stack>
                   </Grid>
                 </Stack>
