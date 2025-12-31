@@ -19,6 +19,7 @@ export const CabinetSpecsSchema = z.object({
 
 export const ShippingSchema = z.object({
   shipping_client_name: z.string().optional(),
+  project_name: z.string().optional(),
   shipping_street: z.string().optional(),
   shipping_city: z.string().optional(),
   shipping_province: z.string().optional(),

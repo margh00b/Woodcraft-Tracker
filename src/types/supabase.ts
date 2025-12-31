@@ -1091,6 +1091,7 @@ export type Database = {
           layout_date: string | null
           markout_date: string | null
           order_type: string | null
+          project_name: string | null
           review_date: string | null
           sales_order_number: string | null
           second_markout_date: string | null
@@ -1133,6 +1134,7 @@ export type Database = {
           layout_date?: string | null
           markout_date?: string | null
           order_type?: string | null
+          project_name?: string | null
           review_date?: string | null
           sales_order_number?: string | null
           second_markout_date?: string | null
@@ -1175,6 +1177,7 @@ export type Database = {
           layout_date?: string | null
           markout_date?: string | null
           order_type?: string | null
+          project_name?: string | null
           review_date?: string | null
           sales_order_number?: string | null
           second_markout_date?: string | null

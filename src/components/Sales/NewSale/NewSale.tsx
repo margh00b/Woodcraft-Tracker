@@ -34,6 +34,7 @@ import {
   Text,
   Divider,
   Grid,
+  GridCol,
 } from "@mantine/core";
 import { FaCopy, FaPlus, FaCheckCircle, FaCircle } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -156,6 +157,7 @@ export default function NewSale() {
       },
       shipping: {
         shipping_client_name: "",
+        project_name: "",
         shipping_street: "",
         shipping_city: "",
         shipping_province: "",
@@ -446,6 +448,7 @@ export default function NewSale() {
 
     form.setFieldValue(`shipping`, {
       shipping_client_name: `${selectedClientData.lastName}`,
+      project_name: form.values.shipping.project_name,
       shipping_street: selectedClientData.street ?? "",
       shipping_city: selectedClientData.city ?? "",
       shipping_province: selectedClientData.province ?? "",
@@ -773,29 +776,52 @@ export default function NewSale() {
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Client Name"
-                      placeholder="Name of recipient"
+                      placeholder="Builder/Client Name...."
                       {...form.getInputProps(`shipping.shipping_client_name`)}
                     />
                     <TextInput
-                      label="Street Address"
-                      placeholder="123 Main St"
-                      {...form.getInputProps(`shipping.shipping_street`)}
+                      label="Project Name"
+                      placeholder="Project Name for Multi-fams..."
+                      {...form.getInputProps(`shipping.project_name`)}
                     />
                   </SimpleGrid>
-                  <SimpleGrid cols={3} spacing="sm">
-                    <TextInput
-                      label="City"
-                      {...form.getInputProps(`shipping.shipping_city`)}
-                    />
-                    <TextInput
-                      label="Province"
-                      {...form.getInputProps(`shipping.shipping_province`)}
-                    />
-                    <TextInput
-                      label="Zip"
-                      {...form.getInputProps(`shipping.shipping_zip`)}
-                    />
-                  </SimpleGrid>
+                  <Grid>
+                    {/* <GridCol span={6}>
+                      <TextInput
+                        label="Unit #"
+                        placeholder="1234..."
+                        {...form.getInputProps(`shipping.shipping_street`)}
+                      />
+                    </GridCol> */}
+                    <GridCol span={6}>
+                      <TextInput
+                        label="Street Address"
+                        placeholder="123 Main St"
+                        {...form.getInputProps(`shipping.shipping_street`)}
+                      />
+                    </GridCol>
+                    <GridCol span={2}>
+                      <TextInput
+                        label="City"
+                        placeholder="Calgary..."
+                        {...form.getInputProps(`shipping.shipping_city`)}
+                      />
+                    </GridCol>
+                    <GridCol span={2}>
+                      <TextInput
+                        label="Province"
+                        placeholder="AB..."
+                        {...form.getInputProps(`shipping.shipping_province`)}
+                      />
+                    </GridCol>
+                    <GridCol span={2}>
+                      <TextInput
+                        label="Zip"
+                        placeholder="A1B 2C3..."
+                        {...form.getInputProps(`shipping.shipping_zip`)}
+                      />
+                    </GridCol>
+                  </Grid>
                   <SimpleGrid cols={2} spacing="sm">
                     <TextInput
                       label="Phone 1"
@@ -1011,6 +1037,11 @@ export default function NewSale() {
                     <Select
                       label="Drawer Hardware"
                       rightSection
+                      placeholder={
+                        form.values.cabinet.drawer_box
+                          ? "Select Hardware"
+                          : "Select Box First"
+                      }
                       data={
                         form.values.cabinet.drawer_box
                           ? HARDWARE_MAPPING[form.values.cabinet.drawer_box]
