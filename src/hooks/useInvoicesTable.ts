@@ -32,22 +32,23 @@ export function useInvoicesTable({
   return useQuery({
     queryKey: ["invoices_list_server", pagination, columnFilters, sorting],
     queryFn: async () => {
-      let query = supabase.from("invoices").select(
-        `
-          *,
-          job:jobs!inner (
-            job_number,
-            sales_orders (
-              shipping_client_name,
-              shipping_street,
-              shipping_city,
-              shipping_province,
-              shipping_zip
-            )
+      const selectString = `
+        *,
+        job:jobs!inner (
+          job_number,
+          sales_orders!inner (
+            shipping_client_name,
+            shipping_street,
+            shipping_city,
+            shipping_province,
+            shipping_zip
           )
-        `,
-        { count: "exact" }
-      );
+        )
+      `;
+
+      let query = supabase
+        .from("invoices")
+        .select(selectString, { count: "exact" });
 
       for (const filter of columnFilters) {
         const { id, value } = filter;
@@ -76,9 +77,9 @@ export function useInvoicesTable({
                   dayjs(start).format("YYYY-MM-DD")
                 );
               if (end)
-                query = query.lte(
+                query = query.lt(
                   "date_entered",
-                  dayjs(end).format("YYYY-MM-DD")
+                  dayjs(end).add(1, "day").format("YYYY-MM-DD")
                 );
             }
             break;
@@ -86,7 +87,7 @@ export function useInvoicesTable({
             if (valStr === "paid") {
               query = query.not("paid_at", "is", null);
             } else if (valStr === "pending") {
-              query = query.is("paid_at", null);
+              query = query.is("paid_at", null).is("no_charge", false);
             } else if (valStr === "noCharge") {
               query = query.is("no_charge", true);
             }

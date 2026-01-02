@@ -192,7 +192,7 @@ export default function AddInvoice({
                 color: !form.values.job_id ? "#000000ff" : "white",
               }}
             >
-              Create Credit Memo
+              {isCreditMemo ? "Create Credit Memo" : "Create Invoice"}
             </Button>
           </Group>
         </Stack>

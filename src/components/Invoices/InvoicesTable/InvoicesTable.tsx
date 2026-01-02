@@ -748,33 +748,43 @@ export default function InvoicesTable() {
         />
       </Center>
 
-      <AddInvoice
-        opened={addInvoiceModalOpened}
-        onClose={closeAddInvoiceModal}
-      />
-      <AddInvoice
-        opened={addCreditModalOpened}
-        onClose={closeAddCreditModal}
-        isCreditMemo={true}
-      />
+      {addInvoiceModalOpened && (
+        <AddInvoice
+          opened={addInvoiceModalOpened}
+          onClose={closeAddInvoiceModal}
+        />
+      )}
 
-      <EditInvoice
-        opened={editInvoiceModalOpened}
-        onClose={() => {
-          closeEditInvoiceModal();
-          setSelectedInvoice(null);
-        }}
-        invoice={selectedInvoice}
-      />
-      <EditInvoice
-        opened={editCreditModalOpened}
-        onClose={() => {
-          closeEditCreditModal();
-          setSelectedInvoice(null);
-        }}
-        invoice={selectedInvoice}
-        isCreditMemo={true}
-      />
+      {addCreditModalOpened && (
+        <AddInvoice
+          opened={addCreditModalOpened}
+          onClose={closeAddCreditModal}
+          isCreditMemo={true}
+        />
+      )}
+
+      {editInvoiceModalOpened && selectedInvoice && (
+        <EditInvoice
+          opened={editInvoiceModalOpened}
+          onClose={() => {
+            closeEditInvoiceModal();
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+        />
+      )}
+
+      {editCreditModalOpened && selectedInvoice && (
+        <EditInvoice
+          opened={editCreditModalOpened}
+          onClose={() => {
+            closeEditCreditModal();
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+          isCreditMemo={true}
+        />
+      )}
 
       <Modal
         opened={commentModalOpened}
