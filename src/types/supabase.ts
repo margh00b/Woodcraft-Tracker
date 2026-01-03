@@ -1578,8 +1578,11 @@ export type Database = {
           client_name: string | null
           custom_finish_completed_actual: string | null
           cut_finish_completed_actual: string | null
+          cut_melamine_completed_actual: string | null
           doors_completed_actual: string | null
+          drawer_completed_actual: string | null
           has_shipped: boolean | null
+          in_warehouse: string | null
           installation_completed: string | null
           installation_id: number | null
           installation_notes: string | null
@@ -1588,8 +1591,10 @@ export type Database = {
           paint_completed_actual: string | null
           partially_shipped: boolean | null
           placement_date: string | null
+          prod_id: number | null
           project_name: string | null
           ship_schedule: string | null
+          ship_status: Database["public"]["Enums"]["ShippingStatus"] | null
           shipping_city: string | null
           shipping_province: string | null
           shipping_street: string | null
@@ -1597,7 +1602,22 @@ export type Database = {
           wrap_completed: string | null
           wrap_date: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_prod_id_fkey"
+            columns: ["prod_id"]
+            isOneToOne: false
+            referencedRelation: "prod_table_view"
+            referencedColumns: ["prod_id"]
+          },
+          {
+            foreignKeyName: "jobs_prod_id_fkey"
+            columns: ["prod_id"]
+            isOneToOne: false
+            referencedRelation: "production_schedule"
+            referencedColumns: ["prod_id"]
+          },
+        ]
       }
       prod_table_view: {
         Row: {

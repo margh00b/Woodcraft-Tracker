@@ -68,11 +68,6 @@ const dashboardLinks: SidebarLink[] = [
     label: "Plant",
     links: [
       {
-        iconName: "GrSchedules",
-        label: "Master Table",
-        path: "/dashboard/plant/master",
-      },
-      {
         iconName: "FaCalendarAlt",
         label: "Wrap Schedule",
         path: "/dashboard/plant/wrap",
@@ -82,11 +77,6 @@ const dashboardLinks: SidebarLink[] = [
         label: "Ship Schedule",
         path: "/dashboard/plant/ship",
       },
-      {
-        iconName: "FaClipboardCheck",
-        label: "Plant Actuals",
-        path: "/dashboard/plant/actuals",
-      },
     ],
   },
 
@@ -95,11 +85,7 @@ const dashboardLinks: SidebarLink[] = [
     iconName: "FaClipboardCheck",
     label: "Reports",
     links: [
-      {
-        iconName: "FaTruckLoading",
-        label: "Not Shipped",
-        path: "/dashboard/reports/shippingreport",
-      },
+
       {
         iconName: "FaTruckLoading",
         label: "Past Shipping",

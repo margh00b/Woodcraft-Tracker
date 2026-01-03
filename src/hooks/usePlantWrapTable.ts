@@ -27,8 +27,7 @@ export function usePlantWrapTable({
         .from("plant_table_view")
         .select("wrap_date")
         .not("has_shipped", "is", true)
-        .not("wrap_date", "is", null)
-        .is("wrap_completed", null);
+        .not("wrap_date", "is", null);
 
       columnFilters.forEach((filter) => {
         const { id, value } = filter;
@@ -81,7 +80,6 @@ export function usePlantWrapTable({
         .select("*")
         .not("has_shipped", "is", true)
         .not("wrap_date", "is", null)
-        .is("wrap_completed", null)
         .in("wrap_date", targetDates);
 
       if (sorting.length > 0) {

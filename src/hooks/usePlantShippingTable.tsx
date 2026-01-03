@@ -27,7 +27,6 @@ export function usePlantShippingTable({
         .from("plant_table_view")
         .select("ship_schedule")
         .not("ship_schedule", "is", null)
-        .not("has_shipped", "is", true)
         .is("installation_completed", null);
 
       columnFilters.forEach((filter) => {
@@ -78,7 +77,6 @@ export function usePlantShippingTable({
         .select("*")
         .in("ship_schedule", targetDates)
         .not("ship_schedule", "is", null)
-        .not("has_shipped", "is", true)
         .is("installation_completed", null);
 
       if (sorting.length > 0) {
