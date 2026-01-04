@@ -45,6 +45,7 @@ import SiteChangeModal from "./SiteChangeModal/SiteChangeModal";
 import { linearGradients, gradients } from "@/theme";
 import { DatePickerInput } from "@mantine/dates";
 import SiteChangesPdfModal from "./SiteChangesPdfModal/SiteChangesPdfModal";
+import SingleSiteChangePdfModal from "./SingleSiteChangePdfModal/SingleSiteChangePdfModal";
 
 export default function SiteChanges() {
   const permissions = usePermissions();
@@ -144,18 +145,30 @@ export default function SiteChanges() {
       }),
       columnHelper.display({
         id: "actions",
-        size: 60,
+        size: 90,
         cell: (info) => (
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(info.row.original);
-            }}
-          >
-            <FaPen size={14} />
-          </ActionIcon>
+          <Group gap={0}>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrintSingle(info.row.original);
+              }}
+            >
+              <FaPrint size={14} />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(info.row.original);
+              }}
+            >
+              <FaPen size={14} />
+            </ActionIcon>
+          </Group>
         ),
       }),
     ],
@@ -178,6 +191,17 @@ export default function SiteChanges() {
   const handleEdit = (job: any) => {
     setSelectedJob(job);
     openModal();
+  };
+
+  const [
+    printSingleModalOpened,
+    { open: openPrintSingleModal, close: closePrintSingleModal },
+  ] = useDisclosure(false);
+  const [selectedPrintJob, setSelectedPrintJob] = useState<any>(null);
+
+  const handlePrintSingle = (job: any) => {
+    setSelectedPrintJob(job);
+    openPrintSingleModal();
   };
 
   const setFilterValue = (id: string, value: any) => {
@@ -403,6 +427,11 @@ export default function SiteChanges() {
         onClose={closePrintModal}
         data={allDataForPrint?.data || []}
         dateRange={dateRangeFilter || [null, null]}
+      />
+      <SingleSiteChangePdfModal
+        opened={printSingleModalOpened}
+        onClose={closePrintSingleModal}
+        data={selectedPrintJob}
       />
     </Box>
   );
