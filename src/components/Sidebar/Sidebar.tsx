@@ -31,6 +31,7 @@ import {
   FaTruckLoading,
   FaBoxOpen,
   FaChevronLeft,
+  FaClipboardList,
 } from "react-icons/fa";
 import { FaGears, FaBarsStaggered } from "react-icons/fa6";
 import { MdFactory, MdFeedback, MdSupervisorAccount } from "react-icons/md";
@@ -67,6 +68,7 @@ const iconMap: Record<string, any> = {
   FaFileInvoice,
   FaCalendarAlt,
   FaClipboardCheck,
+  FaClipboardList,
   FaTruckLoading,
   MdSupervisorAccount,
   GrSchedules,
@@ -86,7 +88,6 @@ function MainLink({
   const hasLinks = Array.isArray(item.links) && item.links.length > 0;
   const { navigatePush } = useNavigationGuard();
 
-
   const isChildActive = hasLinks
     ? item.links?.some(
         (link) => pathname === link.path || pathname.startsWith(link.path + "/")
@@ -95,7 +96,7 @@ function MainLink({
 
   const isActive = item.path
     ? pathname === item.path ||
-      (!hasLinks && 
+      (!hasLinks &&
         item.path !== "/dashboard" &&
         pathname.startsWith(item.path) &&
         pathname === item.path)

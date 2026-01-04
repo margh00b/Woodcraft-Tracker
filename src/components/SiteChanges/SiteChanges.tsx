@@ -27,7 +27,6 @@ import {
   Accordion,
   SimpleGrid,
   ActionIcon,
-  rem,
 } from "@mantine/core";
 import {
   FaPrint,
@@ -35,21 +34,19 @@ import {
   FaSort,
   FaSortDown,
   FaSortUp,
-  FaPlus,
   FaPen,
+  FaClipboardList,
 } from "react-icons/fa";
-import { GrSchedules } from "react-icons/gr";
 import dayjs from "dayjs";
 import { useDisclosure } from "@mantine/hooks";
-import { DatePickerInput } from "@mantine/dates";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useSiteVisitsTable } from "@/hooks/useSiteVisitsTable";
-import SiteVisitModal from "./SiteVisitModal/SiteVisitModal";
-import { linearGradients, colors, gradients } from "@/theme";
-import SiteVisitsPdfModal from "./SiteVisitsPdfModal/SiteVisitsPdfModal";
-import SingleSiteVisitPdfModal from "./SingleSiteVisitPdfModal/SingleSiteVisitPdfModal";
+import { useSiteChangesTable } from "@/hooks/useSiteChangesTable";
+import SiteChangeModal from "./SiteChangeModal/SiteChangeModal";
+import { linearGradients, gradients } from "@/theme";
+import { DatePickerInput } from "@mantine/dates";
+import SiteChangesPdfModal from "./SiteChangesPdfModal/SiteChangesPdfModal";
 
-export default function SiteVisits() {
+export default function SiteChanges() {
   const permissions = usePermissions();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -61,23 +58,18 @@ export default function SiteVisits() {
 
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
-  const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
 
   const [printModalOpened, { open: openPrintModal, close: closePrintModal }] =
     useDisclosure(false);
 
-  const { data, isLoading } = useSiteVisitsTable({
+  const { data, isLoading } = useSiteChangesTable({
     pagination,
     columnFilters: activeFilters,
     sorting,
   });
 
-  const { data: printData, isLoading: isPrintLoading } = useSiteVisitsTable({
-    pagination: { pageIndex: 0, pageSize: 0 },
-    columnFilters: activeFilters,
-    sorting,
-  });
-  const { data: allDataForPrint } = useSiteVisitsTable({
+  const { data: allDataForPrint } = useSiteChangesTable({
     pagination: { pageIndex: 0, pageSize: 10000 },
     columnFilters: activeFilters,
     sorting,
@@ -91,7 +83,7 @@ export default function SiteVisits() {
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("jobs.job_number", {
+      columnHelper.accessor("job_number", {
         id: "job_number",
         header: "Job #",
         size: 100,
@@ -101,7 +93,7 @@ export default function SiteVisits() {
           </Text>
         ),
       }),
-      columnHelper.accessor("jobs.sales_orders.shipping_client_name", {
+      columnHelper.accessor("sales_orders.shipping_client_name", {
         id: "client_name",
         header: "Client",
         size: 200,
@@ -110,17 +102,17 @@ export default function SiteVisits() {
       columnHelper.accessor(
         (row) =>
           [
-            row.jobs?.sales_orders?.shipping_street,
-            row.jobs?.sales_orders?.shipping_city,
-            row.jobs?.sales_orders?.shipping_province,
-            row.jobs?.sales_orders?.shipping_zip,
+            row.sales_orders?.shipping_street,
+            row.sales_orders?.shipping_city,
+            row.sales_orders?.shipping_province,
+            row.sales_orders?.shipping_zip,
           ]
             .filter(Boolean)
             .join(", ") || "—",
         {
           id: "shipping_address",
           header: "Site Address",
-          size: 200,
+          size: 250,
           cell: (info) => (
             <Text size="sm" truncate>
               {info.getValue()}
@@ -128,52 +120,42 @@ export default function SiteVisits() {
           ),
         }
       ),
-      columnHelper.accessor("visit_date", {
-        header: "Visit Date",
-        size: 100,
-        cell: (info) =>
-          info.getValue() ? dayjs(info.getValue()).format("YYYY-MM-DD") : "—",
-      }),
-      columnHelper.accessor("created_by", {
-        header: "Visisted By",
-        size: 100,
-        cell: (info) => <Text size="sm">{info.getValue() || "—"}</Text>,
-      }),
-      columnHelper.accessor("notes", {
-        header: "Notes",
+      columnHelper.accessor("installation.site_changes_detail", {
+        id: "site_changes_detail",
+        header: "Details",
         size: 300,
         cell: (info) => (
-          <Text size="sm" lineClamp={1} title={info.getValue()}>
+          <Text size="sm" lineClamp={2} title={info.getValue()}>
             {info.getValue() || "—"}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor("installation.installation_date", {
+        id: "installation_date",
+        header: "Install Date",
+        size: 120,
+        cell: (info) => (
+          <Text size="sm">
+            {info.getValue()
+              ? dayjs(info.getValue()).format("YYYY-MM-DD")
+              : "—"}
           </Text>
         ),
       }),
       columnHelper.display({
         id: "actions",
-        size: 90,
+        size: 60,
         cell: (info) => (
-          <Group gap={10}>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrintSingle(info.row.original);
-              }}
-            >
-              <FaPrint size={14} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(info.row.original);
-              }}
-            >
-              <FaPen size={14} />
-            </ActionIcon>
-          </Group>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(info.row.original);
+            }}
+          >
+            <FaPen size={14} />
+          </ActionIcon>
         ),
       }),
     ],
@@ -193,25 +175,9 @@ export default function SiteVisits() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleEdit = (visit: any) => {
-    setSelectedVisit(visit);
+  const handleEdit = (job: any) => {
+    setSelectedJob(job);
     openModal();
-  };
-
-  const handleCreate = () => {
-    setSelectedVisit(null);
-    openModal();
-  };
-
-  const [
-    printSingleModalOpened,
-    { open: openPrintSingleModal, close: closePrintSingleModal },
-  ] = useDisclosure(false);
-  const [selectedPrintVisit, setSelectedPrintVisit] = useState<any>(null);
-
-  const handlePrintSingle = (visit: any) => {
-    setSelectedPrintVisit(visit);
-    openPrintSingleModal();
   };
 
   const setFilterValue = (id: string, value: any) => {
@@ -237,8 +203,9 @@ export default function SiteVisits() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const dateRangeFilter = activeFilters.find((f) => f.id === "visit_date")
-    ?.value as [Date | null, Date | null] | undefined;
+  const dateRangeFilter = activeFilters.find(
+    (f) => f.id === "installation_date"
+  )?.value as [Date | null, Date | null] | undefined;
 
   return (
     <Box
@@ -255,35 +222,23 @@ export default function SiteVisits() {
             variant="gradient"
             gradient={gradients.primary}
           >
-            <GrSchedules size={24} />
+            <FaClipboardList size={24} />
           </ThemeIcon>
           <Stack gap={0}>
-            <Title order={3}>Site Visits</Title>
+            <Title order={3}>Site Changes</Title>
             <Text c="dimmed" size="sm">
-              Log and track site visits
+              Track jobs with site changes
             </Text>
           </Stack>
         </Group>
-        <Group>
-          <Button
-            leftSection={<FaPrint size={14} />}
-            variant="outline"
-            color="violet"
-            onClick={openPrintModal}
-          >
-            Print List
-          </Button>
-          <Button
-            leftSection={<FaPlus size={14} />}
-            onClick={handleCreate}
-            style={{
-              background: linearGradients.primary,
-              border: "none",
-            }}
-          >
-            Log Site Visit
-          </Button>
-        </Group>
+        <Button
+          leftSection={<FaPrint size={14} />}
+          variant="outline"
+          color="violet"
+          onClick={openPrintModal}
+        >
+          Print List
+        </Button>
       </Group>
 
       <Accordion variant="contained" radius="md" mb="md">
@@ -319,16 +274,16 @@ export default function SiteVisits() {
               <DatePickerInput
                 type="range"
                 allowSingleDateInRange
-                label="Visit Date"
+                label="Install Date"
                 placeholder="Filter by Date Range"
                 clearable
                 value={
-                  (getFilterValue("visit_date") as [
+                  (getFilterValue("installation_date") as [
                     Date | null,
                     Date | null
                   ]) || [null, null]
                 }
-                onChange={(value) => setFilterValue("visit_date", value)}
+                onChange={(value) => setFilterValue("installation_date", value)}
               />
             </SimpleGrid>
 
@@ -403,7 +358,7 @@ export default function SiteVisits() {
               <Table.Tr>
                 <Table.Td colSpan={columns.length}>
                   <Center h={100}>
-                    <Text c="dimmed">No site visits found.</Text>
+                    <Text c="dimmed">No site changes found.</Text>
                   </Center>
                 </Table.Td>
               </Table.Tr>
@@ -438,21 +393,16 @@ export default function SiteVisits() {
         />
       </Group>
 
-      <SiteVisitModal
+      <SiteChangeModal
         opened={modalOpened}
         onClose={closeModal}
-        visit={selectedVisit}
+        job={selectedJob}
       />
-      <SiteVisitsPdfModal
+      <SiteChangesPdfModal
         opened={printModalOpened}
         onClose={closePrintModal}
         data={allDataForPrint?.data || []}
         dateRange={dateRangeFilter || [null, null]}
-      />
-      <SingleSiteVisitPdfModal
-        opened={printSingleModalOpened}
-        onClose={closePrintSingleModal}
-        data={selectedPrintVisit}
       />
     </Box>
   );

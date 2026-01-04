@@ -57,6 +57,11 @@ const dashboardLinks: SidebarLink[] = [
         label: "Site Visits",
         path: "/dashboard/installation/site-visits",
       },
+      {
+        iconName: "FaClipboardList",
+        label: "Site Changes",
+        path: "/dashboard/installation/site-changes",
+      },
     ],
   },
   {
