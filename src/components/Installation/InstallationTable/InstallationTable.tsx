@@ -231,8 +231,8 @@ export default function InstallationTable() {
       : []),
     columnHelper.accessor("job_number", {
       header: "Job No.",
-      size: 100,
-      minSize: 100,
+      size: 130,
+      minSize: 130,
       cell: (info) => (
         <Anchor
           component="button"

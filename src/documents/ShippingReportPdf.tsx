@@ -289,24 +289,24 @@ export const ShippingReportPdf = ({
             <Text style={styles.cellText}>{jobNum}</Text>
           </View>
           <View style={[styles.cellBase, styles.colCust]}>
-            <Text style={styles.cellText}>{clientName.substring(0, 20)}</Text>
+            <Text style={styles.cellText}>{clientName}</Text>
           </View>
           <View style={[styles.cellBase, styles.colAddr]}>
-            <Text style={styles.cellTextSmall}>{address.substring(0, 25)}</Text>
+            <Text style={styles.cellTextSmall}>{address}</Text>
           </View>
 
           <View style={[styles.cellBase, styles.colBox]}>
             <Text style={[styles.cellText, { fontWeight: "bold" }]}>{box}</Text>
           </View>
           <View style={[styles.cellBase, styles.colDoor]}>
-            <Text style={styles.cellTextSmall}>{door.substring(0, 20)}</Text>
+            <Text style={styles.cellTextSmall}>{door}</Text>
           </View>
 
           <View style={[styles.cellBase, styles.colSpec]}>
-            <Text style={styles.cellTextSmall}>{species.substring(0, 15)}</Text>
+            <Text style={styles.cellTextSmall}>{species}</Text>
           </View>
           <View style={[styles.cellBase, styles.colColor]}>
-            <Text style={styles.cellTextSmall}>{color.substring(0, 15)}</Text>
+            <Text style={styles.cellTextSmall}>{color}</Text>
           </View>
 
           <View style={[styles.cellBase, styles.colCheck]}>

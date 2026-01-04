@@ -168,7 +168,7 @@ export default function SalesTable() {
     () => [
       columnHelper.accessor("job_number", {
         header: "Job Number",
-        size: 70,
+        size: 50,
         cell: (info) => {
           if (info.getValue()) {
             return (
@@ -195,7 +195,7 @@ export default function SalesTable() {
       }),
       columnHelper.accessor("stage", {
         header: "Status",
-        size: 80,
+        size: 70,
         cell: (info) => (
           <Badge
             style={{ cursor: "inherit" }}
@@ -261,7 +261,7 @@ export default function SalesTable() {
       }),
       columnHelper.accessor("ship_schedule", {
         header: "Ship Date",
-        size: 100,
+        size: 70,
         cell: (info) => {
           const date = info.getValue<string>();
           return date ? dayjs.utc(date).format("YYYY-MM-DD") : "(TBD)";
@@ -269,7 +269,7 @@ export default function SalesTable() {
       }),
       columnHelper.accessor("created_at", {
         header: "Created",
-        size: 100,
+        size: 70,
         cell: (info) => {
           const date = info.getValue<string>();
           return date ? dayjs.utc(date).format("YYYY-MM-DD") : "—";
@@ -592,13 +592,7 @@ export default function SalesTable() {
         }}
         type="hover"
       >
-        <Table
-          striped
-          stickyHeader
-          highlightOnHover
-          withColumnBorders
-          layout="fixed"
-        >
+        <Table striped stickyHeader highlightOnHover withColumnBorders>
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
@@ -611,7 +605,6 @@ export default function SalesTable() {
                       onClick={header.column.getToggleSortingHandler()}
                       style={{
                         position: "relative",
-                        width: header.getSize(),
                         cursor: "pointer",
                         whiteSpace: "nowrap",
                         userSelect: "none",
@@ -661,7 +654,6 @@ export default function SalesTable() {
                     <Table.Td
                       key={cell.id}
                       style={{
-                        width: cell.column.getSize(),
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
