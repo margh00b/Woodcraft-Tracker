@@ -81,7 +81,7 @@ export default function JobAttachments({
           onClick={toggle}
           style={{ width: "100%", display: "block" }}
         >
-          {/* FIX 1: Removed conditional mb={opened ? "xs" : 0} */}
+          {}
           <Group justify="space-between" align="center">
             <Group gap="xs">
               <FaChevronRight
@@ -108,7 +108,7 @@ export default function JobAttachments({
         </UnstyledButton>
 
         <Collapse in={opened}>
-          {/* FIX 2: Added pt="xs" here so the spacing animates smoothly */}
+          {}
           <Stack gap="sm" pt="xs">
             <ScrollArea.Autosize mah={220} type="hover" offsetScrollbars>
               <Stack gap={4}>
@@ -299,14 +299,13 @@ export default function JobAttachments({
       </Paper>
     );
   } else {
-    // Full version (Accordion style)
     return (
       <Paper p="sm" radius="md" withBorder shadow="sm" bg="white">
         <UnstyledButton
           onClick={toggle}
           style={{ width: "100%", display: "block" }}
         >
-          {/* FIX 1: Removed conditional mb={opened ? "sm" : 0} */}
+          {}
           <Group justify="space-between" align="center">
             <Group gap="xs">
               <FaChevronRight
@@ -333,7 +332,7 @@ export default function JobAttachments({
         </UnstyledButton>
 
         <Collapse in={opened}>
-          {/* FIX 2: Added pt="sm" here so the spacing animates smoothly */}
+          {}
           <Stack gap="sm" pt="sm">
             <ScrollArea.Autosize mah={300} type="hover" offsetScrollbars>
               <Stack gap={4}>

@@ -47,7 +47,6 @@ export type PastShippingJob = {
     | null;
 };
 
-// Common border color for the grid
 const BORDER_COLOR = "#e0e0e0";
 const HEADER_BORDER_COLOR = "#000";
 
@@ -85,39 +84,36 @@ const styles = StyleSheet.create({
   },
   dateGroupText: { fontSize: 10, fontWeight: "bold", paddingHorizontal: 5 },
 
-  // Table Row & Header
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#000",
     backgroundColor: "#f8f9fa",
-    alignItems: "stretch", // Ensures borders go top to bottom
+    alignItems: "stretch", 
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER_COLOR,
-    alignItems: "stretch", // Ensures borders go top to bottom
+    alignItems: "stretch", 
   },
 
-  // Base Cell Style (Divider Logic)
   cellBase: {
     paddingVertical: 3,
     paddingHorizontal: 2,
     borderRightWidth: 0.5,
     borderRightColor: BORDER_COLOR,
-    justifyContent: "center", // Vertically Center Content
+    justifyContent: "center", 
   },
   headerCellBase: {
     paddingVertical: 4,
     paddingHorizontal: 2,
     borderRightWidth: 0.5,
     borderRightColor: HEADER_BORDER_COLOR,
-    justifyContent: "center", // Vertically Center Header Text
+    justifyContent: "center", 
     backgroundColor: "#f8f9fa",
   },
 
-  // Specific Column Widths
   colJob: { width: "6%" },
   colCust: { width: "11%" },
   colAddr: { width: "13%" },
@@ -130,12 +126,11 @@ const styles = StyleSheet.create({
   colInspectComp: { width: "8%", alignItems: "center" },
   colInv: { width: "6%", alignItems: "center" },
   colInvDate: { width: "6%", alignItems: "center" },
-  colInvNum: { width: "6%", borderRightWidth: 0 }, // Last column, no border
+  colInvNum: { width: "6%", borderRightWidth: 0 }, 
 
-  // Text Styles
   headerText: { fontSize: 7, fontWeight: "bold", textAlign: "center" },
   cellText: { fontSize: 8 },
-  cellTextSmall: { fontSize: 7 }, // For longer addresses/names
+  cellTextSmall: { fontSize: 7 }, 
 
   checkbox: {
     width: 10,

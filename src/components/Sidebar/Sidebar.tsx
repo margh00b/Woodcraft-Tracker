@@ -86,12 +86,19 @@ function MainLink({
   const hasLinks = Array.isArray(item.links) && item.links.length > 0;
   const { navigatePush } = useNavigationGuard();
 
+
+  const isChildActive = hasLinks
+    ? item.links?.some(
+        (link) => pathname === link.path || pathname.startsWith(link.path + "/")
+      ) ?? false
+    : false;
+
   const isActive = item.path
     ? pathname === item.path ||
-    (item.path !== "/dashboard" && pathname.startsWith(item.path))
-    : false;
-  const isChildActive = hasLinks
-    ? item.links?.some((link) => pathname === link.path) ?? false
+      (!hasLinks && 
+        item.path !== "/dashboard" &&
+        pathname.startsWith(item.path) &&
+        pathname === item.path)
     : false;
 
   const [opened, setOpened] = useState(isChildActive);

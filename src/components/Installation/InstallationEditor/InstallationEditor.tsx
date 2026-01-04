@@ -108,7 +108,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
-  // Prompt state controls
   const [isBackorderPromptOpen, setIsBackorderPromptOpen] = useState(false);
   const [isAddBackorderModalOpen, setIsAddBackorderModalOpen] = useState(false);
 
@@ -350,7 +349,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       const timestamp = new Date().toISOString();
 
       let finalWrapCompleted = installValues.wrap_completed;
-      // Auto-complete wrap if fully shipped
       if (installValues.has_shipped && !installValues.partially_shipped) {
         finalWrapCompleted = finalWrapCompleted || timestamp;
       }
@@ -388,7 +386,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         ship_status: ship_status,
       };
 
-      // Auto-complete production steps if fully shipped
       if (installValues.has_shipped && !installValues.partially_shipped) {
         const autoCompleteFields = [
           "in_plant_actual",
@@ -505,11 +502,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       form.setFieldValue("has_shipped", true);
       form.setFieldValue("partially_shipped", false);
     } else {
-      // Both partial options set status to partial
       form.setFieldValue("has_shipped", false);
       form.setFieldValue("partially_shipped", true);
 
-      // Only one option triggers the modal
       if (type === "partial-with-bo") {
         setIsAddBackorderModalOpen(true);
       }
@@ -1282,7 +1277,6 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           jobId={String(jobData.id)}
           jobNumber={jobData.job_number}
           onSuccess={() => {
-            // Ensure status is updated to Partial if a backorder is added
             const updates: Partial<CombinedInstallFormValues> = {
               partially_shipped: true,
               has_shipped: false,

@@ -1378,6 +1378,90 @@ export type Database = {
           },
         ]
       }
+      site_visits: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: number
+          job_id: number | null
+          notes: string | null
+          visit_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          job_id?: number | null
+          notes?: string | null
+          visit_date: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          job_id?: number | null
+          notes?: string | null
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "installation_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "plant_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "prod_table_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "sales_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders_table_view"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "site_visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "shipped_not_invoiced_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       species: {
         Row: {
           Id: number

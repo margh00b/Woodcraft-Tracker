@@ -52,7 +52,6 @@ type DashboardView =
   | "SERVICE"
   | "PLANT";
 
-// Modified type to include the nested jobs relation we will fetch
 type SalesTrendData = Pick<
   Tables<"sales_orders">,
   "designer" | "created_at"
@@ -253,7 +252,6 @@ export default function ManagerDashboardClient() {
 
       const todayISO = dayjs().startOf("day").toISOString();
 
-      // Generic helper to count unique values in a dataset
       const getUniqueCount = (data: any[], key: string, nestedKey?: string) => {
         if (!data || data.length === 0) return 0;
         const uniqueValues = new Set();
@@ -262,14 +260,12 @@ export default function ManagerDashboardClient() {
           const relation = item[key];
 
           if (nestedKey && relation) {
-            // Handle array vs object relation
             if (Array.isArray(relation)) {
-              // If multiple related items (e.g. split jobs), consider all
               relation.forEach((relItem) => {
                 if (relItem[nestedKey])
                   uniqueValues.add(String(relItem[nestedKey]));
               });
-              return; // Skip default add
+              return; 
             } else {
               val = relation[nestedKey];
             }
@@ -300,7 +296,6 @@ export default function ManagerDashboardClient() {
         });
 
         salesData.forEach((s) => {
-          // Identify Job Base Number
           let baseNumber: string | null = null;
 
           if (s.jobs) {
@@ -314,11 +309,10 @@ export default function ManagerDashboardClient() {
             }
           }
 
-          // Fallback: If no job relation, use row ID as unique (mostly for quotes or error states, but this fn is for Sold)
           const uniqueKey = baseNumber || `no-job-${s.created_at}`;
 
           if (baseNumber && seenJobBaseNumbers.has(baseNumber)) {
-            return; // Skip duplicate base numbers
+            return; 
           }
           if (baseNumber) seenJobBaseNumbers.add(baseNumber);
 
@@ -358,13 +352,11 @@ export default function ManagerDashboardClient() {
       if (currentView === "OVERVIEW") {
         const [quotes, sold, service, activeJobs, salesData, shipments] =
           await Promise.all([
-            // Quotes don't have base numbers yet
             supabase
               .from("sales_orders")
               .select("id", { count: "exact", head: true })
               .eq("stage", "QUOTE"),
 
-            // Total Sold: Fetch jobs relation for deduplication
             supabase
               .from("sales_orders")
               .select("id, jobs!inner(job_base_number)")
@@ -376,7 +368,6 @@ export default function ManagerDashboardClient() {
               .select("*", { count: "exact", head: true })
               .is("completed_at", null),
 
-            // Active Jobs: Already has base number
             supabase
               .from("jobs")
               .select(
@@ -386,7 +377,6 @@ export default function ManagerDashboardClient() {
               .not("installation.wrap_date", "is", null)
               .is("installation.wrap_completed", null),
 
-            // Sales Chart Data: Fetch jobs relation for deduplication
             supabase
               .from("sales_orders")
               .select("designer, created_at, jobs!inner(job_base_number)")
@@ -448,7 +438,6 @@ export default function ManagerDashboardClient() {
               .eq("jobs.is_active", true)
               .limit(5),
 
-            // Fetch job_base_number from purchasing view for deduplication
             supabase
               .from("purchasing_table_view")
               .select(
@@ -458,7 +447,6 @@ export default function ManagerDashboardClient() {
               .lte("ship_schedule", endOfWeek),
           ]);
 
-        // Filter for pending, then count unique base numbers
         const pendingOrdersUniqueCount = (() => {
           const rawPending = (pendingOrders.data || []).filter((row) => {
             const isPending = (

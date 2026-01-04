@@ -46,7 +46,18 @@ const dashboardLinks: SidebarLink[] = [
   {
     iconName: "FaShippingFast",
     label: "Installation",
-    path: "/dashboard/installation",
+    links: [
+      {
+        iconName: "GrSchedules",
+        label: "Schedule",
+        path: "/dashboard/installation",
+      },
+      {
+        iconName: "FaClipboardCheck",
+        label: "Site Visits",
+        path: "/dashboard/installation/site-visits",
+      },
+    ],
   },
   {
     iconName: "FaTools",
@@ -85,7 +96,6 @@ const dashboardLinks: SidebarLink[] = [
     iconName: "FaClipboardCheck",
     label: "Reports",
     links: [
-
       {
         iconName: "FaTruckLoading",
         label: "Past Shipping",

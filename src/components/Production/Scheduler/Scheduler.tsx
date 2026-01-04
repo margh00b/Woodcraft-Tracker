@@ -431,7 +431,7 @@ export default function EditProductionSchedulePage({
               <Paper p="md" radius="md" shadow="xl" pb={30} bg="gray.1">
                 <Paper p="md" radius="md" shadow="xl" bg="white">
                   <Stack>
-                    {/* Status Switches Section */}
+                    {}
                     <Box mb="md">
                       <Group gap="xl" align="center">
                         <Switch

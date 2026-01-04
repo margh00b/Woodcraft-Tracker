@@ -175,7 +175,7 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
       }}
     >
       <Box style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
-        {/* Header Section */}
+        {}
         <Paper p="md" radius="md" shadow="sm" bg="white" mb="md">
           <Group justify="space-between" align="center">
             <Group align="center">
@@ -228,9 +228,9 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
           </Group>
         </Paper>
 
-        {/* Main Content Grid */}
+        {}
         <Grid gutter="lg" align="stretch">
-          {/* Column 1: Client & Logistics (Stacked for balance) */}
+          {}
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Stack gap="lg" h="100%">
               <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -338,7 +338,7 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
             </Stack>
           </Grid.Col>
 
-          {/* Column 2: Cabinet Specs (Tallest item) */}
+          {}
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
               <SectionTitle
@@ -408,7 +408,7 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
             </Card>
           </Grid.Col>
 
-          {/* Column 3: Notes & Related Orders */}
+          {}
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Stack gap="lg" h="100%">
               <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -440,7 +440,7 @@ export default function ReadOnlySale({ salesOrderId }: ReadOnlySaleProps) {
                 </Paper>
               </Card>
 
-              {/* Related Service Orders takes remaining space if needed, or flows naturally */}
+              {}
               <Box style={{ flex: 1 }}>
                 {jobId && <RelatedServiceOrders jobId={jobId} readOnly />}
               </Box>

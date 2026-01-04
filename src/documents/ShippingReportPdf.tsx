@@ -54,7 +54,6 @@ const styles = StyleSheet.create({
   },
   dateGroupText: { fontSize: 10, fontWeight: "bold", paddingHorizontal: 5 },
 
-  // Table Structure
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -69,7 +68,6 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
   },
 
-  // Cell Styling
   cellBase: {
     paddingVertical: 3,
     paddingHorizontal: 2,
@@ -86,7 +84,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
 
-  // Column Widths
   colPlace: { width: "6%", alignItems: "center" },
   colJob: { width: "8%" },
   colCust: { width: "14%" },
@@ -97,7 +94,6 @@ const styles = StyleSheet.create({
   colColor: { width: "10%" },
   colCheck: { width: "4%", alignItems: "center" },
 
-  // Text Styles
   headerText: { fontSize: 8, fontWeight: "bold", textAlign: "center" },
   cellText: { fontSize: 8 },
   cellTextSmall: { fontSize: 7 },
