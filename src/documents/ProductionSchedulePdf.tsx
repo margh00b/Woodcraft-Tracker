@@ -7,6 +7,7 @@ export type JoinedCabinet = Tables<"cabinets"> & {
   door_styles: { name: string } | null;
   species: { Species: string } | null;
   colors: { Name: string } | null;
+  interior?: string | null;
 };
 
 export type ShippingReportJob = Tables<"jobs"> & {
@@ -87,13 +88,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
 
-  colPlace: { width: "6%", alignItems: "center" },
-  colJob: { width: "8%" },
+  colPlace: { width: "3%", alignItems: "center" },
+  colJob: { width: "6%" },
   colCust: { width: "12%" },
   colAddr: { width: "12%" },
   colReq: { width: "6%", alignItems: "center" },
   colBox: { width: "3%", alignItems: "center" },
-  colDoor: { width: "14%" },
+  colInterior: { width: "6%" },
+  colDoor: { width: "13%" },
   colSpec: { width: "6%" },
   colColor: { width: "9%" },
   colCheck: { width: "4%", alignItems: "center" },
@@ -155,7 +157,7 @@ const safeGet = (data: any) => {
 const ColumnHeaders = () => (
   <View style={styles.tableHeader}>
     <View style={[styles.headerCellBase, styles.colPlace]}>
-      <Text style={styles.headerText}>Placement</Text>
+      <Text style={styles.headerText}>Plc.</Text>
     </View>
     <View style={[styles.headerCellBase, styles.colJob]}>
       <Text style={styles.headerText}>Job #</Text>
@@ -168,6 +170,9 @@ const ColumnHeaders = () => (
     </View>
     <View style={[styles.headerCellBase, styles.colBox]}>
       <Text style={styles.headerText}>Box</Text>
+    </View>
+    <View style={[styles.headerCellBase, styles.colInterior]}>
+      <Text style={styles.headerText}>Interior</Text>
     </View>
     <View style={[styles.headerCellBase, styles.colDoor]}>
       <Text style={styles.headerText}>Door Style</Text>
@@ -213,14 +218,17 @@ export const ProductionSchedulePdf = ({
   startDate: Date | null;
   endDate: Date | null;
 }) => {
-  const grouped = data.reduce((acc, job) => {
-    const install = safeGet(job.installation);
-    const dateKey = install?.wrap_date || "No Date";
+  const grouped = data.reduce(
+    (acc, job) => {
+      const install = safeGet(job.installation);
+      const dateKey = install?.wrap_date || "No Date";
 
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(job);
-    return acc;
-  }, {} as Record<string, ShippingReportJob[]>);
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(job);
+      return acc;
+    },
+    {} as Record<string, ShippingReportJob[]>,
+  );
 
   const sortedDates = Object.keys(grouped).sort((a, b) => {
     if (a === "No Date") return 1;
@@ -261,7 +269,7 @@ export const ProductionSchedulePdf = ({
         <Text style={styles.dateGroupText}>Wrap Date:</Text>
         <Text style={styles.dateGroupText}>{formattedDate}</Text>
         <Text style={styles.dateGroupText}>{dayName}</Text>
-      </View>
+      </View>,
     );
     currentCount += 1;
 
@@ -286,6 +294,7 @@ export const ProductionSchedulePdf = ({
         "—";
 
       const box = cab?.box || "0";
+      const interior = cab?.interior || "—";
       const door = safeGet(cab?.door_styles)?.name || "—";
       const species = safeGet(cab?.species)?.Species || "—";
       const color = safeGet(cab?.colors)?.Name || "—";
@@ -307,6 +316,9 @@ export const ProductionSchedulePdf = ({
 
           <View style={[styles.cellBase, styles.colBox]}>
             <Text style={[styles.cellText, { fontWeight: "bold" }]}>{box}</Text>
+          </View>
+          <View style={[styles.cellBase, styles.colInterior]}>
+            <Text style={styles.cellTextSmall}>{interior}</Text>
           </View>
           <View style={[styles.cellBase, styles.colDoor]}>
             <Text style={styles.cellTextSmall}>{door.substring(0, 20)}</Text>

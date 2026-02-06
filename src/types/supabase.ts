@@ -2183,6 +2183,7 @@ export type Database = {
           cabinet_box: string | null
           cabinet_color: string | null
           cabinet_door_style: string | null
+          cabinet_interior: string | null
           cabinet_species: string | null
           canopy_completed_actual: string | null
           client_name: string | null

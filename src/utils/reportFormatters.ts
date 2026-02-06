@@ -66,6 +66,7 @@ export const formatProductionScheduleData = (
           shipping_province: item.shipping_province || "",
           cabinet: {
             box: item.cabinet_box || "0",
+            interior: item.cabinet_interior || "",
             door_styles: { name: item.cabinet_door_style || "" },
             species: { Species: item.cabinet_species || "" },
             colors: { Name: item.cabinet_color || "" },
