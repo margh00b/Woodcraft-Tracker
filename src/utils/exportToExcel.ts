@@ -80,8 +80,8 @@ export const exportToExcel = (
       if (cell) {
         if (R < startRow) {
           cell.s = {
-            font: { name: "Calibri", sz: 12, bold: true },
-            alignment: { vertical: "center", horizontal: "left" },
+            font: { name: "Calibri", sz: 14, bold: true },
+            alignment: { vertical: "center", horizontal: "center" },
           };
         } else if (R === startRow) {
           cell.s = headerStyle;

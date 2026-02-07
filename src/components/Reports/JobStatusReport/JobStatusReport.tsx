@@ -35,7 +35,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function JobStatusReport() {
@@ -88,7 +88,7 @@ export default function JobStatusReport() {
         />
       </PDFViewer>
     ),
-    [reportData, dateRange]
+    [reportData, dateRange],
   );
 
   const handleExport = () => {
@@ -108,15 +108,51 @@ export default function JobStatusReport() {
           : "",
         Shipped: job.has_shipped ? "Yes" : "No",
         "Install Date": job.installation_date || "",
-        "Install Comp": job.installation_completed || "",
+        "Install Comp":
+          job.installation_completed &&
+          dayjs(job.installation_completed).isValid()
+            ? dayjs(job.installation_completed).format("YYYY-MM-DD")
+            : "",
         "Inspection Date": job.inspection_date || "",
-        "Inspection Comp": job.inspection_completed || "",
-        "Final Date": "", 
+        "Inspection Comp":
+          job.inspection_completed && dayjs(job.inspection_completed).isValid()
+            ? dayjs(job.inspection_completed).format("YYYY-MM-DD")
+            : "",
+        "Final Date": "",
         "SO Count": job.service_order_count || 0,
       };
     });
 
-    exportToExcel(excelData, "Job_Status_Report");
+    const startDate = dayjs(dateRange[0]);
+    const endDate = dayjs(dateRange[1]);
+    let periodText = "Unknown Period";
+
+    if (
+      startDate.isValid() &&
+      endDate.isValid() &&
+      startDate.isSame(endDate, "month") &&
+      startDate.isSame(endDate, "year")
+    ) {
+      periodText = startDate.format("MMMM YYYY");
+    } else if (startDate.isValid() && endDate.isValid()) {
+      periodText = `${startDate.format("MMMM YYYY")} - ${endDate.format("MMMM YYYY")}`;
+    }
+
+    const rangeText = `Range: ${startDate.isValid() ? startDate.format("MMM DD, YYYY") : "?"} - ${endDate.isValid() ? endDate.format("MMM DD, YYYY") : "?"}`;
+    const printedText = `Printed: ${dayjs().format("MMM DD, YYYY")}`;
+
+    exportToExcel(excelData, "Job_Status_Report", {
+      customHeaders: [
+        [periodText],
+        ["Job Status Report"],
+        [`${rangeText}    ${printedText}`],
+      ],
+      merges: [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 10 } },
+      ],
+    });
   };
 
   const presets = [

@@ -7,7 +7,7 @@ import { Views } from "@/types/db";
 
 export type JobStatusJob = Views<"job_status_report_view">;
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 30;
 const BORDER_COLOR = "#e0e0e0";
 const HEADER_BORDER_COLOR = "#000";
 
@@ -241,17 +241,14 @@ export const JobStatusReportPdf = ({
           </Text>
         </View>
         <View style={[styles.cellBase, styles.colFinalDate]}>
-          <Text style={styles.cellText}>
-            {}
-            —
-          </Text>
+          <Text style={styles.cellText}>{}—</Text>
         </View>
         <View style={[styles.cellBase, styles.colSO]}>
           <Text style={styles.cellText}>
             {String(job.service_order_count || 0)}
           </Text>
         </View>
-      </View>
+      </View>,
     );
 
     currentCount += 1;
