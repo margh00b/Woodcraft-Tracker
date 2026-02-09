@@ -33,7 +33,7 @@ import {
   FaBoxOpen,
   FaCalendarCheck,
   FaUndo,
-  FaTimes, 
+  FaTimes,
 } from "react-icons/fa";
 import { colors, gradients } from "@/theme";
 import AddBackorderModal from "@/components/Installation/AddBOModal/AddBOModal";
@@ -80,7 +80,7 @@ export default function BulkScheduleModal({
 
   const [completionModalOpen, setCompletionModalOpen] = useState(false);
   const [completionDateInput, setCompletionDateInput] = useState<Date | null>(
-    new Date()
+    new Date(),
   );
   const [targetCompletionField, setTargetCompletionField] = useState<
     "installation_completed" | null
@@ -109,14 +109,11 @@ export default function BulkScheduleModal({
 
   const installerOptions = useMemo(() => {
     return (installers || []).map((i) => {
-      const fullName = [i.first_name, i.last_name].filter(Boolean).join(" ");
-      let label = fullName;
-      if (i.company_name) {
-        label = fullName ? `${i.company_name} (${fullName})` : i.company_name;
-      }
+      const namePart = `${i.first_name || ""} ${i.last_name || ""}`.trim();
+      const companyPart = i.company_name || "";
       return {
         value: String(i.installer_id),
-        label: label || "Unknown Installer",
+        label: [namePart, companyPart].filter(Boolean).join(" - "),
       };
     });
   }, [installers]);
@@ -188,7 +185,7 @@ export default function BulkScheduleModal({
           color="red"
           size="sm"
           onClick={(e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
             openDeleteModal(field);
           }}
         >
@@ -252,7 +249,7 @@ export default function BulkScheduleModal({
           clearSelection();
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -474,7 +471,7 @@ export default function BulkScheduleModal({
                       onChange={(e) =>
                         handleUpdate(
                           "site_changes_detail",
-                          e.currentTarget.value
+                          e.currentTarget.value,
                         )
                       }
                     />
@@ -503,7 +500,7 @@ export default function BulkScheduleModal({
                         "wrap_completed",
                         e.currentTarget.checked
                           ? new Date().toISOString()
-                          : null
+                          : null,
                       )
                     }
                     styles={{ label: { fontWeight: 500 } }}
@@ -580,7 +577,7 @@ export default function BulkScheduleModal({
                         "installation_report_received",
                         e.currentTarget.checked
                           ? new Date().toISOString()
-                          : null
+                          : null,
                       )
                     }
                     styles={{ label: { fontWeight: 500 } }}
@@ -604,7 +601,7 @@ export default function BulkScheduleModal({
                         "trade_30days",
                         e.currentTarget.checked
                           ? new Date().toISOString()
-                          : null
+                          : null,
                       )
                     }
                     styles={{ label: { fontWeight: 500 } }}
@@ -628,7 +625,7 @@ export default function BulkScheduleModal({
                         "trade_6months",
                         e.currentTarget.checked
                           ? new Date().toISOString()
-                          : null
+                          : null,
                       )
                     }
                     styles={{ label: { fontWeight: 500 } }}
@@ -652,7 +649,7 @@ export default function BulkScheduleModal({
                         "site_changes",
                         e.currentTarget.checked
                           ? new Date().toISOString()
-                          : null
+                          : null,
                       )
                     }
                     styles={{ label: { fontWeight: 500 } }}
@@ -685,7 +682,7 @@ export default function BulkScheduleModal({
         title="Confirm Removal"
         centered
         size="sm"
-        zIndex={202} 
+        zIndex={202}
       >
         <Stack>
           <Text size="sm">
