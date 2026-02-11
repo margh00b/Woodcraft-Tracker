@@ -17,7 +17,7 @@ export function usePermissions() {
   const isManager = role === "manager";
   const isInspection = role === "inspection";
 
-  const canEditSales = isAdmin || isDesigner || isScheduler;
+  const canEditSales = isAdmin || isDesigner || isScheduler || isReception;
   const canEditProduction = isAdmin || isScheduler;
   const canEditInstallation = isAdmin || isInstaller || isService;
   const canEditInspections = isAdmin || isInspection || isInstaller;

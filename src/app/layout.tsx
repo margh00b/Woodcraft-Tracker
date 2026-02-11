@@ -43,7 +43,7 @@ const dashboardLinks: SidebarLink[] = [
     iconName: "CircleDollarSign",
     label: "Sales",
     path: "/dashboard/sales",
-    allowedRoles: ["designer", "admin", "manager"],
+    allowedRoles: ["designer", "admin", "manager", "reception"],
   },
   {
     iconName: "Hammer",
