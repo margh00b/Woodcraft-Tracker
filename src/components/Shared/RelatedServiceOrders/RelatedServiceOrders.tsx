@@ -58,7 +58,7 @@ export default function RelatedServiceOrders({
       const { data, error } = await supabase
         .from("service_orders")
         .select(
-          "service_order_id, service_order_number, date_entered, due_date, completed_at"
+          "service_order_id, service_order_number, date_entered, due_date, completed_at",
         )
         .eq("job_id", jobId)
         .order("date_entered", { ascending: false });
@@ -78,12 +78,8 @@ export default function RelatedServiceOrders({
           .from("service_orders")
           .select(
             `
-          service_order_id,
-          service_order_number,
-          date_entered,
-          due_date,
-          comments,
-          service_order_parts (qty, part, description),
+          *,
+          service_order_parts (*),
           installers:installer_id (first_name, last_name, company_name),
           jobs:job_id (
             job_number,
@@ -104,7 +100,7 @@ export default function RelatedServiceOrders({
               )
             )
           )
-        `
+        `,
           )
           .eq("service_order_id", selectedPrintId)
           .single();
