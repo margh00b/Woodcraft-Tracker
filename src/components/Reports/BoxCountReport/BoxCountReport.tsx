@@ -30,7 +30,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function BoxCountReport() {
@@ -66,8 +66,11 @@ export default function BoxCountReport() {
       ),
       production_schedule!inner (
         ship_schedule
+      ),
+      installation (
+        has_shipped
       )
-    `
+    `,
         )
         .gte("production_schedule.ship_schedule", startDate)
         .lte("production_schedule.ship_schedule", endDate)

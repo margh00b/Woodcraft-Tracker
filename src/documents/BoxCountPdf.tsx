@@ -68,10 +68,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  colMonth: { width: "40%", textAlign: "left" },
-  colJobs: { width: "20%", textAlign: "center" },
-  colBoxes: { width: "20%", textAlign: "center" },
-  colAvg: { width: "20%", textAlign: "right" },
+  colMonth: { width: "20%", textAlign: "left" },
+  colJobs: { width: "15%", textAlign: "center" },
+  colPending: { width: "20%", textAlign: "center" },
+  colShipped: { width: "20%", textAlign: "center" },
+  colAvg: { width: "25%", textAlign: "right" },
 
   headerText: {
     fontSize: 10,
@@ -107,30 +108,47 @@ export const BoxCountReportPdf = ({
   startDate: Date | null;
   endDate: Date | null;
 }) => {
-  const groupedData = data.reduce((acc, job) => {
-    const shipDate = job.production_schedule.ship_schedule;
-    const monthKey = shipDate
-      ? dayjs(shipDate).format("YYYY-MM")
-      : "Unscheduled";
+  const groupedData = data.reduce(
+    (acc, job) => {
+      const shipDate = job.production_schedule.ship_schedule;
+      const monthKey = shipDate
+        ? dayjs(shipDate).format("YYYY-MM")
+        : "Unscheduled";
 
-    if (!acc[monthKey]) {
-      acc[monthKey] = {
-        jobsCount: 0,
-        totalBoxes: 0,
-        monthLabel: shipDate
-          ? dayjs(shipDate).format("MMMM YYYY")
-          : "Unscheduled",
-      };
-    }
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          jobsCount: 0,
+          pendingBoxes: 0,
+          shippedBoxes: 0,
+          monthLabel: shipDate
+            ? dayjs(shipDate).format("MMMM YYYY")
+            : "Unscheduled",
+        };
+      }
 
-    const boxes = parseInt(job.sales_orders?.cabinet?.box || "0", 10);
-    const safeBoxes = isNaN(boxes) ? 0 : boxes;
+      const boxes = parseInt(job.sales_orders?.cabinet?.box || "0", 10);
+      const safeBoxes = isNaN(boxes) ? 0 : boxes;
 
-    acc[monthKey].jobsCount += 1;
-    acc[monthKey].totalBoxes += safeBoxes;
+      acc[monthKey].jobsCount += 1;
 
-    return acc;
-  }, {} as Record<string, { jobsCount: number; totalBoxes: number; monthLabel: string }>);
+      if (job.installation?.has_shipped) {
+        acc[monthKey].shippedBoxes += safeBoxes;
+      } else {
+        acc[monthKey].pendingBoxes += safeBoxes;
+      }
+
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        jobsCount: number;
+        pendingBoxes: number;
+        shippedBoxes: number;
+        monthLabel: string;
+      }
+    >,
+  );
 
   const sortedKeys = Object.keys(groupedData).sort((a, b) => {
     if (a === "Unscheduled") return 1;
@@ -141,15 +159,15 @@ export const BoxCountReportPdf = ({
   const grandTotal = Object.values(groupedData).reduce(
     (acc, curr) => ({
       jobs: acc.jobs + curr.jobsCount,
-      boxes: acc.boxes + curr.totalBoxes,
+      pending: acc.pending + curr.pendingBoxes,
+      shipped: acc.shipped + curr.shippedBoxes,
     }),
-    { jobs: 0, boxes: 0 }
+    { jobs: 0, pending: 0, shipped: 0 },
   );
 
+  const totalBoxes = grandTotal.pending + grandTotal.shipped;
   const grandAvg =
-    grandTotal.jobs > 0
-      ? (grandTotal.boxes / grandTotal.jobs).toFixed(0)
-      : "0.0";
+    grandTotal.jobs > 0 ? (totalBoxes / grandTotal.jobs).toFixed(0) : "0.0";
 
   return (
     <Document>
@@ -173,8 +191,11 @@ export const BoxCountReportPdf = ({
           <View style={styles.tableHeader}>
             <Text style={[styles.headerText, styles.colMonth]}>Month</Text>
             <Text style={[styles.headerText, styles.colJobs]}>Total Jobs</Text>
-            <Text style={[styles.headerText, styles.colBoxes]}>
-              Total Boxes
+            <Text style={[styles.headerText, styles.colPending]}>
+              Pending Boxes
+            </Text>
+            <Text style={[styles.headerText, styles.colShipped]}>
+              Shipped Boxes
             </Text>
             <Text style={[styles.headerText, styles.colAvg]}>
               Avg Box/Order
@@ -183,9 +204,10 @@ export const BoxCountReportPdf = ({
 
           {sortedKeys.map((key) => {
             const row = groupedData[key];
+            const totalRowBoxes = row.pendingBoxes + row.shippedBoxes;
             const avg =
               row.jobsCount > 0
-                ? (row.totalBoxes / row.jobsCount).toFixed(0)
+                ? (totalRowBoxes / row.jobsCount).toFixed(0)
                 : "0";
 
             return (
@@ -198,8 +220,11 @@ export const BoxCountReportPdf = ({
                 <Text style={[styles.rowText, styles.colJobs]}>
                   {row.jobsCount}
                 </Text>
-                <Text style={[styles.rowText, styles.colBoxes]}>
-                  {row.totalBoxes}
+                <Text style={[styles.rowText, styles.colPending]}>
+                  {row.pendingBoxes}
+                </Text>
+                <Text style={[styles.rowText, styles.colShipped]}>
+                  {row.shippedBoxes}
                 </Text>
                 <Text style={[styles.rowText, styles.colAvg]}>{avg}</Text>
               </View>
@@ -213,8 +238,11 @@ export const BoxCountReportPdf = ({
             <Text style={[styles.rowText, styles.colJobs, styles.boldText]}>
               {grandTotal.jobs}
             </Text>
-            <Text style={[styles.rowText, styles.colBoxes, styles.boldText]}>
-              {grandTotal.boxes}
+            <Text style={[styles.rowText, styles.colPending, styles.boldText]}>
+              {grandTotal.pending}
+            </Text>
+            <Text style={[styles.rowText, styles.colShipped, styles.boldText]}>
+              {grandTotal.shipped}
             </Text>
             <Text style={[styles.rowText, styles.colAvg, styles.boldText]}>
               {grandAvg}

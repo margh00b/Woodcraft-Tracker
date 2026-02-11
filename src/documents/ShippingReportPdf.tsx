@@ -19,6 +19,7 @@ export type ShippingReportJob = Tables<"jobs"> & {
     wrap_completed?: boolean;
     partially_shipped: boolean;
     in_warehouse?: string | null;
+    has_shipped?: boolean;
   } | null;
   warehouse_tracking?: {
     pickup_date?: string | null;
