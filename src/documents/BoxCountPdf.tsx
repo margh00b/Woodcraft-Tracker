@@ -131,7 +131,10 @@ export const BoxCountReportPdf = ({
 
       acc[monthKey].jobsCount += 1;
 
-      if (job.installation?.has_shipped) {
+      if (
+        job.installation?.has_shipped ||
+        job.installation?.partially_shipped
+      ) {
         acc[monthKey].shippedBoxes += safeBoxes;
       } else {
         acc[monthKey].pendingBoxes += safeBoxes;

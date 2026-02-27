@@ -68,7 +68,8 @@ export default function BoxCountReport() {
         ship_schedule
       ),
       installation (
-        has_shipped
+        has_shipped,
+        partially_shipped
       )
     `,
         )
