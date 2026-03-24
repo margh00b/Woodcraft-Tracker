@@ -86,6 +86,41 @@ export default function EditBackorderModal({
         .eq("id", backorder.id);
 
       if (error) throw error;
+
+      if (values.complete && !backorder.complete) {
+        const { data: jobData, error: jobError } = await supabase
+          .from("jobs")
+          .select("installation_id")
+          .eq("id", backorder.job_id)
+          .single();
+
+        if (jobError) {
+          console.error("Error fetching job to get installation_id:", jobError);
+        } else if (jobData?.installation_id) {
+          const { data: installData, error: fetchError } = await supabase
+            .from("installation")
+            .select("installation_id, partially_shipped")
+            .eq("installation_id", jobData.installation_id)
+            .single();
+
+          if (fetchError) {
+            console.error("Error fetching installation for backorder completion:", fetchError);
+          } else if (installData && installData.partially_shipped) {
+            const { error: installError } = await supabase
+              .from("installation")
+              .update({
+                partially_shipped: false,
+                has_shipped: true,
+              })
+              .eq("installation_id", installData.installation_id);
+
+            if (installError) {
+              console.error("Error updating installation when completing backorder:", installError);
+              throw installError;
+            }
+          }
+        }
+      }
     },
     onSuccess: () => {
       notifications.show({

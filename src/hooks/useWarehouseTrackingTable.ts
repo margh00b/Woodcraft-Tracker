@@ -19,7 +19,7 @@ interface UseWarehouseTrackingTableProps {
 
 export const applyWarehouseFilters = (
   query: any,
-  filters: ColumnFiltersState
+  filters: ColumnFiltersState,
 ) => {
   filters.forEach((filter) => {
     const { id, value } = filter;
@@ -76,8 +76,15 @@ export function useWarehouseTrackingTable({
       if (sorting.length > 0) {
         const { id, desc } = sorting[0];
         query = query.order(id, { ascending: !desc });
+        
+        if (id === "pickup_date") {
+          query = query.order("dropoff_date", { ascending: true });
+        } else if (id === "dropoff_date") {
+          query = query.order("pickup_date", { ascending: false });
+        }
       } else {
-        query = query.order("dropoff_date", { ascending: false });
+        query = query.order("pickup_date", { ascending: false });
+        query = query.order("dropoff_date", { ascending: true });
       }
 
       const from = pagination.pageIndex * pagination.pageSize;
@@ -114,7 +121,7 @@ export function useWarehouseExport() {
 
   const fetchAll = async (
     filters: ColumnFiltersState,
-    sorting: SortingState
+    sorting: SortingState,
   ) => {
     let query = supabase.from("warehouse_tracking_view").select("*");
     query = applyWarehouseFilters(query, filters);
@@ -122,8 +129,15 @@ export function useWarehouseExport() {
     if (sorting.length > 0) {
       const { id, desc } = sorting[0];
       query = query.order(id, { ascending: !desc });
+
+      if (id === "pickup_date") {
+        query = query.order("dropoff_date", { ascending: true });
+      } else if (id === "dropoff_date") {
+        query = query.order("pickup_date", { ascending: false });
+      }
     } else {
-      query = query.order("dropoff_date", { ascending: false });
+      query = query.order("pickup_date", { ascending: false });
+      query = query.order("dropoff_date", { ascending: true });
     }
 
     const { data, error } = await query;
