@@ -133,8 +133,8 @@ export default function JobAttachments({
             file: item.file,
             category: item.category,
             silent: true,
-          })
-        )
+          }),
+        ),
       );
 
       notifications.show({
@@ -474,7 +474,7 @@ export default function JobAttachments({
           <Dropzone
             onDrop={handleDrop}
             onReject={() => console.log("File rejected")}
-            maxSize={5 * 1024 ** 2}
+            maxSize={50 * 1024 ** 2}
             multiple
             disabled={!category}
             h={full ? undefined : 36}
