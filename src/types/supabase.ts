@@ -313,7 +313,6 @@ export type Database = {
           id: number
           is_made_in_house: boolean
           is_pre_manufactured: boolean
-          model: string
           name: string
           updated_at: string
         }
@@ -321,7 +320,6 @@ export type Database = {
           id?: never
           is_made_in_house?: boolean
           is_pre_manufactured?: boolean
-          model: string
           name: string
           updated_at?: string
         }
@@ -329,7 +327,6 @@ export type Database = {
           id?: never
           is_made_in_house?: boolean
           is_pre_manufactured?: boolean
-          model?: string
           name?: string
           updated_at?: string
         }

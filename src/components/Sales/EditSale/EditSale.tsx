@@ -77,7 +77,6 @@ interface ExtendedMasterOrderInput extends MasterOrderInput {
 
 interface NewDoorStyleState {
   name: string;
-  model: string;
   is_pre_manufactured: boolean;
   is_made_in_house: boolean;
 }
@@ -97,7 +96,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   const [newDoorStyle, setNewDoorStyle] = useState<NewDoorStyleState>({
     name: "",
-    model: "",
     is_pre_manufactured: false,
     is_made_in_house: false,
   });
@@ -299,7 +297,6 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       closeDoorStyleModal();
       setNewDoorStyle({
         name: "",
-        model: "",
         is_pre_manufactured: false,
         is_made_in_house: false,
       });
