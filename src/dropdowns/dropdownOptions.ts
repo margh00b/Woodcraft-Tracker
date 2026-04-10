@@ -60,6 +60,7 @@ export const flooringTypeOptions = [
 ];
 export const flooringClearanceOptions = [
   `TBD`,
+  `5.5mm`,
   `7/8'`,
   `5/8'`,
   `N/A`,
