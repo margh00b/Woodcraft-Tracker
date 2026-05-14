@@ -37,7 +37,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function ShipScheduleReport() {
@@ -67,10 +67,14 @@ export default function ShipScheduleReport() {
       let query = supabase
         .from("plant_shipping_view")
         .select("*")
-        .lte("ship_schedule", endDate)
+        .lte("ship_schedule", endDate) 
         .not("ship_schedule", "is", null);
 
-      if (!debouncedShowPrior) {
+      if (debouncedShowPrior) {
+       
+        query = query.eq("has_shipped", false);
+      } else {
+        
         query = query.gte("ship_schedule", startDate);
       }
 
@@ -104,7 +108,7 @@ export default function ShipScheduleReport() {
         />
       </PDFViewer>
     ),
-    [formattedData, debouncedDateRange, debouncedShowPrior]
+    [formattedData, debouncedDateRange, debouncedShowPrior],
   );
 
   const isDebouncing =
