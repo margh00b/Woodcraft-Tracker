@@ -8,7 +8,17 @@ export const CabinetSpecsSchema = z.object({
   interior: z.string().nullable().optional(),
   drawer_box: z.string().nullable().optional(),
   drawer_hardware: z.string().nullable().optional(),
-  box: z.string().optional(),
+  box: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val || val.trim() === "" || val.trim().toUpperCase() === "N/A") {
+        return null;
+      }
+      const numericVal = val.replace(/\D/g, "");
+      return numericVal !== "" ? numericVal : null;
+    }),
   doors_parts_only: z.boolean().default(false),
   handles_supplied: z.boolean().default(false),
   handles_selected: z.boolean().default(false),
