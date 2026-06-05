@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -28,8 +29,17 @@ import {
   ThemeIcon,
   Tooltip,
   Badge,
+  SegmentedControl,
 } from "@mantine/core";
-import { FaSort, FaSortUp, FaSortDown, FaWrench, FaPlus } from "react-icons/fa";
+import {
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaWrench,
+  FaPlus,
+  FaFilePdf,
+  FaTable,
+} from "react-icons/fa";
 import dayjs from "dayjs";
 import { useDisclosure } from "@mantine/hooks";
 import { colors, gradients } from "@/theme";
@@ -39,11 +49,25 @@ import {
   ServiceOrderChargeableItem,
 } from "@/hooks/useServiceOrdersChargeable";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ServiceOrdersPdf } from "@/documents/invoiceServiceOrderPdf";
+
+const PDFViewer = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <Center h="300px">
+        <Loader color="blue" size="md" />
+      </Center>
+    ),
+  },
+);
 
 export default function ServiceOrdersChargeableTable() {
   const permissions = usePermissions();
   const { data: reportData, isLoading } = useServiceOrdersChargeable();
 
+  const [viewMode, setViewMode] = useState<string>("table");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 15,
@@ -56,7 +80,7 @@ export default function ServiceOrdersChargeableTable() {
   ] = useDisclosure(false);
 
   const [selectedJobId, setSelectedJobId] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const [selectedServiceOrderId, setSelectedServiceOrderId] = useState<
     number | undefined
@@ -68,7 +92,7 @@ export default function ServiceOrdersChargeableTable() {
   const handleCreateInvoice = (
     jobId: number,
     serviceOrderId: number,
-    serviceOrderNumber: string
+    serviceOrderNumber: string,
   ) => {
     setSelectedJobId(jobId);
     setSelectedServiceOrderId(serviceOrderId);
@@ -146,7 +170,7 @@ export default function ServiceOrdersChargeableTable() {
                 handleCreateInvoice(
                   info.row.original.job_id,
                   info.row.original.service_order_id,
-                  info.row.original.service_order_number
+                  info.row.original.service_order_number,
                 )
               }
             >
@@ -155,7 +179,7 @@ export default function ServiceOrdersChargeableTable() {
           ) : null,
       }),
     ],
-    [permissions.canEditInvoices]
+    [permissions.canEditInvoices],
   );
 
   const table = useReactTable({
@@ -212,85 +236,138 @@ export default function ServiceOrdersChargeableTable() {
               </Text>
             </Stack>
           </Group>
+
+          <SegmentedControl
+            value={viewMode}
+            onChange={setViewMode}
+            data={[
+              {
+                value: "table",
+                label: (
+                  <Group gap="xs" wrap="nowrap">
+                    <FaTable size={14} />
+                    <Text size="sm">Live Table</Text>
+                  </Group>
+                ),
+              },
+              {
+                value: "pdf",
+                label: (
+                  <Group gap="xs" wrap="nowrap">
+                    <FaFilePdf size={14} color="#e03131" />
+                    <Text size="sm">Print / PDF Preview</Text>
+                  </Group>
+                ),
+              },
+            ]}
+          />
         </Group>
       </Paper>
 
-      <ScrollArea style={{ flex: 1 }}>
-        <Table striped stickyHeader highlightOnHover withColumnBorders>
-          <Table.Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Table.Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Table.Th
-                    key={header.id}
-                    style={{
-                      width: header.getSize(),
-                      cursor: header.column.getCanSort()
-                        ? "pointer"
-                        : "default",
-                    }}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <Group gap={4} wrap="nowrap">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: <FaSortUp />,
-                        desc: <FaSortDown />,
-                      }[header.column.getIsSorted() as string] ??
-                        (header.column.getCanSort() ? (
-                          <FaSort style={{ opacity: 0.2 }} />
-                        ) : null)}
-                    </Group>
-                  </Table.Th>
+      {viewMode === "pdf" ? (
+        <Paper
+          shadow="md"
+          radius="md"
+          style={{
+            flex: 1,
+            overflow: "hidden",
+            border: "1px solid #dee2e6",
+          }}
+        >
+          {reportData && reportData.length > 0 ? (
+            <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
+              <ServiceOrdersPdf data={reportData} />
+            </PDFViewer>
+          ) : (
+            <Center h="100%">
+              <Text c="dimmed" fs="italic">
+                No dataset metrics generated to display in PDF layout.
+              </Text>
+            </Center>
+          )}
+        </Paper>
+      ) : (
+        <>
+          <ScrollArea style={{ flex: 1 }}>
+            <Table striped stickyHeader highlightOnHover withColumnBorders>
+              <Table.Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Table.Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Table.Th
+                        key={header.id}
+                        style={{
+                          width: header.getSize(),
+                          cursor: header.column.getCanSort()
+                            ? "pointer"
+                            : "default",
+                        }}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <Group gap={4} wrap="nowrap">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: <FaSortUp />,
+                            desc: <FaSortDown />,
+                          }[header.column.getIsSorted() as string] ??
+                            (header.column.getCanSort() ? (
+                              <FaSort style={{ opacity: 0.2 }} />
+                            ) : null)}
+                        </Group>
+                      </Table.Th>
+                    ))}
+                  </Table.Tr>
                 ))}
-              </Table.Tr>
-            ))}
-          </Table.Thead>
-          <Table.Tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={columns.length}>
-                  <Center py="xl">
-                    <Text c="dimmed">No chargeable service orders found.</Text>
-                  </Center>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <Table.Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Td
-                      key={cell.id}
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+              </Table.Thead>
+              <Table.Tbody>
+                {table.getRowModel().rows.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={columns.length}>
+                      <Center py="xl">
+                        <Text c="dimmed">
+                          No chargeable service orders found.
+                        </Text>
+                      </Center>
                     </Table.Td>
-                  ))}
-                </Table.Tr>
-              ))
-            )}
-          </Table.Tbody>
-        </Table>
-      </ScrollArea>
+                  </Table.Tr>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <Table.Tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <Table.Td
+                          key={cell.id}
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </Table.Td>
+                      ))}
+                    </Table.Tr>
+                  ))
+                )}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
 
-      <Center pt="md">
-        <Pagination
-          total={table.getPageCount()}
-          value={pagination.pageIndex + 1}
-          onChange={(p) => table.setPageIndex(p - 1)}
-          color={colors.violet.primary}
-        />
-      </Center>
+          <Center pt="md">
+            <Pagination
+              total={table.getPageCount()}
+              value={pagination.pageIndex + 1}
+              onChange={(p) => table.setPageIndex(p - 1)}
+              color={colors.violet.primary}
+            />
+          </Center>
+        </>
+      )}
 
       {addInvoiceModalOpened && (
         <AddInvoice
