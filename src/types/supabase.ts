@@ -129,7 +129,7 @@ export type Database = {
       }
       cabinets: {
         Row: {
-          box: string | null
+          box: number | null
           color_id: number | null
           color_name_legacy: string | null
           created_at: string
@@ -156,7 +156,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          box?: string | null
+          box?: number | null
           color_id?: number | null
           color_name_legacy?: string | null
           created_at?: string
@@ -183,7 +183,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          box?: string | null
+          box?: number | null
           color_id?: number | null
           color_name_legacy?: string | null
           created_at?: string
@@ -2162,22 +2162,10 @@ export type Database = {
         }
         Relationships: []
       }
-      plant_master_view: {
-        Row: {
-          client_name: string | null
-          created_at: string | null
-          description: string | null
-          display_id: string | null
-          due_date: string | null
-          id: number | null
-          record_type: string | null
-        }
-        Relationships: []
-      }
       plant_production_view: {
         Row: {
           assembly_completed_actual: string | null
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_interior: string | null
@@ -2336,7 +2324,7 @@ export type Database = {
       }
       plant_shipping_view: {
         Row: {
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_species: string | null
@@ -2383,7 +2371,7 @@ export type Database = {
       plant_table_view: {
         Row: {
           assembly_completed_actual: string | null
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_species: string | null
@@ -2445,7 +2433,7 @@ export type Database = {
       plant_wrap_view: {
         Row: {
           assembly_completed_actual: string | null
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_species: string | null
@@ -2499,7 +2487,7 @@ export type Database = {
       }
       prod_table_view: {
         Row: {
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           cabinet_door_style: string | null
           cabinet_species: string | null
@@ -2662,7 +2650,7 @@ export type Database = {
       }
       sales_table_view: {
         Row: {
-          cabinet_box: string | null
+          cabinet_box: number | null
           cabinet_color: string | null
           created_at: string | null
           deposit: number | null

@@ -1,9 +1,9 @@
 export const colors = {
   violet: {
-    primary: "#4A00E0",
+    primary: "#2c0066ff",
     secondary: "#8E2DE2",
     light: "#6C63FF",
-    lighter: "#7b2de2",
+    lighter: "#0043c0ff",
   },
   blue: {
     primary: "#0066cc",

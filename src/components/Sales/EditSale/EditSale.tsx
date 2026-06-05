@@ -157,7 +157,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         interior: "",
         drawer_box: "",
         drawer_hardware: "",
-        box: "",
+        box: 0,
         piece_count: "",
         glass_type: "",
         doors_parts_only: false,
@@ -389,7 +389,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           interior: cabinet.interior || "",
           drawer_box: cabinet.drawer_box || "",
           drawer_hardware: cabinet.drawer_hardware || "",
-          box: cabinet.box || "",
+          box: cabinet.box || 0,
           piece_count: cabinet.piece_count || "",
           glass_type: cabinet.glass_type || "",
           doors_parts_only: cabinet.doors_parts_only ?? false,
@@ -1270,10 +1270,11 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                         }
                       }}
                     />
-                    <Autocomplete
+                    <NumberInput
                       label="Box"
-                      data={[]}
-                      {...form.getInputProps(`cabinet.box`)}
+                      min={0}
+                      allowDecimal={false}
+                      {...form.getInputProps("cabinet.box")}
                     />
                   </SimpleGrid>
 

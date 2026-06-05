@@ -196,7 +196,7 @@ export default function NewSale() {
         interior: "",
         drawer_box: "",
         drawer_hardware: "",
-        box: "",
+        box: 0,
         piece_count: "",
         glass_type: "",
         doors_parts_only: false,
@@ -596,7 +596,7 @@ export default function NewSale() {
         });
         router.push("/dashboard/sales");
         setSuccessBannerData(null);
-      }, 3000);
+      }, 200);
     }
     return () => clearTimeout(timer);
   }, [successBannerData, router, form, queryClient]);
@@ -1445,10 +1445,11 @@ export default function NewSale() {
                       }}
                     />
 
-                    <Autocomplete
+                    <NumberInput
                       label="Box"
-                      data={[]}
-                      {...form.getInputProps(`cabinet.box`)}
+                      min={0}
+                      allowDecimal={false}
+                      {...form.getInputProps("cabinet.box")}
                     />
                   </SimpleGrid>
 
