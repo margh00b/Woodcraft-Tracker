@@ -387,7 +387,7 @@ export default function Sidebar({
                   backgroundColor: "#5700bbff",
                 }}
               >
-                v1.0.2
+                v1.0.3
               </Code>
             </Text>
           )}

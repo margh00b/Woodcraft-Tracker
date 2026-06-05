@@ -71,6 +71,9 @@ export function useInstallationTable({
           case "rush":
             query = query.eq("rush", valStr === "true");
             break;
+          case "cabinet_color":
+            query = query.ilike("cabinet_color", `%${valStr}%`);
+            break;
           default:
             break;
         }

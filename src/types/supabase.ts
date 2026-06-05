@@ -2079,6 +2079,7 @@ export type Database = {
       installation_table_view: {
         Row: {
           box: number | null
+          cabinet_color: string | null
           created_at: string | null
           has_shipped: boolean | null
           inspection_completed: string | null

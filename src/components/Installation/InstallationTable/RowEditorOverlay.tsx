@@ -46,6 +46,7 @@ type InstallationJobView = Views<"installation_table_view"> & {
   partially_shipped?: boolean;
   installer_id?: number | null;
   prod_id?: number | null;
+  cabinet_color?: string | null;
 };
 
 export function RowEditorOverlay({
@@ -711,6 +712,24 @@ export function RowEditorOverlay({
                                       zIndex: 300,
                                     }}
                                   />
+                                );
+
+                              case "cabinet_color":
+                                return (
+                                  <Box
+                                    fz="xs"
+                                    style={{
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      width: "100%",
+                                      paddingLeft: 8,
+                                    }}
+                                  >
+                                    <Text size="xs">
+                                      {(formData as InstallationJobView).cabinet_color ?? "—"}
+                                    </Text>
+                                  </Box>
                                 );
 
                               default:

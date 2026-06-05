@@ -71,6 +71,7 @@ import { FaDollarSign, FaHandHoldingDollar } from "react-icons/fa6";
 type InstallationJobView = Views<"installation_table_view"> & {
   partially_shipped?: boolean;
   installer_id?: number | null;
+  cabinet_color?: string | null;
 };
 
 interface InstallationTableProps {
@@ -415,6 +416,24 @@ export default function InstallationTable({
         <Center>
           <Text size="xs">{info.getValue() ?? "—"}</Text>
         </Center>
+      ),
+    }),
+
+    columnHelper.accessor("cabinet_color", {
+      id: "cabinet_color",
+      header: "Color",
+      size: 110,
+      minSize: 90,
+      cell: (info) => (
+        <CellWrapper
+          onContextMenu={(e) =>
+            handleContextMenu(e, "cabinet_color", info.getValue() as string)
+          }
+        >
+          <Text size="xs" truncate="end" w="100%">
+            {info.getValue() ?? "—"}
+          </Text>
+        </CellWrapper>
       ),
     }),
 
@@ -825,8 +844,8 @@ export default function InstallationTable({
               Search Filters
             </Accordion.Control>
             <Accordion.Panel styles={{ content: { padding: 8 } }}>
-              <Grid columns={24} gutter="xs">
-                <Grid.Col span={{ base: 24, sm: 8, md: 3 }}>
+              <Grid columns={12} gutter="sm">
+                <Grid.Col span={{ base: 12, sm: 6, md: 1 }}>
                   <TextInput
                     size="xs"
                     label="Job Number"
@@ -838,19 +857,7 @@ export default function InstallationTable({
                     onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 4 }}>
-                  <TextInput
-                    size="xs"
-                    label="Site Address"
-                    placeholder="e.g., 123 Main St, Anytown, CA"
-                    value={getInputFilterValue("site_address") as string}
-                    onChange={(e) =>
-                      setInputFilterValue("site_address", e.target.value)
-                    }
-                    onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-                  />
-                </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 4 }}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
                   <TextInput
                     size="xs"
                     label="Client"
@@ -862,7 +869,7 @@ export default function InstallationTable({
                     onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 3 }}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 1.5 }}>
                   <TextInput
                     size="xs"
                     label="Project Name"
@@ -874,7 +881,8 @@ export default function InstallationTable({
                     onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 2 }}>
+
+                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
                   <TextInput
                     size="xs"
                     label="Installer"
@@ -886,46 +894,34 @@ export default function InstallationTable({
                     onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 3 }}>
-                  <DatePickerInput
+                <Grid.Col span={{ base: 12, sm: 6, md: 1.5 }}>
+                  <TextInput
                     size="xs"
-                    type="range"
-                    allowSingleDateInRange
-                    label="Installation Date"
-                    placeholder="Filter by Date Range"
-                    clearable
-                    value={
-                      (inputFilters.find((f) => f.id === "installation_date")
-                        ?.value as [Date | null, Date | null]) || [null, null]
+                    label="Color"
+                    placeholder="e.g., White"
+                    value={getInputFilterValue("cabinet_color") as string}
+                    onChange={(e) =>
+                      setInputFilterValue("cabinet_color", e.target.value)
                     }
-                    onChange={(value) => {
-                      setInputFilterValue("installation_date", value as any);
-                    }}
-                    valueFormat="YYYY-MM-DD"
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 3 }}>
-                  <DatePickerInput
+                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                  <TextInput
                     size="xs"
-                    type="range"
-                    allowSingleDateInRange
-                    label="Shipping Date"
-                    placeholder="Filter by Date Range"
-                    clearable
-                    value={
-                      (inputFilters.find((f) => f.id === "ship_schedule")
-                        ?.value as [Date | null, Date | null]) || [null, null]
+                    label="Site Address"
+                    placeholder="e.g., 123 Main St"
+                    value={getInputFilterValue("site_address") as string}
+                    onChange={(e) =>
+                      setInputFilterValue("site_address", e.target.value)
                     }
-                    onChange={(value) => {
-                      setInputFilterValue("ship_schedule", value as any);
-                    }}
-                    valueFormat="YYYY-MM-DD"
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 2 }}>
+                <Grid.Col span={{ base: 12, sm: 6, md: 0.8 }}>
                   <Select
                     size="xs"
-                    label="Ship Date Status"
+                    label="Ship Status"
                     placeholder="Date Status"
                     data={[
                       { label: "Confirmed", value: "confirmed" },
@@ -945,103 +941,134 @@ export default function InstallationTable({
                     allowDeselect={false}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 8, md: 6 }}>
-                  <Group
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
+
+                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+                  <DatePickerInput
+                    size="xs"
+                    type="range"
+                    allowSingleDateInRange
+                    label="Installation Date"
+                    placeholder="Filter by Range"
+                    clearable
+                    value={
+                      (inputFilters.find((f) => f.id === "installation_date")
+                        ?.value as [Date | null, Date | null]) || [null, null]
+                    }
+                    onChange={(value) => {
+                      setInputFilterValue("installation_date", value as any);
                     }}
-                  >
-                    <Switch
-                      label="Not Shipped"
-                      size="sm"
-                      thumbIcon={<FaCheckCircle />}
-                      styles={{
-                        label: {
-                          fontSize: 12,
-                        },
-                        track: {
-                          cursor: "pointer",
-                          background:
-                            getInputFilterValue("has_shipped") === "true"
-                              ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
-                              : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
-                          color: "white",
-                          border: "none",
-                        },
-                        thumb: {
-                          background:
-                            getInputFilterValue("has_shipped") === "true"
-                              ? "#6e54ffff"
-                              : "#d1d1d1ff",
-                        },
-                      }}
-                      checked={getInputFilterValue("has_shipped") === "true"}
-                      onChange={(e) => {
-                        const val = e.currentTarget.checked;
-
-                        setInputFilterValue(
-                          "has_shipped",
-                          val ? "true" : undefined,
-                        );
-                        const otherFilters = inputFilters.filter(
-                          (f) => f.id !== "has_shipped",
-                        );
-                        const newActiveFilters = val
-                          ? [...otherFilters, { id: "has_shipped", value: val }]
-                          : otherFilters;
-
-                        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-                        setActiveFilters(newActiveFilters);
-                      }}
-                    />
-                    <Switch
-                      label="Rush"
-                      size="sm"
-                      thumbIcon={<FaCheckCircle />}
-                      styles={{
-                        label: {
-                          fontSize: 12,
-                        },
-                        track: {
-                          cursor: "pointer",
-                          background:
-                            getInputFilterValue("rush") === "true"
-                              ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
-                              : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
-                          color: "white",
-                          border: "none",
-                        },
-                        thumb: {
-                          background:
-                            getInputFilterValue("rush") === "true"
-                              ? "#6e54ffff"
-                              : "#d1d1d1ff",
-                        },
-                      }}
-                      checked={getInputFilterValue("rush") === "true"}
-                      onChange={(e) => {
-                        const val = e.currentTarget.checked;
-
-                        setInputFilterValue(
-                          "rush",
-                          e.target.checked ? "true" : undefined,
-                        );
-                        const otherFilters = inputFilters.filter(
-                          (f) => f.id !== "rush",
-                        );
-                        const newActiveFilters = val
-                          ? [...otherFilters, { id: "rush", value: val }]
-                          : otherFilters;
-
-                        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-                        setActiveFilters(newActiveFilters);
-                      }}
-                    />
-                  </Group>
+                    valueFormat="YYYY-MM-DD"
+                  />
                 </Grid.Col>
-                <Grid.Col span={{ base: 24, sm: 24, md: 18 }}>
-                  <Group justify="flex-end" align="center">
+                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+                  <DatePickerInput
+                    size="xs"
+                    type="range"
+                    allowSingleDateInRange
+                    label="Shipping Date"
+                    placeholder="Filter by Range"
+                    clearable
+                    value={
+                      (inputFilters.find((f) => f.id === "ship_schedule")
+                        ?.value as [Date | null, Date | null]) || [null, null]
+                    }
+                    onChange={(value) => {
+                      setInputFilterValue("ship_schedule", value as any);
+                    }}
+                    valueFormat="YYYY-MM-DD"
+                  />
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+                  <Stack gap={6} pt={2}>
+                    <Text size="xs" fw={500} c="black">
+                      Toggles
+                    </Text>
+                    <Group gap="xl">
+                      <Switch
+                        label="Not Shipped"
+                        size="sm"
+                        thumbIcon={<FaCheckCircle />}
+                        styles={{
+                          label: { fontSize: 15 },
+                          track: {
+                            cursor: "pointer",
+                            background:
+                              getInputFilterValue("has_shipped") === "true"
+                                ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
+                                : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
+                            border: "none",
+                          },
+                          thumb: {
+                            background:
+                              getInputFilterValue("has_shipped") === "true"
+                                ? "#6e54ffff"
+                                : "#d1d1d1ff",
+                          },
+                        }}
+                        checked={getInputFilterValue("has_shipped") === "true"}
+                        onChange={(e) => {
+                          const val = e.currentTarget.checked;
+                          setInputFilterValue(
+                            "has_shipped",
+                            val ? "true" : undefined,
+                          );
+                          const otherFilters = inputFilters.filter(
+                            (f) => f.id !== "has_shipped",
+                          );
+                          const newActiveFilters = val
+                            ? [
+                                ...otherFilters,
+                                { id: "has_shipped", value: val },
+                              ]
+                            : otherFilters;
+                          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                          setActiveFilters(newActiveFilters);
+                        }}
+                      />
+                      <Switch
+                        label="Rush"
+                        size="sm"
+                        thumbIcon={<FaCheckCircle />}
+                        styles={{
+                          label: { fontSize: 15 },
+                          track: {
+                            cursor: "pointer",
+                            background:
+                              getInputFilterValue("rush") === "true"
+                                ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
+                                : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
+                            border: "none",
+                          },
+                          thumb: {
+                            background:
+                              getInputFilterValue("rush") === "true"
+                                ? "#6e54ffff"
+                                : "#d1d1d1ff",
+                          },
+                        }}
+                        checked={getInputFilterValue("rush") === "true"}
+                        onChange={(e) => {
+                          const val = e.currentTarget.checked;
+                          setInputFilterValue(
+                            "rush",
+                            e.target.checked ? "true" : undefined,
+                          );
+                          const otherFilters = inputFilters.filter(
+                            (f) => f.id !== "rush",
+                          );
+                          const newActiveFilters = val
+                            ? [...otherFilters, { id: "rush", value: val }]
+                            : otherFilters;
+                          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                          setActiveFilters(newActiveFilters);
+                        }}
+                      />
+                    </Group>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={12}>
+                  <Group justify="flex-end" gap="xs">
                     <Button
                       size="xs"
                       variant="default"
@@ -1053,8 +1080,7 @@ export default function InstallationTable({
                     <Button
                       size="xs"
                       variant="filled"
-                      color="blue"
-                      leftSection={<FaSearch size={14} />}
+                      leftSection={<FaSearch size={12} />}
                       onClick={handleApplyFilters}
                       style={{
                         background:
