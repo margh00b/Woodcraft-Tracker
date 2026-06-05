@@ -191,10 +191,10 @@ export default function PlantShippingTable() {
             data: old.data.map((row) =>
               row.installation_id === installationId
                 ? { ...row, [field]: value }
-                : row
+                : row,
             ),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -287,7 +287,7 @@ export default function PlantShippingTable() {
               return row;
             }),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -315,7 +315,7 @@ export default function PlantShippingTable() {
       });
       if (variables.type === "partial") {
         const job = (data?.data as PlantTableData[])?.find(
-          (j) => j.job_id === variables.jobId
+          (j) => j.job_id === variables.jobId,
         );
         if (job) {
           setBackorderModalState({
@@ -365,7 +365,7 @@ export default function PlantShippingTable() {
 
   const handlePrintPreview = () => {
     const hasActiveDateFilter = activeFilters.some(
-      (f) => f.id === "ship_date_range"
+      (f) => f.id === "ship_date_range",
     );
 
     if (!hasActiveDateFilter || !dateRange[0] || !dateRange[1]) {
@@ -694,7 +694,7 @@ export default function PlantShippingTable() {
                 >
                   {(job as any).pickup_date
                     ? `Picked Up ${dayjs((job as any).pickup_date).format(
-                        "DD/MM"
+                        "DD/MM",
                       )}`
                     : `In Warehouse`}
                 </Badge>
@@ -750,15 +750,18 @@ export default function PlantShippingTable() {
 
   const groupedRows = useMemo(() => {
     if (!table.getRowModel().rows) return {};
-    return table.getRowModel().rows.reduce((acc, row) => {
-      const job = row.original;
-      const shipDate = job.ship_schedule
-        ? dayjs(job.ship_schedule).format("YYYY-MM-DD")
-        : "Unscheduled";
-      if (!acc[shipDate]) acc[shipDate] = [];
-      acc[shipDate].push(row);
-      return acc;
-    }, {} as Record<string, Row<PlantTableData>[]>);
+    return table.getRowModel().rows.reduce(
+      (acc, row) => {
+        const job = row.original;
+        const shipDate = job.ship_schedule
+          ? dayjs(job.ship_schedule).format("YYYY-MM-DD")
+          : "Unscheduled";
+        if (!acc[shipDate]) acc[shipDate] = [];
+        acc[shipDate].push(row);
+        return acc;
+      },
+      {} as Record<string, Row<PlantTableData>[]>,
+    );
   }, [table.getRowModel().rows]);
 
   const sortedGroupKeys = useMemo(() => {
@@ -948,12 +951,12 @@ export default function PlantShippingTable() {
                   jobsInGroup.map((r) => {
                     const val = r.original.job_number || "";
                     return val.split("-")[0].trim();
-                  })
+                  }),
                 ).size;
 
                 const totalBoxes = jobsInGroup.reduce((sum, row) => {
-                  const parsed = parseInt(row.original.cabinet_box || "0", 10);
-                  return isNaN(parsed) ? sum : sum + parsed;
+                  const currentBoxCount = row.original.cabinet_box ?? 0;
+                  return sum + currentBoxCount;
                 }, 0);
 
                 return (
@@ -1003,7 +1006,7 @@ export default function PlantShippingTable() {
                                   >
                                     {flexRender(
                                       header.column.columnDef.header,
-                                      header.getContext()
+                                      header.getContext(),
                                     )}
                                   </Table.Th>
                                 ))}
@@ -1029,7 +1032,7 @@ export default function PlantShippingTable() {
                                       >
                                         {flexRender(
                                           cell.column.columnDef.cell,
-                                          cell.getContext()
+                                          cell.getContext(),
                                         )}
                                       </Table.Td>
                                     ))}
@@ -1108,7 +1111,7 @@ export default function PlantShippingTable() {
           }}
         />
       )}
-             <Modal
+      <Modal
         opened={warehouseUncheckModalOpen}
         onClose={() => setWarehouseUncheckModalOpen(false)}
         title="Update Warehouse Status"
@@ -1137,7 +1140,7 @@ export default function PlantShippingTable() {
               onClick={async () => {
                 if (
                   confirm(
-                    "This will PERMANENTLY delete the warehouse tracking data (dates, pallets, notes). Are you sure?"
+                    "This will PERMANENTLY delete the warehouse tracking data (dates, pallets, notes). Are you sure?",
                   )
                 ) {
                   try {
@@ -1154,7 +1157,7 @@ export default function PlantShippingTable() {
                         .update({ in_warehouse: null } as any)
                         .eq(
                           "installation_id",
-                          warehouseModalState.installationId
+                          warehouseModalState.installationId,
                         );
 
                       if (updateError) throw updateError;
