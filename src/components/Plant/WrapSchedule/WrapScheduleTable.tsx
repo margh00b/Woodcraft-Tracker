@@ -162,10 +162,10 @@ export default function WrapScheduleTable() {
                       ? null
                       : new Date().toISOString(),
                   }
-                : row
+                : row,
             ),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -239,10 +239,10 @@ export default function WrapScheduleTable() {
           return {
             ...old,
             data: old.data.map((row) =>
-              row.prod_id === prodId ? { ...row, [field]: timestamp } : row
+              row.prod_id === prodId ? { ...row, [field]: timestamp } : row,
             ),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -548,8 +548,8 @@ export default function WrapScheduleTable() {
                           isComplete
                             ? "green"
                             : doneCount > 1
-                            ? "yellow"
-                            : "gray"
+                              ? "yellow"
+                              : "gray"
                         }
                         p={4}
                         style={{ minWidth: 28, textAlign: "center" }}
@@ -632,7 +632,7 @@ export default function WrapScheduleTable() {
               </Tooltip>
             );
           },
-        })
+        }),
       );
     }
 
@@ -652,7 +652,7 @@ export default function WrapScheduleTable() {
               {info.getValue() || "—"}
             </Text>
           ),
-      })
+      }),
     );
 
     commonEnd.push(
@@ -705,7 +705,7 @@ export default function WrapScheduleTable() {
             </Group>
           );
         },
-      })
+      }),
     );
 
     return [...commonStart, ...actualsCols, ...commonEnd];
@@ -726,15 +726,18 @@ export default function WrapScheduleTable() {
 
   const groupedRows = useMemo(() => {
     if (!table.getRowModel().rows) return {};
-    return table.getRowModel().rows.reduce((acc, row) => {
-      const job = row.original;
-      const wrapDate = job.wrap_date
-        ? dayjs(job.wrap_date).format("YYYY-MM-DD")
-        : "No Date";
-      if (!acc[wrapDate]) acc[wrapDate] = [];
-      acc[wrapDate].push(row);
-      return acc;
-    }, {} as Record<string, Row<WrapTableData>[]>);
+    return table.getRowModel().rows.reduce(
+      (acc, row) => {
+        const job = row.original;
+        const wrapDate = job.wrap_date
+          ? dayjs(job.wrap_date).format("YYYY-MM-DD")
+          : "No Date";
+        if (!acc[wrapDate]) acc[wrapDate] = [];
+        acc[wrapDate].push(row);
+        return acc;
+      },
+      {} as Record<string, Row<WrapTableData>[]>,
+    );
   }, [table.getRowModel().rows]);
 
   const sortedGroupKeys = useMemo(() => {
@@ -922,11 +925,11 @@ export default function WrapScheduleTable() {
                   jobsInGroup.map((r) => {
                     const val = r.original.job_number || "";
                     return val.split("-")[0].trim();
-                  })
+                  }),
                 ).size;
                 const totalBoxes = jobsInGroup.reduce((sum, row) => {
-                  const parsed = parseInt(row.original.cabinet_box || "0", 10);
-                  return isNaN(parsed) ? sum : sum + parsed;
+                  const currentBoxCount = row.original.cabinet_box ?? 0;
+                  return sum + currentBoxCount;
                 }, 0);
 
                 return (
@@ -992,7 +995,7 @@ export default function WrapScheduleTable() {
                                     >
                                       {flexRender(
                                         header.column.columnDef.header,
-                                        header.getContext()
+                                        header.getContext(),
                                       )}
                                     </Table.Th>
                                   );
@@ -1038,7 +1041,7 @@ export default function WrapScheduleTable() {
                                         >
                                           {flexRender(
                                             cell.column.columnDef.cell,
-                                            cell.getContext()
+                                            cell.getContext(),
                                           )}
                                         </Table.Td>
                                       );

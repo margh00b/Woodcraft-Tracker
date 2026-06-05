@@ -126,8 +126,7 @@ export const BoxCountReportPdf = ({
         };
       }
 
-      const boxes = parseInt(job.sales_orders?.cabinet?.box || "0", 10);
-      const safeBoxes = isNaN(boxes) ? 0 : boxes;
+      const safeBoxes = job.sales_orders?.cabinet?.box ?? 0;
 
       acc[monthKey].jobsCount += 1;
 
