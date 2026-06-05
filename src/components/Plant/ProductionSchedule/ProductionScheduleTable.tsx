@@ -161,10 +161,10 @@ export default function ProductionScheduleTable() {
                       ? null
                       : new Date().toISOString(),
                   }
-                : row
+                : row,
             ),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -238,10 +238,10 @@ export default function ProductionScheduleTable() {
           return {
             ...old,
             data: old.data.map((row) =>
-              row.prod_id === prodId ? { ...row, [field]: timestamp } : row
+              row.prod_id === prodId ? { ...row, [field]: timestamp } : row,
             ),
           };
-        }
+        },
       );
       return { previousData, queryKey };
     },
@@ -357,7 +357,7 @@ export default function ProductionScheduleTable() {
       dbField: string,
       requiredFlag?: "isCanopy" | "isWoodtop" | "isCustom",
       customSize?: number,
-      bgColor?: string
+      bgColor?: string,
     ) =>
       columnHelper.accessor(accessor, {
         id,
@@ -586,39 +586,39 @@ export default function ProductionScheduleTable() {
           "doors",
           "Doors",
           (r) => r.doors_completed_actual,
-          "doors_completed_actual"
+          "doors_completed_actual",
         ),
         makeCheckboxCol(
           "panels",
           "Panels",
           (r) => r.panel_completed_actual,
-          "panel_completed_actual"
+          "panel_completed_actual",
         ),
         makeCheckboxCol(
           "custom_finish",
           "Custom Finish",
           (r) => r.custom_finish_completed_actual,
-          "custom_finish_completed_actual"
+          "custom_finish_completed_actual",
         ),
         makeCheckboxCol(
           "drawers",
           "Drawers",
           (r) => r.drawer_completed_actual,
-          "drawer_completed_actual"
+          "drawer_completed_actual",
         ),
         makeCheckboxCol(
           "woodtop",
           "Woodtop",
           (r) => r.woodtop_completed_actual,
           "woodtop_completed_actual",
-          "isWoodtop"
+          "isWoodtop",
         ),
         makeCheckboxCol(
           "canopy",
           "Canopy",
           (r) => r.canopy_completed_actual,
           "canopy_completed_actual",
-          "isCanopy"
+          "isCanopy",
         ),
       ];
     } else if (subRole === "assembly" && userRole === "plant") {
@@ -627,13 +627,13 @@ export default function ProductionScheduleTable() {
           "cut_mel",
           "Cut Melamine",
           (r) => r.cut_melamine_completed_actual,
-          "cut_melamine_completed_actual"
+          "cut_melamine_completed_actual",
         ),
         makeCheckboxCol(
           "assembly",
           "Assembly",
           (r) => r.assembly_completed_actual,
-          "assembly_completed_actual"
+          "assembly_completed_actual",
         ),
       ];
     } else if (subRole === "paint" && userRole === "plant") {
@@ -649,7 +649,7 @@ export default function ProductionScheduleTable() {
           (r) => r.paint_doors_completed_actual,
           "paint_doors_completed_actual",
           undefined,
-          150
+          150,
         ),
         makeCheckboxCol(
           "paint_canopy",
@@ -661,7 +661,7 @@ export default function ProductionScheduleTable() {
           </Stack>,
           (r) => r.paint_canopy_completed_actual,
           "paint_canopy_completed_actual",
-          "isCanopy"
+          "isCanopy",
         ),
         makeCheckboxCol(
           "paint_custom",
@@ -673,7 +673,7 @@ export default function ProductionScheduleTable() {
           </Stack>,
           (r) => r.paint_cust_cab_completed_actual,
           "paint_cust_cab_completed_actual",
-          "isCustom"
+          "isCustom",
         ),
       ];
     } else if (
@@ -688,13 +688,13 @@ export default function ProductionScheduleTable() {
           "cut_melamine_completed_actual",
           undefined,
           undefined,
-          "#f6f6f6"
+          "#f6f6f6",
         ),
         makeCheckboxCol(
           "doors",
           "Doors",
           (r) => r.doors_completed_actual,
-          "doors_completed_actual"
+          "doors_completed_actual",
         ),
         makeCheckboxCol(
           "panels",
@@ -703,13 +703,13 @@ export default function ProductionScheduleTable() {
           "panel_completed_actual",
           undefined,
           undefined,
-          "#f6f6f6"
+          "#f6f6f6",
         ),
         makeCheckboxCol(
           "drawers",
           "Drawers",
           (r) => r.drawer_completed_actual,
-          "drawer_completed_actual"
+          "drawer_completed_actual",
         ),
         makeCheckboxCol(
           "custom_finish",
@@ -718,14 +718,14 @@ export default function ProductionScheduleTable() {
           "custom_finish_completed_actual",
           undefined,
           undefined,
-          "#f6f6f6"
+          "#f6f6f6",
         ),
         makeCheckboxCol(
           "woodtop",
           "Woodtop",
           (r) => r.woodtop_completed_actual,
           "woodtop_completed_actual",
-          "isWoodtop"
+          "isWoodtop",
         ),
         makeCheckboxCol(
           "canopy",
@@ -734,7 +734,7 @@ export default function ProductionScheduleTable() {
           "canopy_completed_actual",
           "isCanopy",
           undefined,
-          "#f6f6f6"
+          "#f6f6f6",
         ),
         makeCheckboxCol(
           "paint_doors",
@@ -747,7 +747,7 @@ export default function ProductionScheduleTable() {
           (r) => r.paint_doors_completed_actual,
           "paint_doors_completed_actual",
           undefined,
-          150
+          150,
         ),
         makeCheckboxCol(
           "paint_canopy",
@@ -759,7 +759,7 @@ export default function ProductionScheduleTable() {
           </Stack>,
           (r) => r.paint_canopy_completed_actual,
           "paint_canopy_completed_actual",
-          "isCanopy"
+          "isCanopy",
         ),
         makeCheckboxCol(
           "paint_custom",
@@ -771,7 +771,7 @@ export default function ProductionScheduleTable() {
           </Stack>,
           (r) => r.paint_cust_cab_completed_actual,
           "paint_cust_cab_completed_actual",
-          "isCustom"
+          "isCustom",
         ),
         makeCheckboxCol(
           "assembly",
@@ -780,7 +780,7 @@ export default function ProductionScheduleTable() {
           "assembly_completed_actual",
           undefined,
           undefined,
-          "#f6f6f6"
+          "#f6f6f6",
         ),
       ];
     } else {
@@ -843,7 +843,7 @@ export default function ProductionScheduleTable() {
               </Tooltip>
             );
           },
-        })
+        }),
       );
     }
 
@@ -863,7 +863,7 @@ export default function ProductionScheduleTable() {
               {info.getValue() || "—"}
             </Text>
           ),
-      })
+      }),
     );
 
     commonEnd.push(
@@ -916,7 +916,7 @@ export default function ProductionScheduleTable() {
             </Group>
           );
         },
-      })
+      }),
     );
 
     return [...commonStart, ...actualsCols, ...commonEnd];
@@ -937,15 +937,18 @@ export default function ProductionScheduleTable() {
 
   const groupedRows = useMemo(() => {
     if (!table.getRowModel().rows) return {};
-    return table.getRowModel().rows.reduce((acc, row) => {
-      const job = row.original;
-      const wrapDate = job.wrap_date
-        ? dayjs(job.wrap_date).format("YYYY-MM-DD")
-        : "No Date";
-      if (!acc[wrapDate]) acc[wrapDate] = [];
-      acc[wrapDate].push(row);
-      return acc;
-    }, {} as Record<string, Row<PlantTableData>[]>);
+    return table.getRowModel().rows.reduce(
+      (acc, row) => {
+        const job = row.original;
+        const wrapDate = job.wrap_date
+          ? dayjs(job.wrap_date).format("YYYY-MM-DD")
+          : "No Date";
+        if (!acc[wrapDate]) acc[wrapDate] = [];
+        acc[wrapDate].push(row);
+        return acc;
+      },
+      {} as Record<string, Row<PlantTableData>[]>,
+    );
   }, [table.getRowModel().rows]);
 
   const sortedGroupKeys = useMemo(() => {
@@ -1133,11 +1136,11 @@ export default function ProductionScheduleTable() {
                   jobsInGroup.map((r) => {
                     const val = r.original.job_number || "";
                     return val.split("-")[0].trim();
-                  })
+                  }),
                 ).size;
                 const totalBoxes = jobsInGroup.reduce((sum, row) => {
-                  const parsed = parseInt(row.original.cabinet_box || "0", 10);
-                  return isNaN(parsed) ? sum : sum + parsed;
+                  const currentBoxCount = row.original.cabinet_box ?? 0;
+                  return sum + currentBoxCount;
                 }, 0);
 
                 return (
@@ -1206,7 +1209,7 @@ export default function ProductionScheduleTable() {
                                     >
                                       {flexRender(
                                         header.column.columnDef.header,
-                                        header.getContext()
+                                        header.getContext(),
                                       )}
                                     </Table.Th>
                                   );
@@ -1254,7 +1257,7 @@ export default function ProductionScheduleTable() {
                                         >
                                           {flexRender(
                                             cell.column.columnDef.cell,
-                                            cell.getContext()
+                                            cell.getContext(),
                                           )}
                                         </Table.Td>
                                       );
