@@ -9,6 +9,7 @@ export type BuilderSummaryParams = {
   shipDateEnd?: Date | null;
   creationDateStart?: Date | null;
   creationDateEnd?: Date | null;
+  shipStatus?: "shipped" | "not_shipped" | "partially_shipped" | null;
   page: number;
   pageSize: number;
 };
@@ -63,6 +64,14 @@ export function useBuilderSummaryReport(params: BuilderSummaryParams) {
           "created_at",
           dayjs(params.creationDateEnd).endOf("day").toISOString(),
         );
+      }
+
+      if (params.shipStatus === "shipped") {
+        query = query.eq("has_shipped", true);
+      } else if (params.shipStatus === "partially_shipped") {
+        query = query.eq("partially_shipped", true).eq("has_shipped", false);
+      } else if (params.shipStatus === "not_shipped") {
+        query = query.eq("has_shipped", false).eq("partially_shipped", false);
       }
 
       const from = params.page * params.pageSize;
@@ -126,6 +135,14 @@ export function useBuilderSummaryExport(params: BuilderSummaryExcelParams) {
           "created_at",
           dayjs(params.creationDateEnd).endOf("day").toISOString(),
         );
+      }
+
+      if (params.shipStatus === "shipped") {
+        query = query.eq("has_shipped", true);
+      } else if (params.shipStatus === "partially_shipped") {
+        query = query.eq("partially_shipped", true).eq("has_shipped", false);
+      } else if (params.shipStatus === "not_shipped") {
+        query = query.eq("has_shipped", false).eq("partially_shipped", false);
       }
 
       const { data, error } = await query;

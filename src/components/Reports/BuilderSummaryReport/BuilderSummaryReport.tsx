@@ -50,6 +50,7 @@ export default function BuilderSummaryReport() {
   const [creationDateRange, setCreationDateRange] = useState<
     [Date | null, Date | null]
   >([null, null]);
+  const [shipStatusFilter, setShipStatusFilter] = useState<string | null>(null);
 
   const {
     options: clientOptions,
@@ -85,6 +86,7 @@ export default function BuilderSummaryReport() {
     shipDateEnd: null,
     creationDateStart: null,
     creationDateEnd: null,
+    shipStatus: null,
     page: 0,
     pageSize: 30,
   });
@@ -108,6 +110,7 @@ export default function BuilderSummaryReport() {
       shipDateEnd: queryParams.shipDateEnd,
       creationDateStart: queryParams.creationDateStart,
       creationDateEnd: queryParams.creationDateEnd,
+      shipStatus: queryParams.shipStatus,
     }),
     [queryParams],
   );
@@ -122,6 +125,7 @@ export default function BuilderSummaryReport() {
       shipDateEnd: shipDateRange[1],
       creationDateStart: creationDateRange[0],
       creationDateEnd: creationDateRange[1],
+      shipStatus: (shipStatusFilter as BuilderSummaryParams["shipStatus"]) || null,
       page: 0,
       pageSize: 30,
     });
@@ -133,12 +137,14 @@ export default function BuilderSummaryReport() {
     setClientSearch("");
     setShipDateRange([null, null]);
     setCreationDateRange([null, null]);
+    setShipStatusFilter(null);
     setQueryParams({
       builderName: undefined,
       shipDateStart: null,
       shipDateEnd: null,
       creationDateStart: null,
       creationDateEnd: null,
+      shipStatus: null,
       page: 0,
       pageSize: 30,
     });
@@ -329,6 +335,19 @@ export default function BuilderSummaryReport() {
                 leftSection={<FaCalendarAlt size={16} />}
                 clearable
                 w={300}
+              />
+              <Select
+                label="Ship Status"
+                placeholder="All Statuses"
+                data={[
+                  { value: "shipped", label: "Shipped" },
+                  { value: "not_shipped", label: "Not Shipped" },
+                  { value: "partially_shipped", label: "Partially Shipped" },
+                ]}
+                value={shipStatusFilter}
+                onChange={setShipStatusFilter}
+                clearable
+                w={200}
               />
             </Group>
           </Group>
