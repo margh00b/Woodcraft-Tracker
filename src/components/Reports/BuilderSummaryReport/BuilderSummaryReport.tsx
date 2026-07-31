@@ -27,6 +27,7 @@ import {
   FaSearch,
   FaFilter,
   FaTimes,
+  FaBoxes,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import { colors, gradients } from "@/theme";
@@ -36,9 +37,9 @@ import {
   useBuilderSummaryExport,
   BuilderSummaryParams,
   BuilderSummaryExcelParams,
+  groupBuilderSummaryData,
 } from "@/hooks/useBuilderSummaryReport";
 import { useClientSearch } from "@/hooks/useClientSearch";
-import "@mantine/dates/styles.css";
 
 export default function BuilderSummaryReport() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -101,6 +102,8 @@ export default function BuilderSummaryReport() {
 
   const reportData = queryResult?.data || [];
   const totalCount = queryResult?.count || 0;
+  const totalJobs = queryResult?.totalJobs || 0;
+  const totalBoxes = queryResult?.totalBoxes || 0;
   const totalPages = Math.ceil(totalCount / queryParams.pageSize);
 
   const exportParams: BuilderSummaryExcelParams = useMemo(
@@ -163,13 +166,25 @@ export default function BuilderSummaryReport() {
         return;
       }
 
-      const excelData = allData.map((item) => {
+      const {
+        grouped: exportedGroupedData,
+        totalBoxes: exportTotalBoxes,
+        totalJobs: exportTotalJobs,
+      } = groupBuilderSummaryData(allData);
+
+      const excelData: any[] = exportedGroupedData.map((item) => {
         let shipStatus = "Not Shipped";
         if (item.has_shipped) shipStatus = "Shipped";
         else if (item.partially_shipped) shipStatus = "Partially Shipped";
 
+        const displayJobNum =
+          item.job_numbers.length > 1
+            ? item.job_number
+            : item.job_numbers[0] || item.job_number;
+
         return {
-          "Job #": item.job_number || "",
+          "Job #": displayJobNum,
+          Boxes: item.box,
           Address: item.site_address || "",
           "Order Date": item.created_at
             ? dayjs(item.created_at).format("YYYY-MM-DD")
@@ -185,11 +200,11 @@ export default function BuilderSummaryReport() {
         };
       });
 
-      let builderHeader = "All Builders";
-      if (queryParams.builderName)
-        builderHeader = `Builder: ${queryParams.builderName}`;
+      const builderName = queryParams.builderName || "All Builders";
+      const builderLabel = "Builder: ";
 
-      let dateRangeStr = "All Ship Dates";
+      let shipDateLabel = "Ship Date: ";
+      let shipDateValue = "All Ship Dates";
       if (queryParams.shipDateStart || queryParams.shipDateEnd) {
         const start = queryParams.shipDateStart
           ? dayjs(queryParams.shipDateStart).format("YYYY-MM-DD")
@@ -197,17 +212,44 @@ export default function BuilderSummaryReport() {
         const end = queryParams.shipDateEnd
           ? dayjs(queryParams.shipDateEnd).format("YYYY-MM-DD")
           : "End";
-        dateRangeStr = `Ship Date: ${start} to ${end}`;
+        shipDateValue = `${start} to ${end}`;
       }
 
-      const customHeaders = [[builderHeader, dateRangeStr, "", "", "", "", ""]];
+      const todayStr = dayjs().format("YYYY-MM-DD");
+
+      const spacer = "          ";
+
+      const richTextRuns = [
+        { t: builderLabel, s: { font: { bold: true, name: "Calibri", sz: 11 } } },
+        { t: builderName + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+        { t: shipDateLabel, s: { font: { bold: true, name: "Calibri", sz: 11 } } },
+        { t: shipDateValue + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+        { t: "Total Jobs: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
+        { t: String(exportTotalJobs) + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+        { t: "Total Boxes: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
+        { t: String(exportTotalBoxes) + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+        { t: "Date: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
+        { t: todayStr, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+      ];
+
+      const plainHeaderText = richTextRuns.map((r) => r.t).join("");
+
+      const customHeaders = [
+        [plainHeaderText, "", "", "", "", "", "", ""],
+      ];
 
       exportToExcel(excelData, "Builder_Summary_Report", {
         customHeaders,
         merges: [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
-          { s: { r: 0, c: 2 }, e: { r: 0, c: 6 } },
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
         ],
+        onSheetCreated: (worksheet) => {
+          const cell = worksheet["A1"];
+          if (cell) {
+            cell.r = richTextRuns;
+            cell.t = "s";
+          }
+        },
       });
     } catch (e) {
       console.error(e);
@@ -216,7 +258,9 @@ export default function BuilderSummaryReport() {
     }
   };
 
-  const rows = reportData?.map((item) => {
+  const processedData = reportData;
+
+  const rows = processedData.map((item) => {
     let shipStatusColor = "gray";
     let shipStatusText = "Not Shipped";
     if (item.has_shipped) {
@@ -227,10 +271,12 @@ export default function BuilderSummaryReport() {
       shipStatusText = "Partially Shipped";
     }
 
+    const displayJobNum = item.job_numbers.length > 1 ? item.job_number : (item.job_numbers[0] || item.job_number);
+
     return (
-      <Table.Tr key={item.job_number}>
-        <Table.Td>{item.job_number}</Table.Td>
-        {}
+      <Table.Tr key={`${item.job_number}_${item.ship_schedule}`}>
+        <Table.Td>{displayJobNum}</Table.Td>
+        <Table.Td>{item.box}</Table.Td>
         <Table.Td>
           <Text size="sm" truncate>
             {item.site_address}
@@ -321,7 +367,7 @@ export default function BuilderSummaryReport() {
                 }
                 leftSection={<FaCalendarAlt size={16} />}
                 clearable
-                w={300}
+                w={360}
               />
               <DatePickerInput
                 type="range"
@@ -334,7 +380,7 @@ export default function BuilderSummaryReport() {
                 }
                 leftSection={<FaCalendarAlt size={16} />}
                 clearable
-                w={300}
+                w={220}
               />
               <Select
                 label="Ship Status"
@@ -352,35 +398,60 @@ export default function BuilderSummaryReport() {
             </Group>
           </Group>
 
-          <Group justify="flex-end" mt="md">
-            <Button
-              variant="default"
-              onClick={handleClearFilters}
-              leftSection={<FaTimes size={12} />}
-            >
-              Clear Filters
-            </Button>
-            <Button
-              variant="filled"
-              color="blue"
-              onClick={handleApplyFilters}
-              leftSection={<FaFilter size={12} />}
-              style={{ background: gradients.primary.to }}
-            >
-              Apply Filters
-            </Button>
+          <Group justify="space-between" align="center" mt="md">
+            {reportData && reportData.length > 0 ? (
+              <Group gap="xs">
+                <Badge
+                  size="lg"
+                  variant="light"
+                  color="blue"
+                  leftSection={<FaFileInvoice size={12} />}
+                >
+                  TOTAL JOBS: {totalJobs}
+                </Badge>
+                <Badge
+                  size="lg"
+                  variant="light"
+                  color="violet"
+                  leftSection={<FaBoxes size={12} />}
+                >
+                  TOTAL BOXES: {totalBoxes}
+                </Badge>
+              </Group>
+            ) : (
+              <div />
+            )}
 
-            <Button
-              onClick={handleExport}
-              loading={exportLoading}
-              disabled={!reportData || reportData.length === 0}
-              leftSection={<FaFileExcel size={14} />}
-              variant="outline"
-              color="green"
-              ml="xl"
-            >
-              Export Excel
-            </Button>
+            <Group align="center">
+              <Button
+                variant="default"
+                onClick={handleClearFilters}
+                leftSection={<FaTimes size={12} />}
+              >
+                Clear Filters
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                onClick={handleApplyFilters}
+                leftSection={<FaFilter size={12} />}
+                style={{ background: gradients.primary.to }}
+              >
+                Apply Filters
+              </Button>
+
+              <Button
+                onClick={handleExport}
+                loading={exportLoading}
+                disabled={!reportData || reportData.length === 0}
+                leftSection={<FaFileExcel size={14} />}
+                variant="outline"
+                color="green"
+                ml="md"
+              >
+                Export Excel
+              </Button>
+            </Group>
           </Group>
         </Paper>
 
@@ -411,6 +482,7 @@ export default function BuilderSummaryReport() {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Job #</Table.Th>
+                    <Table.Th>Boxes</Table.Th>
                     <Table.Th>Address</Table.Th>
                     <Table.Th>Order Date</Table.Th>
                     <Table.Th>Placement Date</Table.Th>

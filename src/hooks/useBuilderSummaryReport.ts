@@ -18,7 +18,93 @@ export type BuilderSummaryExcelParams = Omit<
   "page" | "pageSize"
 >;
 
-export type BuilderSummaryItem = Views<"installation_table_view"> & {
+export type BuilderSummaryItem = Views<"installation_table_view"> & {};
+
+export type GroupedBuilderSummaryItem = {
+  job_number: string;
+  job_numbers: string[];
+  site_address: string;
+  created_at: string | null;
+  placement_date: string | null;
+  has_shipped: boolean;
+  partially_shipped: boolean;
+  ship_schedule: string | null;
+  ship_status: string | null;
+  box: number;
+};
+
+export const getBaseJobNumber = (jobNum?: string | null) => {
+  if (!jobNum) return "";
+  return jobNum.split("-")[0].trim();
+};
+
+export const shouldExcludeJob = (jobNum?: string | null) => {
+  if (!jobNum) return false;
+  const lower = jobNum.toLowerCase();
+  if (lower.includes("memo")) return true;
+
+  const parts = jobNum.split("-");
+  const base = parts[0] || "";
+  const suffix = parts.slice(1).join("-");
+
+  if (base.toLowerCase().includes("m")) return true;
+  if (suffix.toLowerCase().includes("x")) return true;
+
+  return false;
+};
+
+export const groupBuilderSummaryData = (data: BuilderSummaryItem[]) => {
+  const groupMap = new Map<string, GroupedBuilderSummaryItem>();
+
+  for (const item of data) {
+    if (shouldExcludeJob(item.job_number)) continue;
+    const baseNum = getBaseJobNumber(item.job_number);
+    const shipDateKey = item.ship_schedule
+      ? dayjs(item.ship_schedule).format("YYYY-MM-DD")
+      : "NO_SHIP_DATE";
+    const key = `${baseNum}_${shipDateKey}`;
+
+    const existing = groupMap.get(key);
+    const itemBox = item.box || 0;
+
+    if (existing) {
+      if (item.job_number && !existing.job_numbers.includes(item.job_number)) {
+        existing.job_numbers.push(item.job_number);
+      }
+      existing.box += itemBox;
+      existing.has_shipped = existing.has_shipped || !!item.has_shipped;
+      existing.partially_shipped =
+        existing.partially_shipped || !!item.partially_shipped;
+      if (!existing.site_address && item.site_address) {
+        existing.site_address = item.site_address;
+      }
+      if (!existing.created_at && item.created_at) {
+        existing.created_at = item.created_at;
+      }
+      if (!existing.placement_date && item.placement_date) {
+        existing.placement_date = item.placement_date;
+      }
+    } else {
+      groupMap.set(key, {
+        job_number: baseNum || item.job_number || "",
+        job_numbers: item.job_number ? [item.job_number] : [],
+        site_address: item.site_address || "",
+        created_at: item.created_at || null,
+        placement_date: item.placement_date || null,
+        has_shipped: !!item.has_shipped,
+        partially_shipped: !!item.partially_shipped,
+        ship_schedule: item.ship_schedule || null,
+        ship_status: item.ship_status || null,
+        box: itemBox,
+      });
+    }
+  }
+
+  const grouped = Array.from(groupMap.values());
+  const totalBoxes = grouped.reduce((acc, item) => acc + item.box, 0);
+  const totalJobs = grouped.length;
+
+  return { grouped, totalBoxes, totalJobs };
 };
 
 export function useBuilderSummaryReport(params: BuilderSummaryParams) {
@@ -28,12 +114,13 @@ export function useBuilderSummaryReport(params: BuilderSummaryParams) {
     queryKey: ["builder_summary_report", params],
     queryFn: async () => {
       if (!params.builderName) {
-        return { data: [], count: 0 };
+        return { data: [], count: 0, totalJobs: 0, totalBoxes: 0 };
       }
 
       let query = supabase
         .from("installation_table_view")
-        .select("*", { count: "exact" })
+        .select("*")
+        .not("job_number", "ilike", "%memo%")
         .order("job_number", { ascending: false });
 
       if (params.builderName) {
@@ -74,22 +161,30 @@ export function useBuilderSummaryReport(params: BuilderSummaryParams) {
         query = query.eq("has_shipped", false).eq("partially_shipped", false);
       }
 
-      const from = params.page * params.pageSize;
-      const to = from + params.pageSize - 1;
-      query = query.range(from, to);
-
-      const { data, error, count } = await query;
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching builder summary report:", error);
         throw error;
       }
 
-      return { data: data as BuilderSummaryItem[], count: count || 0 };
+      const rawItems = (data || []) as BuilderSummaryItem[];
+      const { grouped, totalBoxes, totalJobs } = groupBuilderSummaryData(rawItems);
+
+      const from = params.page * params.pageSize;
+      const to = from + params.pageSize;
+      const paginatedData = grouped.slice(from, to);
+
+      return {
+        data: paginatedData,
+        count: grouped.length,
+        totalJobs,
+        totalBoxes,
+      };
     },
     enabled: isAuthenticated,
-    staleTime: 1000 * 60 * 5, 
-    placeholderData: (previousData) => previousData, 
+    staleTime: 1000 * 60 * 5,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -105,6 +200,7 @@ export function useBuilderSummaryExport(params: BuilderSummaryExcelParams) {
       let query = supabase
         .from("installation_table_view")
         .select("*")
+        .not("job_number", "ilike", "%memo%")
         .order("job_number", { ascending: false });
 
       if (params.builderName) {

@@ -70,6 +70,10 @@ export const exportToExcel = (
 
   const startRow = headerOffset;
 
+  if (options?.onSheetCreated) {
+    options.onSheetCreated(worksheet, range, XLSX.utils, headerOffset + 1);
+  }
+
   for (let C = range.s.c; C <= range.e.c; ++C) {
     let maxWidth = 12;
 
@@ -78,9 +82,16 @@ export const exportToExcel = (
       const cell = worksheet[cellAddress];
 
       if (cell) {
+        if (typeof cell.v === "object" && cell.v !== null && "t" in cell.v) {
+          if ((cell.v as any).r) cell.r = (cell.v as any).r;
+          cell.v = (cell.v as any).t;
+          cell.t = "s";
+        }
+
         if (R < startRow) {
+          const hasRichText = !!(cell.r && cell.r.length > 0);
           cell.s = {
-            font: { name: "Calibri", sz: 14, bold: true },
+            font: { name: "Calibri", sz: 11, bold: !hasRichText },
             alignment: { vertical: "center", horizontal: "center" },
           };
         } else if (R === startRow) {
@@ -89,8 +100,8 @@ export const exportToExcel = (
           cell.s = (R - startRow) % 2 === 0 ? stripeStyle : baseStyle;
         }
 
-        if (cell.v != null) {
-          const cellLength = String(cell.v).length;
+        if (R >= startRow && cell.v != null) {
+          const cellLength = String(cell.v).length + 2;
           if (cellLength > maxWidth) maxWidth = cellLength;
         }
       }
@@ -106,10 +117,6 @@ export const exportToExcel = (
       e: range.e,
     }),
   };
-
-  if (options?.onSheetCreated) {
-    options.onSheetCreated(worksheet, range, XLSX.utils, headerOffset + 1);
-  }
 
   worksheet["!margins"] = {
     left: 0.25,
