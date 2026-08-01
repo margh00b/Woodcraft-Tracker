@@ -991,6 +991,27 @@ export type Database = {
           },
         ]
       }
+      local_data: {
+        Row: {
+          id: string
+          machine_name: string
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          machine_name: string
+          payload: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          machine_name?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       production_schedule: {
         Row: {
           assembly_completed_actual: string | null
