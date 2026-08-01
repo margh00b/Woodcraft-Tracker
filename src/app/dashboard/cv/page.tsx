@@ -38,14 +38,15 @@ export default function CVDataPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "local_data" },
         (payload) => {
+          const newRecord = payload.new as any;
           setMachineData((prev) => {
-            const index = prev.findIndex((item) => item.id === payload.new.id);
+            const index = prev.findIndex((item) => item.id === newRecord.id);
             if (index >= 0) {
               const updated = [...prev];
-              updated[index] = payload.new;
+              updated[index] = newRecord;
               return updated;
             }
-            return [payload.new, ...prev];
+            return [newRecord, ...prev];
           });
           setLoading(false);
         },
