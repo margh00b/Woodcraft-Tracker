@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 const styles = StyleSheet.create({
   page: {
     paddingTop: 30,
-    paddingBottom: 30,
+    paddingBottom: 70,
     paddingLeft: 40,
     paddingRight: 40,
     fontFamily: "Helvetica",
@@ -104,6 +104,32 @@ const styles = StyleSheet.create({
   colLocation: { width: "11%" },
   colDueDate: { width: "10%" },
   colStatus: { width: "11%" },
+
+  // Updated Signature Styles
+  signatureContainer: {
+    position: "absolute",
+    bottom: 45,
+    left: 40,
+    right: 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  signatureBoxLeft: {
+    width: "45%",
+  },
+  signatureBoxRight: {
+    width: "45%",
+    marginLeft: 15, // Pushes the client signature a bit further to the right
+  },
+  signatureLine: {
+    fontSize: 9,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  dateLine: {
+    fontSize: 9,
+    fontWeight: "bold",
+  },
 });
 
 const htmlStyles = {
@@ -116,7 +142,6 @@ const htmlStyles = {
     marginTop: 0,
     marginBottom: 0,
   },
-
   ul: {
     fontSize: 10,
     marginBottom: 4,
@@ -204,6 +229,7 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
             </View>
           </View>
         </View>
+
         <View style={styles.row}>
           <Text style={styles.label}>Status:</Text>
           <Text style={styles.value}>
@@ -269,6 +295,7 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
               </Text>
             </View>
           </View>
+
           <View style={styles.rightCol}>
             <View style={{ marginBottom: 15 }}>
               <Text
@@ -294,6 +321,7 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
               </Text>
               <Text style={{ fontSize: 10 }}>{so.designer || "—"}</Text>
             </View>
+
             {(homeowner?.homeowner_name ||
               homeowner?.homeowner_phone ||
               homeowner?.homeowner_email ||
@@ -304,37 +332,20 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
                 >
                   Homeowner Info
                 </Text>
-
                 <Text style={{ fontSize: 10 }}>
                   {homeowner.homeowner_name || "—"}
                 </Text>
-
                 <Text style={{ fontSize: 10 }}>
                   {homeowner.homeowner_phone || "—"}
                 </Text>
-
                 <Text style={{ fontSize: 10 }}>
                   {homeowner.homeowner_email || "—"}
                 </Text>
-
                 <Text style={{ fontSize: 10, marginBottom: 10 }}>
                   {homeowner.homeowner_details || "—"}
                 </Text>
               </View>
             )}
-
-            {/* Signature and Date lines */}
-
-            <Text
-              style={{
-                marginTop: 20,
-                fontSize: 10,
-                paddingBottom: 2,
-                fontWeight: "bold",
-              }}
-            >
-              Client Signature:
-            </Text>
           </View>
         </View>
 
@@ -409,11 +420,27 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
           )}
         </View>
 
+        {/* Bottom Signatures Section */}
+        <View style={styles.signatureContainer}>
+          <View style={styles.signatureBoxLeft}>
+            <Text style={styles.signatureLine}>
+              Service Tech Signature: _____________________
+            </Text>
+            <Text style={styles.dateLine}>Date: _____________</Text>
+          </View>
+          <View style={styles.signatureBoxRight}>
+            <Text style={styles.signatureLine}>
+              Client Signature: _____________________
+            </Text>
+            <Text style={styles.dateLine}>Date: _____________</Text>
+          </View>
+        </View>
+
         <Text
           style={{
             position: "absolute",
-            bottom: 30,
-            left: 30,
+            bottom: 20,
+            left: 40,
             fontSize: 8,
             color: "#aaa",
           }}
