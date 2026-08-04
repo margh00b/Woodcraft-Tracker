@@ -122,12 +122,12 @@ const styles = StyleSheet.create({
     marginLeft: 15, // Pushes the client signature a bit further to the right
   },
   signatureLine: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "bold",
     marginBottom: 15,
   },
   dateLine: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "bold",
   },
 });
@@ -424,13 +424,13 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
         <View style={styles.signatureContainer}>
           <View style={styles.signatureBoxLeft}>
             <Text style={styles.signatureLine}>
-              Service Tech Signature: _____________________
+              Service Tech Signature: _______________
             </Text>
             <Text style={styles.dateLine}>Date: _____________</Text>
           </View>
           <View style={styles.signatureBoxRight}>
             <Text style={styles.signatureLine}>
-              Client Signature: _____________________
+              Client Signature: _______________
             </Text>
             <Text style={styles.dateLine}>Date: _____________</Text>
           </View>
