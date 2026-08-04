@@ -317,11 +317,24 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
                   {homeowner.homeowner_email || "—"}
                 </Text>
 
-                <Text style={{ fontSize: 10 }}>
+                <Text style={{ fontSize: 10, marginBottom: 10 }}>
                   {homeowner.homeowner_details || "—"}
                 </Text>
               </View>
             )}
+
+            {/* Signature and Date lines */}
+
+            <Text
+              style={{
+                marginTop: 20,
+                fontSize: 10,
+                paddingBottom: 2,
+                fontWeight: "bold",
+              }}
+            >
+              Client Signature:
+            </Text>
           </View>
         </View>
 
