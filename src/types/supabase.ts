@@ -469,7 +469,7 @@ export type Database = {
           shipped_at: string | null
           site_changes: string | null
           site_changes_detail: string | null
-          site_prep_install: boolean | null
+          site_prep_install: string | null
           trade_30days: string | null
           trade_6months: string | null
           updated_at: string
@@ -494,7 +494,7 @@ export type Database = {
           shipped_at?: string | null
           site_changes?: string | null
           site_changes_detail?: string | null
-          site_prep_install?: boolean | null
+          site_prep_install?: string | null
           trade_30days?: string | null
           trade_6months?: string | null
           updated_at?: string
@@ -519,7 +519,7 @@ export type Database = {
           shipped_at?: string | null
           site_changes?: string | null
           site_changes_detail?: string | null
-          site_prep_install?: boolean | null
+          site_prep_install?: string | null
           trade_30days?: string | null
           trade_6months?: string | null
           updated_at?: string
@@ -2366,6 +2366,7 @@ export type Database = {
           installation_notes: string | null
           job_id: number | null
           job_number: string | null
+          order_type: string | null
           partially_shipped: boolean | null
           pickup_date: string | null
           placement_date: string | null

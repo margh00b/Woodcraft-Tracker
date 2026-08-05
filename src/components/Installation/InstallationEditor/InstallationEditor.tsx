@@ -653,26 +653,36 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
 
                   <Grid gutter="xl">
                     <Grid.Col span={{ base: 12, md: 8 }}>
-                      {jobData?.sales_orders?.order_type === "Reno" && (
-                        <Switch
-                          size="md"
-                          mb={25}
-                          color={colors.red.primary}
-                          label="Customer has been called and Site expectations are confirmed"
-                          checked={!!form.values.site_prep_install}
-                          onChange={(event) => {
-                            const isChecked = event.currentTarget.checked;
-                            form.setFieldValue("site_prep_install", isChecked);
-                          }}
-                          styles={{
-                            label: {
-                              fontWeight: 500,
-                              color: colors.red.primary,
-                            },
-                          }}
-                        />
-                      )}
-
+                      <Group align="center" gap="xl" mb={25}>
+                        {jobData?.sales_orders?.order_type === "Reno" && (
+                          <Switch
+                            size="md"
+                            color={colors.red.primary}
+                            label="Customer has been called and Site expectations are confirmed"
+                            checked={!!form.values.site_prep_install}
+                            onChange={(event) => {
+                              const isChecked = event.currentTarget.checked;
+                              form.setFieldValue(
+                                "site_prep_install",
+                                isChecked ? dayjs().toISOString() : null,
+                              );
+                            }}
+                            styles={{
+                              label: {
+                                fontWeight: 500,
+                                color: colors.red.primary,
+                              },
+                            }}
+                          />
+                        )}
+                        {form.values.site_prep_install && (
+                          <Text c="dimmed" size="xs">
+                            {dayjs(form.values.site_prep_install).format(
+                              "YYYY-MM-DD",
+                            )}
+                          </Text>
+                        )}
+                      </Group>
                       <SimpleGrid cols={2} spacing="md">
                         <Select
                           styles={{ label: { fontWeight: "bold" } }}

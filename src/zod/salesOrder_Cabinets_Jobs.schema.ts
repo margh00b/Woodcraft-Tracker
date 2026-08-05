@@ -61,7 +61,9 @@ export const MasterOrderSchema = z
     is_custom_cab_required: z.boolean().default(false).optional(),
     is_cod: z.boolean().nullable().optional(),
     payment_received: z.boolean().nullable().optional(),
-    site_prep: z.boolean({ error: "Select Yes/No" }),
+
+    // 1. Make this optional/nullable in the base object
+    site_prep: z.boolean().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.order_type !== "Multi Fam") {
@@ -73,6 +75,15 @@ export const MasterOrderSchema = z
         });
       }
     }
-  });
 
+    if (data.order_type === "Reno") {
+      if (data.site_prep === undefined || data.site_prep === null) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Select Yes/No",
+          path: ["site_prep"],
+        });
+      }
+    }
+  });
 export type MasterOrderInput = z.infer<typeof MasterOrderSchema>;
