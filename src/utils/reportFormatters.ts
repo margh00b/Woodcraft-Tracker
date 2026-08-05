@@ -64,6 +64,7 @@ export const formatProductionScheduleData = (
           shipping_city: item.shipping_city || "",
           shipping_street: item.shipping_street || "",
           shipping_province: item.shipping_province || "",
+          order_type: item.order_type,
           cabinet: {
             box: item.cabinet_box || "0",
             interior: item.cabinet_interior || "",
@@ -107,6 +108,7 @@ export const formatShipScheduleData = (
             shipping_city: item.shipping_city || "",
             shipping_street: item.shipping_street || "",
             shipping_province: item.shipping_province || "",
+            order_type: item.order_type,
             cabinet: {
               box: item.cabinet_box || "0",
               door_styles: { name: item.cabinet_door_style || "" },

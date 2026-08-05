@@ -255,6 +255,7 @@ export const ProductionSchedulePdf = ({
 
     const boxTotal = jobs.reduce((sum, job) => {
       const so = safeGet(job.sales_orders);
+
       const cab = safeGet(so?.cabinet);
       const box = parseInt(cab?.box || "0", 10);
       return isNaN(box) ? sum : sum + box;
@@ -284,6 +285,7 @@ export const ProductionSchedulePdf = ({
       }
 
       const so = safeGet(job.sales_orders);
+      const ot = so?.order_type;
       const cab = safeGet(so?.cabinet);
       const ps = safeGet(job.production_schedule);
 
@@ -305,7 +307,9 @@ export const ProductionSchedulePdf = ({
             <Checkbox checked={Boolean(ps?.placement_date)} />
           </View>
           <View style={[styles.cellBase, styles.colJob]}>
-            <Text style={styles.cellText}>{jobNum}</Text>
+            <Text style={styles.cellText}>
+              {`${jobNum || ""} ${ot === "Reno" ? "(R)" : ""}`.trim()}
+            </Text>
           </View>
           <View style={[styles.cellBase, styles.colCust]}>
             <Text style={styles.cellText}>{clientName.substring(0, 20)}</Text>
@@ -380,7 +384,7 @@ export const ProductionSchedulePdf = ({
               </Text>
             )}
           </View>
-        </View>
+        </View>,
       );
       currentCount += 1;
     });
@@ -392,7 +396,7 @@ export const ProductionSchedulePdf = ({
     currentPage.push(
       <View key={`total-${dateKey}`} style={styles.totalRow} wrap={false}>
         <Text style={styles.totalText}>Total Boxes: {boxTotal}</Text>
-      </View>
+      </View>,
     );
     currentCount += 1;
   });

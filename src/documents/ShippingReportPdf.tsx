@@ -104,12 +104,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
 
-  colJob: { width: "6%" },
+  colJob: { width: "8%" },
   colConfirm: { width: "3%", alignItems: "center" },
   colCust: { width: "16%" },
   colAddr: { width: "17%" },
   colBox: { width: "3%", alignItems: "center" },
-  colDoor: { width: "13%" },
+  colDoor: { width: "11%" },
   colSpec: { width: "6%" },
   colColor: { width: "9%" },
   colWrapped: { width: "3%", alignItems: "center" },
@@ -296,6 +296,7 @@ export const ShippingReportPdf = ({
               {}
               {jobs.map((job) => {
                 const so = safeGet(job.sales_orders);
+                const ot = so?.order_type;
                 const cab = safeGet(so?.cabinet);
                 const jobNum = job.job_number || "—";
                 const clientName = so?.shipping_client_name || "Unknown";
@@ -333,7 +334,9 @@ export const ShippingReportPdf = ({
                       />
                     </View>
                     <View style={[styles.cellBase, styles.colJob]}>
-                      <Text style={styles.cellText}>{jobNum}</Text>
+                      <Text style={styles.cellText}>
+                        {`${jobNum || ""} ${ot === "Reno" ? "(R)" : ""}`.trim()}
+                      </Text>
                     </View>
                     <View style={[styles.cellBase, styles.colCust]}>
                       <Text style={styles.cellText}>{clientName}</Text>

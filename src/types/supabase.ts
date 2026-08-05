@@ -2213,6 +2213,7 @@ export type Database = {
           is_woodtop_required: boolean | null
           job_id: number | null
           job_number: string | null
+          order_type: string | null
           paint_canopy_completed_actual: string | null
           paint_cust_cab_completed_actual: string | null
           paint_doors_completed_actual: string | null
