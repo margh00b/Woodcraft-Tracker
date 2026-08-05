@@ -17,6 +17,7 @@ import {
   ActionIcon,
   TextInput,
   Modal,
+  Tooltip,
 } from "@mantine/core";
 import {
   FaCheckCircle,
@@ -27,6 +28,7 @@ import {
   FaCalendarCheck,
   FaSave,
   FaExternalLinkAlt,
+  FaDollarSign,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import { DatePickerInput } from "@mantine/dates";
@@ -41,6 +43,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { Views } from "@/types/db";
+import { SiRenovate } from "react-icons/si";
 
 type InstallationJobView = Views<"installation_table_view"> & {
   partially_shipped?: boolean;
@@ -86,7 +89,7 @@ export function RowEditorOverlay({
     setSearch: setInstallerSearch,
     isLoading: loadingInstallers,
   } = useInstallerSearch(
-    formData.installer_id ? String(formData.installer_id) : null
+    formData.installer_id ? String(formData.installer_id) : null,
   );
 
   useEffect(() => {
@@ -107,14 +110,14 @@ export function RowEditorOverlay({
     if (error) throw error;
     if (!data || data.length === 0) {
       throw new Error(
-        `Update blocked: You do not have permission to update ${context}.`
+        `Update blocked: You do not have permission to update ${context}.`,
       );
     }
   };
 
   const updateDB = async (
     field: keyof InstallationJobView | string,
-    value: any
+    value: any,
   ) => {
     try {
       if (!data.installation_id) return;
@@ -204,7 +207,7 @@ export function RowEditorOverlay({
 
   const handleDateChange = (
     key: keyof InstallationJobView,
-    date: Date | string | null
+    date: Date | string | null,
   ) => {
     const val = date instanceof Date ? dayjs(date).format("YYYY-MM-DD") : date;
 
@@ -413,7 +416,7 @@ export function RowEditorOverlay({
                                         e.stopPropagation();
                                         window.open(
                                           `/dashboard/installation/${row.original.job_id}`,
-                                          "_blank"
+                                          "_blank",
                                         );
                                       }}
                                     >
@@ -437,6 +440,63 @@ export function RowEditorOverlay({
                                     </Text>
                                     {formData.rush && (
                                       <FaFire size={12} color="red" />
+                                    )}
+                                    {formData.is_cod && (
+                                      <Tooltip
+                                        label={
+                                          formData.payment_received
+                                            ? "COD : Received"
+                                            : "COD : Pending"
+                                        }
+                                      >
+                                        <Badge
+                                          style={{ cursor: "pointer" }}
+                                          size="xs"
+                                          radius="100%"
+                                          styles={{
+                                            root: { padding: 3, marginLeft: 3 },
+                                          }}
+                                          variant="gradient"
+                                          gradient={
+                                            formData.payment_received
+                                              ? {
+                                                  from: "#00470cff",
+                                                  to: "#009917ff",
+                                                  deg: 135,
+                                                }
+                                              : {
+                                                  from: "#a30000ff",
+                                                  to: "#d60000ff",
+                                                  deg: 135,
+                                                }
+                                          }
+                                        >
+                                          <FaDollarSign
+                                            size={10}
+                                            color="white"
+                                          />
+                                        </Badge>
+                                      </Tooltip>
+                                    )}
+                                    {formData.order_type === "Reno" && (
+                                      <Tooltip label={"Reno Job"}>
+                                        <Badge
+                                          style={{ cursor: "pointer" }}
+                                          size="xs"
+                                          radius="100%"
+                                          styles={{
+                                            root: { padding: 3, marginLeft: 3 },
+                                          }}
+                                          variant="gradient"
+                                          gradient={{
+                                            from: "#0062a3ff",
+                                            to: "#23c1ffff",
+                                            deg: 135,
+                                          }}
+                                        >
+                                          <SiRenovate size={10} color="white" />
+                                        </Badge>
+                                      </Tooltip>
                                     )}
                                   </Group>
                                 );
@@ -468,7 +528,7 @@ export function RowEditorOverlay({
                                     onChange={(d) => {
                                       if (d) {
                                         setPendingDate(
-                                          dayjs(d).format("YYYY-MM-DD")
+                                          dayjs(d).format("YYYY-MM-DD"),
                                         );
                                         setConfirmModalOpened(true);
                                       } else {
@@ -510,16 +570,16 @@ export function RowEditorOverlay({
                                                   deg: 90,
                                                 }
                                               : isFull
-                                              ? {
-                                                  from: "lime",
-                                                  to: "green",
-                                                  deg: 90,
-                                                }
-                                              : {
-                                                  from: "red",
-                                                  to: "#ff2c2cff",
-                                                  deg: 90,
-                                                }
+                                                ? {
+                                                    from: "lime",
+                                                    to: "green",
+                                                    deg: 90,
+                                                  }
+                                                : {
+                                                    from: "red",
+                                                    to: "#ff2c2cff",
+                                                    deg: 90,
+                                                  }
                                           }
                                           onClick={() =>
                                             setShipPopoverOpened((o) => !o)
@@ -528,8 +588,8 @@ export function RowEditorOverlay({
                                           {isPartial
                                             ? "PARTIAL"
                                             : isFull
-                                            ? "YES"
-                                            : "NO"}
+                                              ? "YES"
+                                              : "NO"}
                                         </Badge>
                                       </Popover.Target>
                                       <Popover.Dropdown p={4}>
@@ -636,7 +696,7 @@ export function RowEditorOverlay({
                                     w="100%"
                                     allowDeselect
                                     value={getDateValue(
-                                      formData.installation_date
+                                      formData.installation_date,
                                     )}
                                     onChange={(d) =>
                                       handleDateChange("installation_date", d)
@@ -655,7 +715,7 @@ export function RowEditorOverlay({
                                     w="100%"
                                     allowDeselect
                                     value={getDateValue(
-                                      formData.inspection_date
+                                      formData.inspection_date,
                                     )}
                                     onChange={(d) =>
                                       handleDateChange("inspection_date", d)
@@ -675,12 +735,12 @@ export function RowEditorOverlay({
                                     allowDeselect
                                     placeholder="Pending"
                                     value={getDateValue(
-                                      formData.installation_completed
+                                      formData.installation_completed,
                                     )}
                                     onChange={(d) =>
                                       handleDateChange(
                                         "installation_completed",
-                                        d
+                                        d,
                                       )
                                     }
                                     valueFormat="YYYY-MM-DD"
@@ -698,12 +758,12 @@ export function RowEditorOverlay({
                                     allowDeselect
                                     placeholder="Pending"
                                     value={getDateValue(
-                                      formData.inspection_completed
+                                      formData.inspection_completed,
                                     )}
                                     onChange={(d) =>
                                       handleDateChange(
                                         "inspection_completed",
-                                        d
+                                        d,
                                       )
                                     }
                                     valueFormat="YYYY-MM-DD"
@@ -727,7 +787,8 @@ export function RowEditorOverlay({
                                     }}
                                   >
                                     <Text size="xs">
-                                      {(formData as InstallationJobView).cabinet_color ?? "—"}
+                                      {(formData as InstallationJobView)
+                                        .cabinet_color ?? "—"}
                                     </Text>
                                   </Box>
                                 );
@@ -755,7 +816,7 @@ export function RowEditorOverlay({
                                           row
                                             .getVisibleCells()
                                             .find((c) => c.column.id === key)!
-                                            .getContext()
+                                            .getContext(),
                                         )
                                       : "—"}
                                   </Box>

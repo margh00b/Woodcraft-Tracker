@@ -74,6 +74,9 @@ export function useInstallationTable({
           case "cabinet_color":
             query = query.ilike("cabinet_color", `%${valStr}%`);
             break;
+          case "order_type":
+            query = query.eq("order_type", valStr);
+            break;
           default:
             break;
         }

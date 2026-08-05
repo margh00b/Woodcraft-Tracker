@@ -10,7 +10,7 @@ export const CabinetSpecsSchema = z.object({
   drawer_hardware: z.string().nullable().optional(),
   box: z.preprocess(
     (val) => (val === "" || val === undefined ? null : val),
-    z.number().nullable().optional()
+    z.number().nullable().optional(),
   ),
   doors_parts_only: z.boolean().default(false),
   handles_supplied: z.boolean().default(false),
@@ -61,6 +61,7 @@ export const MasterOrderSchema = z
     is_custom_cab_required: z.boolean().default(false).optional(),
     is_cod: z.boolean().nullable().optional(),
     payment_received: z.boolean().nullable().optional(),
+    site_prep: z.boolean({ error: "Select Yes/No" }),
   })
   .superRefine((data, ctx) => {
     if (data.order_type !== "Multi Fam") {

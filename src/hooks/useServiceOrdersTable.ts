@@ -41,7 +41,7 @@ export function useServiceOrdersTable({
           if (start) {
             query = query.gte(
               id,
-              dayjs.utc(start).startOf("day").toISOString()
+              dayjs.utc(start).startOf("day").toISOString(),
             );
           }
           if (end) {
@@ -77,6 +77,9 @@ export function useServiceOrdersTable({
             if (valStr === "true") {
               query = query.eq("installer_requested", true);
             }
+            break;
+          case "order_type":
+            query = query.eq("order_type", valStr);
             break;
           default:
             break;

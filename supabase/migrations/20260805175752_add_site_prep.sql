@@ -1,0 +1,1 @@
+alter table public.sales_orders add site_prep boolean default false;

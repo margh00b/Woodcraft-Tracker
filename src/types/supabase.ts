@@ -469,6 +469,7 @@ export type Database = {
           shipped_at: string | null
           site_changes: string | null
           site_changes_detail: string | null
+          site_prep_install: boolean | null
           trade_30days: string | null
           trade_6months: string | null
           updated_at: string
@@ -493,6 +494,7 @@ export type Database = {
           shipped_at?: string | null
           site_changes?: string | null
           site_changes_detail?: string | null
+          site_prep_install?: boolean | null
           trade_30days?: string | null
           trade_6months?: string | null
           updated_at?: string
@@ -517,6 +519,7 @@ export type Database = {
           shipped_at?: string | null
           site_changes?: string | null
           site_changes_detail?: string | null
+          site_prep_install?: boolean | null
           trade_30days?: string | null
           trade_6months?: string | null
           updated_at?: string
@@ -1370,6 +1373,7 @@ export type Database = {
           shipping_province: string | null
           shipping_street: string | null
           shipping_zip: string | null
+          site_prep: boolean | null
           stage: Database["public"]["Enums"]["SalesStage"]
           total: number | null
           updated_at: string
@@ -1418,6 +1422,7 @@ export type Database = {
           shipping_province?: string | null
           shipping_street?: string | null
           shipping_zip?: string | null
+          site_prep?: boolean | null
           stage?: Database["public"]["Enums"]["SalesStage"]
           total?: number | null
           updated_at?: string
@@ -1466,6 +1471,7 @@ export type Database = {
           shipping_province?: string | null
           shipping_street?: string | null
           shipping_zip?: string | null
+          site_prep?: boolean | null
           stage?: Database["public"]["Enums"]["SalesStage"]
           total?: number | null
           updated_at?: string
@@ -2115,6 +2121,7 @@ export type Database = {
           is_cod: boolean | null
           job_id: number | null
           job_number: string | null
+          order_type: string | null
           partially_shipped: boolean | null
           payment_received: boolean | null
           placement_date: string | null
@@ -2706,6 +2713,7 @@ export type Database = {
           installer_requested: boolean | null
           job_id: number | null
           job_number: string | null
+          order_type: string | null
           sales_order_id: number | null
           service_order_id: number | null
           service_order_number: string | null

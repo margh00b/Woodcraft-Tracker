@@ -81,6 +81,7 @@ type CombinedInstallFormValues = TablesUpdate<"installation"> & {
   prod_id: number;
   ship_schedule: string | null;
   ship_status: Tables<"production_schedule">["ship_status"];
+  order_type: Tables<"sales_orders">["order_type"] | null;
 };
 
 type InstallerLookup = Pick<
@@ -239,6 +240,8 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
       site_changes: null,
       site_changes_detail: "",
       cabfinaldate: null,
+      site_prep_install: null,
+      order_type: null,
     },
     validate: zodResolver(installationSchema),
   });
@@ -278,6 +281,8 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           site_changes: install.site_changes,
           site_changes_detail: install.site_changes_detail ?? "",
           cabfinaldate: install.cabfinaldate || null,
+          site_prep_install: install.site_prep_install || null,
+          order_type: jobData?.sales_orders?.order_type || null,
         });
         form.resetDirty();
       }
@@ -293,7 +298,13 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         throw new Error("Production Schedule record not found for this job.");
       }
 
-      const { prod_id, ship_schedule, ship_status, ...installValues } = values;
+      const {
+        prod_id,
+        ship_schedule,
+        ship_status,
+        order_type,
+        ...installValues
+      } = values;
       const timestamp = new Date().toISOString();
 
       let finalWrapCompleted = installValues.wrap_completed;
@@ -314,6 +325,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         installation_notes: installValues.installation_notes || null,
         legacy_ref: installValues.legacy_ref || null,
         partially_shipped: installValues.partially_shipped,
+        site_prep_install: installValues.site_prep_install || null,
       };
 
       const { error: installError } = await supabase
@@ -641,6 +653,26 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
 
                   <Grid gutter="xl">
                     <Grid.Col span={{ base: 12, md: 8 }}>
+                      {jobData?.sales_orders?.order_type === "Reno" && (
+                        <Switch
+                          size="md"
+                          mb={25}
+                          color={colors.red.primary}
+                          label="Customer has been called and Site expectations are confirmed"
+                          checked={!!form.values.site_prep_install}
+                          onChange={(event) => {
+                            const isChecked = event.currentTarget.checked;
+                            form.setFieldValue("site_prep_install", isChecked);
+                          }}
+                          styles={{
+                            label: {
+                              fontWeight: 500,
+                              color: colors.red.primary,
+                            },
+                          }}
+                        />
+                      )}
+
                       <SimpleGrid cols={2} spacing="md">
                         <Select
                           styles={{ label: { fontWeight: "bold" } }}

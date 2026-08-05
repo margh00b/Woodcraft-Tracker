@@ -1,0 +1,1 @@
+alter table public.installation add site_prep_install boolean default false;

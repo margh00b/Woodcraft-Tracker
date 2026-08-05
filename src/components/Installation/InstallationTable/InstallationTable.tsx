@@ -56,6 +56,7 @@ import {
   FaFilter,
   FaExternalLinkAlt,
 } from "react-icons/fa";
+import { SiRenovate } from "react-icons/si";
 import { IoIosWarning } from "react-icons/io";
 import dayjs from "dayjs";
 import { DatePickerInput } from "@mantine/dates";
@@ -347,6 +348,20 @@ export default function InstallationTable({
                   }
                 >
                   <FaDollarSign size={10} color="white" />
+                </Badge>
+              </Tooltip>
+            )}
+            {info.row.original.order_type === "Reno" && (
+              <Tooltip label={"Reno Job"}>
+                <Badge
+                  style={{ cursor: "pointer" }}
+                  size="xs"
+                  radius="100%"
+                  styles={{ root: { padding: 3, marginLeft: 3 } }}
+                  variant="gradient"
+                  gradient={{ from: "#0062a3ff", to: "#23c1ffff", deg: 135 }}
+                >
+                  <SiRenovate size={10} color="white" />
                 </Badge>
               </Tooltip>
             )}
@@ -979,7 +994,7 @@ export default function InstallationTable({
                   />
                 </Grid.Col>
 
-                <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+                <Grid.Col span={{ base: 12, sm: 12, md: 8 }}>
                   <Stack gap={6} pt={2}>
                     <Text size="xs" fw={500} c="black">
                       Toggles
@@ -1059,6 +1074,47 @@ export default function InstallationTable({
                           );
                           const newActiveFilters = val
                             ? [...otherFilters, { id: "rush", value: val }]
+                            : otherFilters;
+                          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                          setActiveFilters(newActiveFilters);
+                        }}
+                      />
+                      <Switch
+                        label="Reno Jobs"
+                        size="sm"
+                        thumbIcon={<FaCheckCircle />}
+                        styles={{
+                          label: { fontSize: 15 },
+                          track: {
+                            cursor: "pointer",
+                            background:
+                              getInputFilterValue("order_type") === "Reno"
+                                ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
+                                : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
+                            border: "none",
+                          },
+                          thumb: {
+                            background:
+                              getInputFilterValue("order_type") === "Reno"
+                                ? "#6e54ffff"
+                                : "#d1d1d1ff",
+                          },
+                        }}
+                        checked={getInputFilterValue("order_type") === "Reno"}
+                        onChange={(e) => {
+                          const val = e.currentTarget.checked;
+                          setInputFilterValue(
+                            "order_type",
+                            e.target.checked ? "Reno" : undefined,
+                          );
+                          const otherFilters = inputFilters.filter(
+                            (f) => f.id !== "order_type",
+                          );
+                          const newActiveFilters = val
+                            ? [
+                                ...otherFilters,
+                                { id: "order_type", value: "Reno" },
+                              ]
                             : otherFilters;
                           setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                           setActiveFilters(newActiveFilters);

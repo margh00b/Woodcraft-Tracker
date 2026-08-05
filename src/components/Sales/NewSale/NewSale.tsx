@@ -186,6 +186,7 @@ export default function NewSale() {
       is_custom_cab_required: false,
       is_cod: undefined as unknown as boolean,
       payment_received: undefined as unknown as boolean,
+      site_prep: undefined as unknown as boolean,
       flooring_type: "",
       flooring_clearance: "",
       cabinet: {
@@ -481,6 +482,7 @@ export default function NewSale() {
         is_custom_cab_required,
         is_cod,
         payment_received,
+        site_prep,
       } = values;
       if (stage === "SOLD" && !manual_job_base) {
         throw new Error("Job Base Number is required for Sold jobs.");
@@ -537,6 +539,7 @@ export default function NewSale() {
         is_custom_cab_required: is_custom_cab_required,
         is_cod: is_cod,
         payment_received: payment_received,
+        site_prep: site_prep,
       };
 
       const { data: transactionResult, error: rpcError } = await supabase.rpc(
@@ -1245,38 +1248,57 @@ export default function NewSale() {
                   variant="filled"
                   bg={"white"}
                 >
-                  <SimpleGrid cols={2} mt="sm">
-                    <Select
-                      label="Delivery Type"
-                      withAsterisk
-                      rightSection
-                      placeholder="Pickup, Delivery..."
-                      data={DeliveryTypeOptions}
-                      searchable
-                      nothingFoundMessage="No delivery type found"
-                      {...form.getInputProps(`delivery_type`)}
-                    />
-                    <Radio.Group
-                      label="Installation Required"
-                      withAsterisk
-                      value={
-                        form.values.install === true
-                          ? "true"
-                          : form.values.install === false
-                            ? "false"
-                            : ""
-                      }
-                      onChange={(val) =>
-                        form.setFieldValue("install", val === "true")
-                      }
-                      error={form.errors.install}
-                    >
-                      <Group mt="xs">
-                        <Radio value="true" label="Yes" color="#4a00e0" />
-                        <Radio value="false" label="No" color="#4a00e0" />
-                      </Group>
-                    </Radio.Group>
-                  </SimpleGrid>
+                  <Stack mt="sm" gap="md">
+                    <Collapse in={form.values.order_type === "Reno"}>
+                      <Radio.Group
+                        label="Site Expectations Document is signed by the customer"
+                        withAsterisk
+                        value={String(form.values.site_prep ?? "")}
+                        onChange={(val) =>
+                          form.setFieldValue("site_prep", val === "true")
+                        }
+                        error={form.errors.site_prep}
+                      >
+                        <Group mt="xs" style={{ marginBottom: 10 }}>
+                          <Radio value="true" label="Yes" color="#4a00e0" />
+                          <Radio value="false" label="No" color="#4a00e0" />
+                        </Group>
+                      </Radio.Group>
+                    </Collapse>
+
+                    <SimpleGrid cols={2}>
+                      <Select
+                        label="Delivery Type"
+                        withAsterisk
+                        rightSection
+                        placeholder="Pickup, Delivery..."
+                        data={DeliveryTypeOptions}
+                        searchable
+                        nothingFoundMessage="No delivery type found"
+                        {...form.getInputProps(`delivery_type`)}
+                      />
+                      <Radio.Group
+                        label="Installation Required"
+                        withAsterisk
+                        value={
+                          form.values.install === true
+                            ? "true"
+                            : form.values.install === false
+                              ? "false"
+                              : ""
+                        }
+                        onChange={(val) =>
+                          form.setFieldValue("install", val === "true")
+                        }
+                        error={form.errors.install}
+                      >
+                        <Group mt="xs">
+                          <Radio value="true" label="Yes" color="#4a00e0" />
+                          <Radio value="false" label="No" color="#4a00e0" />
+                        </Group>
+                      </Radio.Group>
+                    </SimpleGrid>
+                  </Stack>
                 </Fieldset>
                 <Fieldset
                   legend="Cabinet Specifications"

@@ -147,6 +147,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       is_custom_cab_required: false,
       is_cod: false,
       payment_received: false,
+      site_prep: false,
       flooring_type: "",
       flooring_clearance: "",
       cabinet: {
@@ -379,6 +380,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         is_custom_cab_required: salesOrderData.is_custom_cab_required ?? false,
         is_cod: salesOrderData.is_cod ?? false,
         payment_received: salesOrderData.payment_received ?? false,
+        site_prep: salesOrderData.site_prep ?? false,
         flooring_type: salesOrderData.flooring_type || "",
         flooring_clearance: salesOrderData.flooring_clearance || "",
         cabinet: {
@@ -534,6 +536,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             is_custom_cab_required: values.is_custom_cab_required,
             is_cod: values.is_cod,
             payment_received: values.payment_received,
+            site_prep: values.site_prep,
             flooring_type: values.flooring_type,
             flooring_clearance: values.flooring_clearance,
             ...values.shipping,
@@ -1067,38 +1070,62 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   variant="filled"
                   bg={"white"}
                 >
-                  <SimpleGrid cols={2} mt="sm">
-                    <Select
-                      label="Delivery Type"
-                      withAsterisk
-                      rightSection
-                      placeholder="Pickup, Delivery..."
-                      data={DeliveryTypeOptions}
-                      searchable
-                      nothingFoundMessage="No delivery type found"
-                      {...form.getInputProps("delivery_type")}
-                    />
-                    <Radio.Group
-                      label="Installation Required"
-                      withAsterisk
-                      value={
-                        form.values.install === true
-                          ? "true"
-                          : form.values.install === false
-                            ? "false"
-                            : ""
-                      }
-                      onChange={(val) =>
-                        form.setFieldValue("install", val === "true")
-                      }
-                      error={form.errors.install}
-                    >
-                      <Group mt="xs">
-                        <Radio value="true" label="Yes" color="#4a00e0" />
-                        <Radio value="false" label="No" color="#4a00e0" />
-                      </Group>
-                    </Radio.Group>
-                  </SimpleGrid>
+                  <Stack mt="sm" gap="md">
+                    {form.values.order_type === "Reno" && (
+                      <Radio.Group
+                        label="Site Expectations Document is signed by the customer"
+                        withAsterisk
+                        value={
+                          form.values.site_prep === true
+                            ? "true"
+                            : form.values.site_prep === false
+                              ? "false"
+                              : ""
+                        }
+                        onChange={(val) =>
+                          form.setFieldValue("site_prep", val === "true")
+                        }
+                        error={form.errors.site_prep}
+                      >
+                        <Group mt="xs" style={{ marginBottom: 10 }}>
+                          <Radio value="true" label="Yes" color="#4a00e0" />
+                          <Radio value="false" label="No" color="#4a00e0" />
+                        </Group>
+                      </Radio.Group>
+                    )}
+                    <SimpleGrid cols={2}>
+                      <Select
+                        label="Delivery Type"
+                        withAsterisk
+                        rightSection
+                        placeholder="Pickup, Delivery..."
+                        data={DeliveryTypeOptions}
+                        searchable
+                        nothingFoundMessage="No delivery type found"
+                        {...form.getInputProps("delivery_type")}
+                      />
+                      <Radio.Group
+                        label="Installation Required"
+                        withAsterisk
+                        value={
+                          form.values.install === true
+                            ? "true"
+                            : form.values.install === false
+                              ? "false"
+                              : ""
+                        }
+                        onChange={(val) =>
+                          form.setFieldValue("install", val === "true")
+                        }
+                        error={form.errors.install}
+                      >
+                        <Group mt="xs">
+                          <Radio value="true" label="Yes" color="#4a00e0" />
+                          <Radio value="false" label="No" color="#4a00e0" />
+                        </Group>
+                      </Radio.Group>
+                    </SimpleGrid>
+                  </Stack>
                 </Fieldset>
 
                 <Fieldset

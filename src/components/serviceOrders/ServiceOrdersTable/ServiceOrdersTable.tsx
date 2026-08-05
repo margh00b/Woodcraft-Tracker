@@ -62,6 +62,7 @@ import { useDisclosure } from "@mantine/hooks";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
 import { useDeleteServiceOrder } from "@/hooks/useDeleteServiceOrder";
 import { gradients } from "@/theme";
+import { SiRenovate } from "react-icons/si";
 
 dayjs.extend(utc);
 type ServiceOrderView = Views<"service_orders_table_view"> & {
@@ -103,7 +104,7 @@ export default function ServiceOrdersTable() {
   useEffect(() => {
     const handleClick = () => {
       setContextMenu((prev) =>
-        prev.visible ? { ...prev, visible: false } : prev
+        prev.visible ? { ...prev, visible: false } : prev,
       );
     };
     document.addEventListener("click", handleClick);
@@ -117,7 +118,7 @@ export default function ServiceOrdersTable() {
 
   const setInputFilterValue = (
     id: string,
-    value: string | undefined | null | [Date | null, Date | null]
+    value: string | undefined | null | [Date | null, Date | null],
   ) => {
     setInputFilters((prev) => {
       const existing = prev.filter((f) => f.id !== id);
@@ -170,7 +171,7 @@ export default function ServiceOrdersTable() {
     e.stopPropagation();
     if (
       window.confirm(
-        `Are you sure you want to delete Service Order #${soNumber}?`
+        `Are you sure you want to delete Service Order #${soNumber}?`,
       )
     ) {
       deleteServiceOrder.mutate(id);
@@ -247,7 +248,25 @@ export default function ServiceOrdersTable() {
             handleContextMenu(e, "job_number", info.getValue())
           }
         >
-          {info.getValue()}
+          <Group gap={4}>
+            <Text fw={600} size="xs">
+              {info.getValue()}
+            </Text>
+            {info.row.original.order_type === "Reno" && (
+              <Tooltip label={"Reno Job"}>
+                <Badge
+                  style={{ cursor: "pointer" }}
+                  size="xs"
+                  radius="100%"
+                  styles={{ root: { padding: 3, marginLeft: 3 } }}
+                  variant="gradient"
+                  gradient={{ from: "#0062a3ff", to: "#23c1ffff", deg: 135 }}
+                >
+                  <SiRenovate size={10} color="white" />
+                </Badge>
+              </Tooltip>
+            )}
+          </Group>
         </Anchor>
       ),
     }),
@@ -613,7 +632,7 @@ export default function ServiceOrdersTable() {
                 value={
                   (getInputFilterValue("date_entered") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(val) =>
@@ -632,7 +651,7 @@ export default function ServiceOrdersTable() {
                 value={
                   (getInputFilterValue("due_date") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(val) => setInputFilterValue("due_date", val as any)}
@@ -651,37 +670,44 @@ export default function ServiceOrdersTable() {
                 onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
 
-              <Box pt={24}>
+              <Box pt={32}>
                 <Switch
-                  label="Installer Requested"
-                  size="md"
+                  label="Reno Jobs"
+                  size="sm"
                   thumbIcon={<FaCheckCircle />}
                   styles={{
+                    label: { fontSize: 15 },
                     track: {
                       cursor: "pointer",
                       background:
-                        getInputFilterValue("installer_requested") === "true"
+                        getInputFilterValue("order_type") === "Reno"
                           ? "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)"
                           : "linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)",
-                      color: "white",
                       border: "none",
                     },
                     thumb: {
                       background:
-                        getInputFilterValue("installer_requested") === "true"
+                        getInputFilterValue("order_type") === "Reno"
                           ? "#6e54ffff"
                           : "#d1d1d1ff",
                     },
                   }}
-                  checked={
-                    getInputFilterValue("installer_requested") === "true"
-                  }
-                  onChange={(e) =>
+                  checked={getInputFilterValue("order_type") === "Reno"}
+                  onChange={(e) => {
+                    const val = e.currentTarget.checked;
                     setInputFilterValue(
-                      "installer_requested",
-                      e.currentTarget.checked ? "true" : ""
-                    )
-                  }
+                      "order_type",
+                      e.target.checked ? "Reno" : undefined,
+                    );
+                    const otherFilters = inputFilters.filter(
+                      (f) => f.id !== "order_type",
+                    );
+                    const newActiveFilters = val
+                      ? [...otherFilters, { id: "order_type", value: "Reno" }]
+                      : otherFilters;
+                    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                    setActiveFilters(newActiveFilters);
+                  }}
                 />
               </Box>
             </SimpleGrid>
@@ -745,7 +771,7 @@ export default function ServiceOrdersTable() {
                     <Group gap="xs" wrap="nowrap">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getIsSorted() === "asc" && <FaSortUp />}
                       {header.column.getIsSorted() === "desc" && <FaSortDown />}
@@ -772,7 +798,7 @@ export default function ServiceOrdersTable() {
                   onClick={() =>
                     window.open(
                       `/dashboard/serviceorders/${row.original.service_order_id}`,
-                      "_blank"
+                      "_blank",
                     )
                   }
                   style={{ cursor: "pointer" }}
@@ -790,7 +816,7 @@ export default function ServiceOrdersTable() {
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}
@@ -861,7 +887,7 @@ export default function ServiceOrdersTable() {
                 if (contextMenu.filterId && contextMenu.filterValue !== null) {
                   handleQuickFilter(
                     contextMenu.filterId,
-                    contextMenu.filterValue
+                    contextMenu.filterValue,
                   );
                 }
               }}
