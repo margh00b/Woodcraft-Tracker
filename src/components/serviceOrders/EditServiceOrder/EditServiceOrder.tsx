@@ -101,7 +101,7 @@ type ServiceOrderData = Tables<"service_orders"> & {
 };
 
 const mapServiceOrderToFormValues = (
-  data: ServiceOrderData
+  data: ServiceOrderData,
 ): ServiceOrderFormValues => {
   const hoInfo = data.jobs?.homeowners_info;
 
@@ -262,7 +262,7 @@ export default function EditServiceOrder({
               )
             )
           )
-        `
+        `,
           )
           .eq("service_order_id", serviceOrderId)
           .single();
@@ -333,7 +333,7 @@ export default function EditServiceOrder({
               homeowner_email: values.homeowner_email,
               homeowner_details: values.homeowner_details,
             },
-            { onConflict: "job_id" }
+            { onConflict: "job_id" },
           );
         if (hoError) throw hoError;
       }
@@ -771,7 +771,7 @@ export default function EditServiceOrder({
                             onClick={() =>
                               form.setFieldValue(
                                 "installer_requested",
-                                !form.values.installer_requested
+                                !form.values.installer_requested,
                               )
                             }
                           >
@@ -870,8 +870,8 @@ export default function EditServiceOrder({
                     form.values.chargeable === true
                       ? "true"
                       : form.values.chargeable === false
-                      ? "false"
-                      : ""
+                        ? "false"
+                        : ""
                   }
                   onChange={(val) =>
                     form.setFieldValue("chargeable", val === "true")
@@ -964,7 +964,7 @@ export default function EditServiceOrder({
                             placeholder="Details..."
                             disabled={isDeleted}
                             {...form.getInputProps(
-                              `parts.${index}.description`
+                              `parts.${index}.description`,
                             )}
                           />
                         </Table.Td>
@@ -975,7 +975,7 @@ export default function EditServiceOrder({
                             data={serviceorderLocationOptions}
                             {...form.getInputProps(`parts.${index}.location`)}
                             leftSection={getLocationIcon(
-                              form.values.parts[index].location
+                              form.values.parts[index].location,
                             )}
                             renderOption={({ option }) => (
                               <Group gap="sm">
@@ -1009,7 +1009,7 @@ export default function EditServiceOrder({
                             clearable
                             disabled={isDeleted}
                             {...form.getInputProps(
-                              `parts.${index}.part_due_date`
+                              `parts.${index}.part_due_date`,
                             )}
                           />
                         </Table.Td>
