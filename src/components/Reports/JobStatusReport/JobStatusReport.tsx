@@ -64,7 +64,8 @@ export default function JobStatusReport() {
         .select("*")
         .gte("ship_schedule", startDate)
         .lte("ship_schedule", endDate)
-        .order("ship_schedule", { ascending: true });
+        .order("ship_schedule", { ascending: true })
+        .order("job_number", { ascending: true });
 
       if (error) throw error;
 
@@ -94,6 +95,9 @@ export default function JobStatusReport() {
   const handleExport = () => {
     if (!reportData) return;
 
+    const formatDate = (dateString: string | null, fallback = "-") =>
+      dateString ? dayjs(dateString).format("MMM DD, YYYY") : fallback;
+
     const excelData = reportData.map((job) => {
       const address =
         [job.shipping_street, job.shipping_city].filter(Boolean).join(", ") ||
@@ -103,22 +107,12 @@ export default function JobStatusReport() {
         "Job #": job.job_number,
         Client: job.shipping_client_name || "",
         Address: address,
-        "Ship Date": job.ship_schedule
-          ? dayjs(job.ship_schedule).format("YYYY-MM-DD")
-          : "",
+        "Ship Date": formatDate(job.ship_schedule, ""),
         Shipped: job.has_shipped ? "Yes" : "No",
-        "Install Date": job.installation_date || "",
-        "Install Comp":
-          job.installation_completed &&
-          dayjs(job.installation_completed).isValid()
-            ? dayjs(job.installation_completed).format("YYYY-MM-DD")
-            : "",
-        "Inspection Date": job.inspection_date || "",
-        "Inspection Comp":
-          job.inspection_completed && dayjs(job.inspection_completed).isValid()
-            ? dayjs(job.inspection_completed).format("YYYY-MM-DD")
-            : "",
-        "Final Date": "",
+        "Install Date": formatDate(job.installation_date, "-"),
+        "Install Comp": formatDate(job.installation_completed, "X"),
+        "Inspection Date": formatDate(job.inspection_date, "-"),
+        "Inspection Comp": formatDate(job.inspection_completed, "X"),
         "SO Count": job.service_order_count || 0,
       };
     });
@@ -148,9 +142,9 @@ export default function JobStatusReport() {
         [`${rangeText}    ${printedText}`],
       ],
       merges: [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
-        { s: { r: 2, c: 0 }, e: { r: 2, c: 10 } },
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } },
       ],
     });
   };

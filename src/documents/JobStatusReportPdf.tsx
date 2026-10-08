@@ -64,15 +64,14 @@ const styles = StyleSheet.create({
 
   colJob: { width: "8%", fontWeight: "bold" },
   colClient: { width: "15%" },
-  colAddress: { width: "20%" },
-  colShipDate: { width: "8%", alignItems: "center" },
-  colShipped: { width: "6%", alignItems: "center" },
-  colInstallDate: { width: "8%", alignItems: "center" },
-  colInstallComp: { width: "8%", alignItems: "center" },
-  colInspDate: { width: "8%", alignItems: "center" },
-  colInspComp: { width: "8%", alignItems: "center" },
-  colFinalDate: { width: "8%", alignItems: "center" },
-  colSO: { width: "5%", alignItems: "center", borderRightWidth: 0 },
+  colAddress: { width: "19%" },
+  colShipDate: { width: "9%", alignItems: "center" },
+  colShipped: { width: "7%", alignItems: "center" },
+  colInstallDate: { width: "9%", alignItems: "center" },
+  colInstallComp: { width: "9%", alignItems: "center" },
+  colInspDate: { width: "9%", alignItems: "center" },
+  colInspComp: { width: "9%", alignItems: "center" },
+  colSO: { width: "6%", alignItems: "center", borderRightWidth: 0 },
 
   headerText: { fontSize: 8, fontWeight: "bold", textAlign: "center" },
   cellText: { fontSize: 8 },
@@ -89,15 +88,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const safeGet = (data: any) => {
-  if (Array.isArray(data)) return data[0] || null;
-  return data || null;
-};
-
-const formatDate = (date: string | null) => {
-  if (!date) return "—";
+const formatDate = (date: string | null, fallback = "—") => {
+  if (!date) return fallback;
   const d = dayjs.utc(date);
-  return d.isValid() ? d.format("MMM D, YYYY") : "—";
+  return d.isValid() ? d.format("MMM D, YYYY") : fallback;
 };
 
 const truncate = (str: string | null, len: number) => {
@@ -145,9 +139,6 @@ const ColumnHeaders = () => (
     <View style={[styles.headerCellBase, styles.colInspComp]}>
       <Text style={styles.headerText}>Inspection Comp</Text>
     </View>
-    <View style={[styles.headerCellBase, styles.colFinalDate]}>
-      <Text style={styles.headerText}>Cabinet Finals</Text>
-    </View>
     <View style={[styles.headerCellBase, styles.colSO]}>
       <Text style={styles.headerText}>Service Orders</Text>
     </View>
@@ -189,8 +180,20 @@ export const JobStatusReportPdf = ({
       currentCount += 1;
     }
 
+    // Determine row highlight logic natively: install complete but NO inspection complete
+    const needsHighlight = Boolean(
+      job.installation_completed && !job.inspection_completed,
+    );
+
     currentPage.push(
-      <View style={styles.tableRow} key={String(job.job_id)} wrap={false}>
+      <View
+        style={[
+          styles.tableRow,
+          needsHighlight ? { backgroundColor: "#fff3cd" } : {},
+        ]}
+        key={String(job.job_id)}
+        wrap={false}
+      >
         <View style={[styles.cellBase, styles.colJob]}>
           <Text style={[styles.cellText]}>{String(job.job_number || "")}</Text>
         </View>
@@ -202,11 +205,13 @@ export const JobStatusReportPdf = ({
         <View style={[styles.cellBase, styles.colAddress]}>
           <Text style={styles.cellTextSmall}>{truncate(address, 40)}</Text>
         </View>
+
         <View style={[styles.cellBase, styles.colShipDate]}>
           <Text style={styles.cellText}>
-            {formatDate(job.ship_schedule || null)}
+            {formatDate(job.ship_schedule, "")}
           </Text>
         </View>
+
         <View
           style={[
             styles.cellBase,
@@ -220,28 +225,26 @@ export const JobStatusReportPdf = ({
             {job.has_shipped ? "Yes" : "No"}
           </Text>
         </View>
+
         <View style={[styles.cellBase, styles.colInstallDate]}>
           <Text style={styles.cellText}>
-            {formatDate(job.installation_date || null)}
+            {formatDate(job.installation_date, "-")}
           </Text>
         </View>
         <View style={[styles.cellBase, styles.colInstallComp]}>
           <Text style={styles.cellText}>
-            {formatDate(job.installation_completed || null)}
+            {formatDate(job.installation_completed, "X")}
           </Text>
         </View>
         <View style={[styles.cellBase, styles.colInspDate]}>
           <Text style={styles.cellText}>
-            {formatDate(job.inspection_date || null)}
+            {formatDate(job.inspection_date, "-")}
           </Text>
         </View>
         <View style={[styles.cellBase, styles.colInspComp]}>
           <Text style={styles.cellText}>
-            {formatDate(job.inspection_completed || null)}
+            {formatDate(job.inspection_completed, "X")}
           </Text>
-        </View>
-        <View style={[styles.cellBase, styles.colFinalDate]}>
-          <Text style={styles.cellText}>{}—</Text>
         </View>
         <View style={[styles.cellBase, styles.colSO]}>
           <Text style={styles.cellText}>
