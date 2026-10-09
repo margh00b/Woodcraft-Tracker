@@ -8,15 +8,19 @@ import {
 import dayjs from "dayjs";
 
 interface UsePlantServiceOrdersParams {
-  pagination: PaginationState;
+  pagination?: PaginationState;
   columnFilters: ColumnFiltersState;
   sorting: SortingState;
+  fetchAll?: boolean;
+  enabled?: boolean;
 }
 
 export function usePlantServiceOrders({
-  pagination,
+  pagination = { pageIndex: 0, pageSize: 15 },
   columnFilters,
   sorting,
+  fetchAll = false,
+  enabled = true,
 }: UsePlantServiceOrdersParams) {
   const { supabase, isAuthenticated } = useSupabase();
 
@@ -74,7 +78,13 @@ export function usePlantServiceOrders({
   };
 
   return useQuery({
-    queryKey: ["plant_service_orders", pagination, columnFilters, sorting],
+    queryKey: [
+      "plant_service_orders",
+      pagination,
+      columnFilters,
+      sorting,
+      fetchAll,
+    ],
     queryFn: async () => {
       const partDateFilter = columnFilters.find(
         (f) => f.id === "part_due_date_range",
@@ -110,7 +120,7 @@ export function usePlantServiceOrders({
 
       const from = pagination.pageIndex * pagination.pageSize;
       const to = from + pagination.pageSize;
-      const targetDates = uniqueDates.slice(from, to);
+      const targetDates = fetchAll ? uniqueDates : uniqueDates.slice(from, to);
 
       if (targetDates.length === 0) {
         return { data: [], count: 0 };
@@ -158,7 +168,7 @@ export function usePlantServiceOrders({
         count: uniqueDates.length,
       };
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     placeholderData: (previousData) => previousData,
   });
 }

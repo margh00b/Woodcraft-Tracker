@@ -643,7 +643,8 @@ export default function PlantServiceOrdersTable() {
       <ServiceOrderPdfPreviewModal
         opened={pdfModalOpen}
         onClose={() => setPdfModalOpen(false)}
-        data={tableData}
+        columnFilters={activeFilters}
+        sorting={sorting}
         dateRange={partDateRange}
       />
     </Box>

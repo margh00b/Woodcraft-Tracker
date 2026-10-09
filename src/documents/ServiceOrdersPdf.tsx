@@ -169,7 +169,7 @@ export const ServiceOrdersPdf = ({
           });
 
           return (
-            <View key={dateKey} wrap={false}>
+            <View key={dateKey}>
               <View style={styles.dateGroupHeader}>
                 <Text style={styles.dateGroupText}>Part Due Date:</Text>
                 <Text style={styles.dateGroupText}>{formattedDate}</Text>
