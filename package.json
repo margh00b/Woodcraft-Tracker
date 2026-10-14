@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:sync": "node scripts/db-sync.js"
+    "db:sync": "node scripts/db-sync.js",
+    "db:diff": "supabase db schema declarative sync --no-apply -f"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.27.0",

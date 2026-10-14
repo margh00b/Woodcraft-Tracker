@@ -1,5 +1,5 @@
 alter table public.service_order_parts
-add column part_due_date date;
+add column if not exists part_due_date date;
 
 create
 or replace view plant_service_orders_view as
