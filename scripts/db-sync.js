@@ -12,7 +12,7 @@ const PROD_DB_URL = process.env.DATABASE_URL_PROD;
 
 const cmdLocalUp = `npx supabase migration up`;
 
-const cmdGenTypes = `npx supabase gen types typescript --local --schema public > src/types/supabase.ts`;
+const cmdGenTypes = `npx supabase gen types typescript --local --schema public,insite > src/types/supabase.ts`;
 
 const cmdPushDev = `npx supabase db push --db-url "${TEST_DB_URL}"`;
 

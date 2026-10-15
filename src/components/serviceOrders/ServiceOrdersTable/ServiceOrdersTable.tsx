@@ -310,9 +310,10 @@ export default function ServiceOrdersTable() {
         const row = info.row.original;
         const installerRequested = row.installer_requested;
         const displayName =
-          row.installer_company ||
+          [row.installer_first, row.installer_last].filter(Boolean).join(" ") ||
           row.installer_first ||
           row.installer_last ||
+          row.installer_company ||
           "—";
         return (
           <CellWrapper>
