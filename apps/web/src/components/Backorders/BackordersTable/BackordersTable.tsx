@@ -118,7 +118,7 @@ export default function BackordersTable() {
               )
             )
           )
-        `
+        `,
         )
         .eq("id", printBackorderId)
         .single();
@@ -142,7 +142,7 @@ export default function BackordersTable() {
 
   const setInputFilterValue = (
     id: string,
-    value: string | undefined | null | [Date | null, Date | null]
+    value: string | undefined | null | [Date | null, Date | null],
   ) => {
     setInputFilters((prev) => {
       const existing = prev.filter((f) => f.id !== id);
@@ -272,7 +272,7 @@ export default function BackordersTable() {
   };
 
   const dateEnteredFilter = activeFilters.find((f) => f.id === "date_entered")
-    ?.value as [Date | null, Date | null] | undefined;
+    ?.value as unknown as [Date | null, Date | null] | undefined;
   const printDateRange = dateEnteredFilter || [null, null];
 
   return (
@@ -359,7 +359,7 @@ export default function BackordersTable() {
                 value={
                   (inputFilters.find((f) => f.id === "date_entered")?.value as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(value) => {
@@ -376,7 +376,7 @@ export default function BackordersTable() {
                 value={
                   (inputFilters.find((f) => f.id === "due_date")?.value as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(value) => {
@@ -439,7 +439,7 @@ export default function BackordersTable() {
                     <Group gap="xs">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {{
                         asc: <FaSortUp />,
@@ -481,7 +481,7 @@ export default function BackordersTable() {
                     <Table.Td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}

@@ -345,7 +345,7 @@ export default function PlantServiceOrdersTable() {
                 placeholder="Pick dates range"
                 value={partDateRange}
                 onChange={(val) =>
-                  setPartDateRange(val as [Date | null, Date | null])
+                  setPartDateRange(val as unknown as [Date | null, Date | null])
                 }
                 clearable
                 leftSection={<FaCalendarCheck size={14} />}

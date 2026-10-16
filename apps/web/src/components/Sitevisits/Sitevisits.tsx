@@ -126,7 +126,7 @@ export default function SiteVisits() {
               {info.getValue()}
             </Text>
           ),
-        }
+        },
       ),
       columnHelper.accessor("visit_date", {
         header: "Visit Date",
@@ -177,7 +177,7 @@ export default function SiteVisits() {
         ),
       }),
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -238,7 +238,7 @@ export default function SiteVisits() {
   };
 
   const dateRangeFilter = activeFilters.find((f) => f.id === "visit_date")
-    ?.value as [Date | null, Date | null] | undefined;
+    ?.value as unknown as [Date | null, Date | null] | undefined;
 
   return (
     <Box
@@ -325,7 +325,7 @@ export default function SiteVisits() {
                 value={
                   (getFilterValue("visit_date") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(value) => setFilterValue("visit_date", value)}
@@ -372,7 +372,7 @@ export default function SiteVisits() {
                     <Group gap="xs">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getCanSort() && (
                         <>
@@ -418,7 +418,7 @@ export default function SiteVisits() {
                     <Table.Td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}

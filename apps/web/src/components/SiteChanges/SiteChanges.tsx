@@ -119,7 +119,7 @@ export default function SiteChanges() {
               {info.getValue()}
             </Text>
           ),
-        }
+        },
       ),
       columnHelper.accessor("installation.site_changes_detail", {
         id: "site_changes_detail",
@@ -172,7 +172,7 @@ export default function SiteChanges() {
         ),
       }),
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -228,8 +228,8 @@ export default function SiteChanges() {
   };
 
   const dateRangeFilter = activeFilters.find(
-    (f) => f.id === "installation_date"
-  )?.value as [Date | null, Date | null] | undefined;
+    (f) => f.id === "installation_date",
+  )?.value as unknown as [Date | null, Date | null] | undefined;
 
   return (
     <Box
@@ -304,7 +304,7 @@ export default function SiteChanges() {
                 value={
                   (getFilterValue("installation_date") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(value) => setFilterValue("installation_date", value)}
@@ -351,7 +351,7 @@ export default function SiteChanges() {
                     <Group gap="xs">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getCanSort() && (
                         <>
@@ -397,7 +397,7 @@ export default function SiteChanges() {
                     <Table.Td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}

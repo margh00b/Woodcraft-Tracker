@@ -128,7 +128,8 @@ export default function BuilderSummaryReport() {
       shipDateEnd: shipDateRange[1],
       creationDateStart: creationDateRange[0],
       creationDateEnd: creationDateRange[1],
-      shipStatus: (shipStatusFilter as BuilderSummaryParams["shipStatus"]) || null,
+      shipStatus:
+        (shipStatusFilter as BuilderSummaryParams["shipStatus"]) || null,
       page: 0,
       pageSize: 30,
     });
@@ -220,29 +221,49 @@ export default function BuilderSummaryReport() {
       const spacer = "          ";
 
       const richTextRuns = [
-        { t: builderLabel, s: { font: { bold: true, name: "Calibri", sz: 11 } } },
-        { t: builderName + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
-        { t: shipDateLabel, s: { font: { bold: true, name: "Calibri", sz: 11 } } },
-        { t: shipDateValue + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
-        { t: "Total Jobs: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
-        { t: String(exportTotalJobs) + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
-        { t: "Total Boxes: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
-        { t: String(exportTotalBoxes) + spacer, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
+        {
+          t: builderLabel,
+          s: { font: { bold: true, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: builderName + spacer,
+          s: { font: { bold: false, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: shipDateLabel,
+          s: { font: { bold: true, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: shipDateValue + spacer,
+          s: { font: { bold: false, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: "Total Jobs: ",
+          s: { font: { bold: true, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: String(exportTotalJobs) + spacer,
+          s: { font: { bold: false, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: "Total Boxes: ",
+          s: { font: { bold: true, name: "Calibri", sz: 11 } },
+        },
+        {
+          t: String(exportTotalBoxes) + spacer,
+          s: { font: { bold: false, name: "Calibri", sz: 11 } },
+        },
         { t: "Date: ", s: { font: { bold: true, name: "Calibri", sz: 11 } } },
         { t: todayStr, s: { font: { bold: false, name: "Calibri", sz: 11 } } },
       ];
 
       const plainHeaderText = richTextRuns.map((r) => r.t).join("");
 
-      const customHeaders = [
-        [plainHeaderText, "", "", "", "", "", "", ""],
-      ];
+      const customHeaders = [[plainHeaderText, "", "", "", "", "", "", ""]];
 
       exportToExcel(excelData, "Builder_Summary_Report", {
         customHeaders,
-        merges: [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
-        ],
+        merges: [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }],
         onSheetCreated: (worksheet) => {
           const cell = worksheet["A1"];
           if (cell) {
@@ -271,7 +292,10 @@ export default function BuilderSummaryReport() {
       shipStatusText = "Partially Shipped";
     }
 
-    const displayJobNum = item.job_numbers.length > 1 ? item.job_number : (item.job_numbers[0] || item.job_number);
+    const displayJobNum =
+      item.job_numbers.length > 1
+        ? item.job_number
+        : item.job_numbers[0] || item.job_number;
 
     return (
       <Table.Tr key={`${item.job_number}_${item.ship_schedule}`}>
@@ -363,7 +387,9 @@ export default function BuilderSummaryReport() {
                 placeholder="Select date range"
                 value={shipDateRange}
                 onChange={(value) =>
-                  setShipDateRange(value as [Date | null, Date | null])
+                  setShipDateRange(
+                    value as unknown as [Date | null, Date | null],
+                  )
                 }
                 leftSection={<FaCalendarAlt size={16} />}
                 clearable
@@ -376,7 +402,9 @@ export default function BuilderSummaryReport() {
                 placeholder="Select date range"
                 value={creationDateRange}
                 onChange={(value) =>
-                  setCreationDateRange(value as [Date | null, Date | null])
+                  setCreationDateRange(
+                    value as unknown as [Date | null, Date | null],
+                  )
                 }
                 leftSection={<FaCalendarAlt size={16} />}
                 clearable

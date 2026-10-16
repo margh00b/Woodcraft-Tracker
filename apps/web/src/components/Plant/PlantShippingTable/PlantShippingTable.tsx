@@ -871,7 +871,7 @@ export default function PlantShippingTable() {
                 placeholder="Pick dates range"
                 value={dateRange}
                 onChange={(val) =>
-                  setDateRange(val as [Date | null, Date | null])
+                  setDateRange(val as unknown as [Date | null, Date | null])
                 }
                 clearable
                 leftSection={<FaCalendarCheck size={14} />}

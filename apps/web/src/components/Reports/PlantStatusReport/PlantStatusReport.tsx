@@ -32,7 +32,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function PlantStatusReport() {
@@ -63,7 +63,7 @@ export default function PlantStatusReport() {
         <PlantStatusPdf data={reportData || []} />
       </PDFViewer>
     ),
-    [reportData]
+    [reportData],
   );
   const handleExport = () => {
     if (!reportData) return;
@@ -122,7 +122,7 @@ export default function PlantStatusReport() {
                 placeholder="Select date range"
                 value={dateRange}
                 onChange={(value) =>
-                  setDateRange(value as [Date | null, Date | null])
+                  setDateRange(value as unknown as [Date | null, Date | null])
                 }
                 leftSection={
                   <FaCalendarAlt size={16} color={colors.violet.primary} />

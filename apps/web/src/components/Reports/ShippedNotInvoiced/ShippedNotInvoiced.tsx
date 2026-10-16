@@ -33,7 +33,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function ShippedNotInvoicedReport() {
@@ -73,7 +73,7 @@ export default function ShippedNotInvoicedReport() {
         />
       </PDFViewer>
     ),
-    [reportData, queryRange]
+    [reportData, queryRange],
   );
 
   const handleExport = () => {
@@ -127,7 +127,7 @@ export default function ShippedNotInvoicedReport() {
                 placeholder="Select date range"
                 value={dateRange}
                 onChange={(value) =>
-                  setDateRange(value as [Date | null, Date | null])
+                  setDateRange(value as unknown as [Date | null, Date | null])
                 }
                 leftSection={
                   <FaCalendarAlt size={16} color={colors.violet.primary} />

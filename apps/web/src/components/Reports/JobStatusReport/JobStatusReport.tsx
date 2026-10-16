@@ -198,7 +198,7 @@ export default function JobStatusReport() {
                 placeholder="Select dates"
                 value={dateRange}
                 onChange={(val) =>
-                  setDateRange(val as [Date | null, Date | null])
+                  setDateRange(val as unknown as [Date | null, Date | null])
                 }
                 style={{ width: 300 }}
                 clearable={false}

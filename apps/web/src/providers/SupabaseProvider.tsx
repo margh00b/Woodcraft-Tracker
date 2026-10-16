@@ -18,7 +18,7 @@ const supabase = createClient(
       detectSessionInUrl: false,
     },
     global: {
-      fetch: async (url, options = {}) => {
+      fetch: async (url, options: RequestInit = {}) => {
         const headers = new Headers(options?.headers);
         if (currentClerkToken) {
           headers.set("Authorization", `Bearer ${currentClerkToken}`);
@@ -29,7 +29,7 @@ const supabase = createClient(
         });
       },
     },
-  }
+  },
 );
 
 export default function SupabaseProvider({

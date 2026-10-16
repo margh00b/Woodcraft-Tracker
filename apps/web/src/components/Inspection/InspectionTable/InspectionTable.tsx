@@ -601,7 +601,10 @@ export default function InspectionTable() {
                 visibleFrom="md"
                 value={
                   (inputFilters.find((f) => f.id === "installation_date")
-                    ?.value as [Date | null, Date | null]) || [null, null]
+                    ?.value as unknown as [Date | null, Date | null]) || [
+                    null,
+                    null,
+                  ]
                 }
                 onChange={(val) => {
                   const formatted = val.map((d) =>
@@ -621,7 +624,10 @@ export default function InspectionTable() {
                 visibleFrom="md"
                 value={
                   (inputFilters.find((f) => f.id === "inspection_date")
-                    ?.value as [Date | null, Date | null]) || [null, null]
+                    ?.value as unknown as [Date | null, Date | null]) || [
+                    null,
+                    null,
+                  ]
                 }
                 onChange={(val) => {
                   const formatted = val.map((d) =>

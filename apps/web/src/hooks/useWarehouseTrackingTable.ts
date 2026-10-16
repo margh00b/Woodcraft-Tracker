@@ -26,7 +26,7 @@ export const applyWarehouseFilters = (
     if (!value) return;
 
     if (id === "dropoff_date_range" || id === "pickup_date_range") {
-      const [start, end] = value as [Date | null, Date | null];
+      const [start, end] = value as unknown as [Date | null, Date | null];
       const field =
         id === "dropoff_date_range" ? "dropoff_date" : "pickup_date";
       if (start)
@@ -76,7 +76,7 @@ export function useWarehouseTrackingTable({
       if (sorting.length > 0) {
         const { id, desc } = sorting[0];
         query = query.order(id, { ascending: !desc });
-        
+
         if (id === "pickup_date") {
           query = query.order("dropoff_date", { ascending: true });
         } else if (id === "dropoff_date") {

@@ -148,7 +148,7 @@ export default function SalesTable() {
 
       const shipScheduleFilter = activeFilters.find(
         (f) => f.id === "ship_schedule",
-      )?.value as [Date | null, Date | null] | undefined;
+      )?.value as unknown as [Date | null, Date | null] | undefined;
       const designerFilter = activeFilters.find((f) => f.id === "designerName")
         ?.value as string | undefined;
       const myJobsFilter = activeFilters.find((f) => f.id === "my_jobs")
@@ -265,7 +265,10 @@ export default function SalesTable() {
             );
             break;
           case "ship_schedule":
-            const [startShip, endShip] = value as [Date | null, Date | null];
+            const [startShip, endShip] = value as unknown as [
+              Date | null,
+              Date | null,
+            ];
             if (startShip)
               query = query.gte(
                 "ship_schedule",

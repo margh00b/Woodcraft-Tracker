@@ -967,7 +967,10 @@ export default function InstallationTable({
                     clearable
                     value={
                       (inputFilters.find((f) => f.id === "installation_date")
-                        ?.value as [Date | null, Date | null]) || [null, null]
+                        ?.value as unknown as [Date | null, Date | null]) || [
+                        null,
+                        null,
+                      ]
                     }
                     onChange={(value) => {
                       setInputFilterValue("installation_date", value as any);
@@ -985,7 +988,10 @@ export default function InstallationTable({
                     clearable
                     value={
                       (inputFilters.find((f) => f.id === "ship_schedule")
-                        ?.value as [Date | null, Date | null]) || [null, null]
+                        ?.value as unknown as [Date | null, Date | null]) || [
+                        null,
+                        null,
+                      ]
                     }
                     onChange={(value) => {
                       setInputFilterValue("ship_schedule", value as any);
