@@ -62,7 +62,6 @@ export const MasterOrderSchema = z
     is_cod: z.boolean().nullable().optional(),
     payment_received: z.boolean().nullable().optional(),
 
-    // 1. Make this optional/nullable in the base object
     site_prep: z.boolean().nullable().optional(),
   })
   .superRefine((data, ctx) => {

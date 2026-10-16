@@ -12,18 +12,14 @@ export async function GET() {
       `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`,
     );
 
-    // If there is an explicit error from stderr, return it
     if (stderr && !stdout) {
       return NextResponse.json({ error: stderr }, { status: 500 });
     }
 
-    // Safely attempt to parse the JSON
     try {
       const data = JSON.parse(stdout.trim());
       return NextResponse.json({ success: true, data });
     } catch (parseError) {
-      // If parsing fails, return the exact raw text PowerShell outputted
-      // This will show you the exact "HResult" error instead of a JSON crash
       return NextResponse.json(
         {
           error: "PowerShell outputted non-JSON text.",

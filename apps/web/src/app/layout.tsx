@@ -113,11 +113,6 @@ const dashboardLinks: SidebarLink[] = [
         label: "Production",
         path: "/dashboard/plant/production",
       },
-      /* {
-        iconName: "Package",
-        label: "Wrapping",
-        path: "/dashboard/plant/wrap",
-      }, */
       {
         iconName: "Truck",
         label: "Shipping",

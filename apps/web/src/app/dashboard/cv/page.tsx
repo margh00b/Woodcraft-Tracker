@@ -21,7 +21,6 @@ export default function CVDataPage() {
   const [loading, setLoading] = useState(false);
   const [machineData, setMachineData] = useState<any[]>([]);
 
-  // 1. Set up Database Listener for Postgres INSERT/UPDATE changes via Realtime
   useEffect(() => {
     const fetchInitialData = async () => {
       const { data, error } = await supabase.from("local_data").select("*");
@@ -58,7 +57,6 @@ export default function CVDataPage() {
     };
   }, [supabase]);
 
-  // 2. Pub/Sub Broadcast Function
   const handleFetchSignal = async () => {
     setLoading(true);
     try {

@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     marginBottom: 20,
     borderBottomWidth: 2,
-    borderBottomColor: "#228be6", // Matching Mantine Blue brand tone
+    borderBottomColor: "#228be6", 
     paddingBottom: 12,
   },
   reportTitle: {
@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
   boldText: {
     fontWeight: "bold",
   },
-  // Column sizing ratios to keep text cleanly aligned without truncating
   colOrderNum: { width: "18%" },
   colJobNum: { width: "12%" },
   colClient: { width: "25%" },
@@ -95,7 +94,7 @@ export const ServiceOrdersPdf = ({ data }: ServiceOrdersPdfProps) => {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        {/* Document Header Section */}
+        {}
         <View style={styles.headerContainer}>
           <View>
             <Text style={styles.reportTitle}>Chargeable Service Orders</Text>
@@ -113,7 +112,7 @@ export const ServiceOrdersPdf = ({ data }: ServiceOrdersPdfProps) => {
           </View>
         </View>
 
-        {/* Data Matrix Grid Table */}
+        {}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
             <Text style={[styles.headerText, styles.colOrderNum]}>Service Order #</Text>
@@ -151,7 +150,7 @@ export const ServiceOrdersPdf = ({ data }: ServiceOrdersPdfProps) => {
           })}
         </View>
 
-        {/* Footer Page Numbers Pagination */}
+        {}
         <Text
           render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
           fixed

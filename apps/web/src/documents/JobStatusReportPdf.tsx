@@ -180,7 +180,6 @@ export const JobStatusReportPdf = ({
       currentCount += 1;
     }
 
-    // Determine row highlight logic natively: install complete but NO inspection complete
     const needsHighlight = Boolean(
       job.installation_completed && !job.inspection_completed,
     );

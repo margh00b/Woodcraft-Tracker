@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
   colDueDate: { width: "10%" },
   colStatus: { width: "11%" },
 
-  // Updated Signature Styles
   signatureContainer: {
     position: "absolute",
     bottom: 45,
@@ -119,7 +118,7 @@ const styles = StyleSheet.create({
   },
   signatureBoxRight: {
     width: "45%",
-    marginLeft: 15, // Pushes the client signature a bit further to the right
+    marginLeft: 15, 
   },
   signatureLine: {
     fontSize: 11,
@@ -420,7 +419,7 @@ export const ServiceOrderPdf = ({ data }: PdfProps) => {
           )}
         </View>
 
-        {/* Bottom Signatures Section */}
+        {}
         <View style={styles.signatureContainer}>
           <View style={styles.signatureBoxLeft}>
             <Text style={styles.signatureLine}>
