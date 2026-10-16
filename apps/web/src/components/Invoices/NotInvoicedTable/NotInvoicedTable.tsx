@@ -88,7 +88,7 @@ export default function NotInvoicedTable() {
   ] = useDisclosure(false);
 
   const [selectedJobId, setSelectedJobId] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const [isCreditMemoMode, setIsCreditMemoMode] = useState(false);
 
@@ -199,7 +199,7 @@ export default function NotInvoicedTable() {
                   onClick={() => {
                     if (
                       confirm(
-                        "Are you sure you want to mark this job as No Charge?"
+                        "Are you sure you want to mark this job as No Charge?",
                       )
                     ) {
                       markNoChargeMutation.mutate(info.row.original.id);
@@ -213,7 +213,7 @@ export default function NotInvoicedTable() {
           ) : null,
       }),
     ],
-    [permissions.canEditInvoices, markNoChargeMutation.mutate]
+    [permissions.canEditInvoices, markNoChargeMutation.mutate],
   );
 
   const table = useReactTable({
@@ -278,7 +278,7 @@ export default function NotInvoicedTable() {
               placeholder="Select date range"
               value={dateRange}
               onChange={(value) =>
-                setDateRange(value as [Date | null, Date | null])
+                setDateRange(value as unknown as [Date | null, Date | null])
               }
               clearable={false}
               presets={[
@@ -334,7 +334,7 @@ export default function NotInvoicedTable() {
                     <Group gap={4} wrap="nowrap">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {{
                         asc: <FaSortUp />,
@@ -372,7 +372,7 @@ export default function NotInvoicedTable() {
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}
