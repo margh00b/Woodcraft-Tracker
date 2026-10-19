@@ -1,7 +1,7 @@
 import React from "react";
 import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import dayjs from "dayjs";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 
 type PlantServiceOrderView =
   Database["public"]["Views"]["plant_service_orders_view"]["Row"];
@@ -110,23 +110,26 @@ export const ServiceOrdersPdf = ({
   startDate: Date | null;
   endDate: Date | null;
 }) => {
-  const grouped = data.reduce((acc, so) => {
-    const parts = (so.pending_parts as unknown as ServiceOrderPart[]) || [];
-    const distinctDates = new Set<string>();
+  const grouped = data.reduce(
+    (acc, so) => {
+      const parts = (so.pending_parts as unknown as ServiceOrderPart[]) || [];
+      const distinctDates = new Set<string>();
 
-    parts.forEach((part) => {
-      if (part.part_due_date) {
-        distinctDates.add(dayjs(part.part_due_date).format("YYYY-MM-DD"));
-      }
-    });
+      parts.forEach((part) => {
+        if (part.part_due_date) {
+          distinctDates.add(dayjs(part.part_due_date).format("YYYY-MM-DD"));
+        }
+      });
 
-    distinctDates.forEach((dateKey) => {
-      if (!acc[dateKey]) acc[dateKey] = [];
-      acc[dateKey].push(so);
-    });
+      distinctDates.forEach((dateKey) => {
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(so);
+      });
 
-    return acc;
-  }, {} as Record<string, PlantServiceOrderView[]>);
+      return acc;
+    },
+    {} as Record<string, PlantServiceOrderView[]>,
+  );
 
   const sortedDates = Object.keys(grouped).sort((a, b) => {
     if (a === "No Date") return 1;

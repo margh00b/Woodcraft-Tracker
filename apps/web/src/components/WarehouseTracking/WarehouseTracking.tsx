@@ -44,7 +44,7 @@ import { IoMdCube } from "react-icons/io";
 import dayjs from "dayjs";
 import { useWarehouseTrackingTable } from "@/hooks/useWarehouseTrackingTable";
 import { gradients, linearGradients } from "@/theme";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 import WarehouseTrackingModal from "@/components/Shared/WarehouseTrackingModal/WarehouseTrackingModal";
 
 type WarehouseTrackingRow =
@@ -67,7 +67,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 export default function WarehouseTrackingTable() {
@@ -81,7 +81,7 @@ export default function WarehouseTrackingTable() {
   const [activeFilters, setActiveFilters] = useState<ColumnFiltersState>([]);
 
   const [selectedRow, setSelectedRow] = useState<WarehouseTrackingRow | null>(
-    null
+    null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -280,7 +280,7 @@ export default function WarehouseTrackingTable() {
         ),
       }),
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -417,7 +417,7 @@ export default function WarehouseTrackingTable() {
                 value={
                   (getFilterValue("dropoff_date_range") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(val) => setFilterValue("dropoff_date_range", val)}
@@ -431,7 +431,7 @@ export default function WarehouseTrackingTable() {
                 value={
                   (getFilterValue("pickup_date_range") as [
                     Date | null,
-                    Date | null
+                    Date | null,
                   ]) || [null, null]
                 }
                 onChange={(val) => setFilterValue("pickup_date_range", val)}
@@ -466,7 +466,7 @@ export default function WarehouseTrackingTable() {
                     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                     setActiveFilters((prev) => {
                       const existing = prev.filter(
-                        (f) => f.id !== "not_picked"
+                        (f) => f.id !== "not_picked",
                       );
                       if (val)
                         return [
@@ -520,7 +520,7 @@ export default function WarehouseTrackingTable() {
                     <Group gap="xs">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getCanSort() && (
                         <>
@@ -562,7 +562,7 @@ export default function WarehouseTrackingTable() {
                     <Table.Td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.Td>
                   ))}

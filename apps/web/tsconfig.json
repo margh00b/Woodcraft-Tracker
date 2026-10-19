@@ -24,7 +24,8 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@repo/types": ["../../types/supabase.ts"]
     }
   },
   "include": [
@@ -34,7 +35,7 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "../../types/supabase.ts"  ],
   "exclude": [
     "node_modules"
   ]

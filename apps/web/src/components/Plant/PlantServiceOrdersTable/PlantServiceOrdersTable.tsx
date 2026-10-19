@@ -46,7 +46,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
 import { usePlantServiceOrders } from "@/hooks/usePlantServiceOrders";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 import { serviceorderLocationOptions } from "@/dropdowns/dropdownOptions";
 import { linearGradients, gradients } from "@/theme";
 import ServiceOrderPdfPreviewModal from "./ServiceOrderPdfPreviewModal";

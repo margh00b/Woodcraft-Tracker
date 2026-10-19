@@ -2,6 +2,7 @@
   "expo": {
     "name": "insite",
     "slug": "insite",
+    "scheme": "insite",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,6 +16,13 @@
     },
     "web": {
       "favicon": "./assets/icon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar",
+      "@clerk/expo",
+      "@clerk/expo-native-components"
+    ]
   }
 }

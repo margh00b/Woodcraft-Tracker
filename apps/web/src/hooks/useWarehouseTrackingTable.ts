@@ -6,7 +6,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 
 type WarehouseTrackingView =
   Database["public"]["Views"]["warehouse_tracking_view"]["Row"];

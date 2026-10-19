@@ -2,7 +2,7 @@
 
 import { Modal, Loader, Center } from "@mantine/core";
 import dynamic from "next/dynamic";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 import { ServiceOrdersPdf } from "@/documents/ServiceOrdersPdf";
 import { useMemo } from "react";
 
@@ -21,7 +21,7 @@ const PDFViewer = dynamic(
         <Loader color="violet" />
       </Center>
     ),
-  }
+  },
 );
 
 interface ServiceOrderPdfPreviewModalProps {
@@ -59,7 +59,7 @@ export default function ServiceOrderPdfPreviewModal({
         />
       </PDFViewer>
     ),
-    [fullData, dateRange]
+    [fullData, dateRange],
   );
 
   return (

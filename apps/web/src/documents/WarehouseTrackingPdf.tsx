@@ -8,7 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import dayjs from "dayjs";
-import { Database } from "@/types/supabase";
+import { Database } from "@repo/types";
 
 type WarehouseTrackingRow =
   Database["public"]["Views"]["warehouse_tracking_view"]["Row"];
@@ -145,8 +145,8 @@ export const WarehouseTrackingPdf = ({
                   0,
                   (row.pickup_date ? dayjs(row.pickup_date) : dayjs()).diff(
                     dayjs(row.dropoff_date),
-                    "day"
-                  )
+                    "day",
+                  ),
                 )
               : 0;
 

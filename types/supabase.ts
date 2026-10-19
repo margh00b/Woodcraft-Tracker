@@ -3,7 +3,37 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type Database = {
   
-  "public": {
+  "insite": {
+          Tables: {
+            "flha": {
+                  Row: {
+                    "acknowledgement": boolean,"created_at": string,"hazards": NonNullable<Json>,"id": number,"job_id": number,"submitted_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "acknowledgement"?: boolean,"created_at"?: string,"hazards"?: NonNullable<Json>,"id"?: number,"job_id": number,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "acknowledgement"?: boolean,"created_at"?: string,"hazards"?: NonNullable<Json>,"id"?: number,"job_id"?: number,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            [_ in never]: never
+          }
+          Enums: {
+            "flha_rating": "acceptable"|"low"|"medium"|"high"|"n/a"
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"public": {
           Tables: {
             "backorders": {
                   Row: {
@@ -1719,7 +1749,11 @@ export type CompositeTypes<
   : never
 
 export const Constants = {
-  "public": {
+  "insite": {
+          Enums: {
+            "flha_rating": ["acceptable", "low", "medium", "high", "n/a"]
+          }
+        },"public": {
           Enums: {
             "SalesStage": ["QUOTE", "SOLD"],"ShippingStatus": ["unprocessed", "tentative", "confirmed"],"so_part_status": ["pending", "completed", "unknown"]
           }
