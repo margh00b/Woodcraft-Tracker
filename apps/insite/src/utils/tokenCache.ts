@@ -17,7 +17,5 @@ const createTokenCache = () => {
   };
 };
 
-// SecureStore is not supported on the web.
-// Clerk handles web caching automatically if we pass undefined.
 export const tokenCache =
   Platform.OS !== "web" ? createTokenCache() : undefined;

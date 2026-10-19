@@ -35,7 +35,6 @@ const runGenTypes = () => {
       maxBuffer: 1024 * 1024 * 10
     });
     
-    // Points to a root-level shared types folder: wckc/types/supabase.ts
     const targetPath = path.join(__dirname, '../types/supabase.ts');
     
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });

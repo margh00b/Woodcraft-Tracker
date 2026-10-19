@@ -8,10 +8,8 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Ensure Metro can bundle ES module (.mjs) and CommonJS (.cjs) files
 config.resolver.sourceExts.push("mjs", "cjs");
 
-// Force React and Tailwind v3 singletons to resolve locally within the app
 config.resolver.extraNodeModules = {
   react: path.resolve(projectRoot, "node_modules/react"),
   "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
@@ -19,11 +17,9 @@ config.resolver.extraNodeModules = {
   nativewind: path.resolve(projectRoot, "node_modules/nativewind"),
 };
 
-// Custom resolver hook to handle internal subpaths for all @clerk packages
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.startsWith("@clerk/")) {
     const parts = moduleName.split("/");
-    // Intercept subpath requests like @clerk/react/internal or @clerk/shared/getToken
     if (parts.length > 2) {
       const pkgName = `${parts[0]}/${parts[1]}`;
       const subpath = parts.slice(2).join("/");
@@ -57,7 +53,6 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
           }
         }
       } catch (e) {
-        // Fall back to default resolution if package lookup fails
       }
     }
   }
