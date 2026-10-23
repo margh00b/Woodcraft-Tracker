@@ -15,7 +15,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/expo";
 import { useSupabase } from "../hooks/useSupabase";
 import { KeyboardAwareContainer } from "@/components/KeyboardAwareContainer/KeyboardAwareContainer";
-import { useJob, JobOption } from "../context/JobContext";
+import ActiveJobCard from "@/components/ActiveJobCard/ActiveJobCard";
+import { useJobHydration } from "@/hooks/useJobHydration";
 
 const HAZARD_CATEGORIES = [
   { key: "access_stairs_exits", label: "1) Access, stairs, and exits" },
@@ -84,9 +85,8 @@ export default function FlhaScreen() {
   const params = useLocalSearchParams<{ jobId?: string }>();
   const supabase = useSupabase();
   const { user } = useUser();
-  const { selectedJob, setSelectedJob } = useJob();
 
-  const [isLoadingJob, setIsLoadingJob] = useState(!selectedJob && !!params.jobId);
+  const { selectedJob, isLoadingJob } = useJobHydration(params.jobId);
   const [notes, setNotes] = useState("");
   const [acknowledgement, setAcknowledgement] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,47 +105,6 @@ export default function FlhaScreen() {
     weather_lighting_working_alone: "n/a",
     other_trades_public_hazard: "n/a",
   });
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadJob() {
-      if (!selectedJob && params.jobId) {
-        setIsLoadingJob(true);
-        try {
-          const { data, error } = await supabase
-            .from("jobs")
-            .select(
-              `
-              id, 
-              job_number,
-              sales_orders (
-                shipping_client_name,
-                shipping_street,
-                shipping_city
-              )
-            `,
-            )
-            .eq("id", params.jobId)
-            .single();
-
-          if (!isCancelled && !error && data) {
-            setSelectedJob(data as JobOption);
-          }
-        } finally {
-          if (!isCancelled) {
-            setIsLoadingJob(false);
-          }
-        }
-      }
-    }
-
-    loadJob();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [params.jobId, selectedJob, supabase, setSelectedJob]);
 
   useEffect(() => {
     const showSub = Keyboard.addListener(
@@ -240,35 +199,15 @@ export default function FlhaScreen() {
             </Text>
           </View>
         ) : selectedJob ? (
-          <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-            <View className="flex-row items-center justify-between mb-1.5">
-              <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Active Job
-              </Text>
-              <View className="px-2 py-0.5 rounded bg-slate-900">
-                <Text className="text-[10px] font-semibold text-white">
-                  #{selectedJob.job_number}
-                </Text>
-              </View>
-            </View>
-
-            <Text className="text-base font-bold text-slate-800">
-              {selectedJob.sales_orders?.shipping_client_name ||
-                "Client Name N/A"}
-            </Text>
-            <Text className="text-xs text-slate-600 mt-0.5">
-              {selectedJob.sales_orders?.shipping_street || "Street N/A"}
-              {", "}
-              {selectedJob.sales_orders?.shipping_city || "City N/A"}
-            </Text>
-          </View>
+          <ActiveJobCard job={selectedJob} />
         ) : (
           <View className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-5 shadow-sm">
             <Text className="text-sm font-bold text-amber-800 mb-1">
               No Job Selected
             </Text>
             <Text className="text-xs text-amber-700 mb-3">
-              Please return to the dashboard to search and select a job before submitting this assessment.
+              Please return to the dashboard to search and select a job before
+              submitting this assessment.
             </Text>
             <Pressable
               className="bg-amber-600 py-2 px-3 rounded-lg self-start"

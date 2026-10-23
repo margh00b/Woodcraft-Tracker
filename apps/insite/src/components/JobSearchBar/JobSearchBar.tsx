@@ -6,11 +6,11 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useSupabase } from "@/hooks/useSupabase";
-import { useJob, JobOption } from "@/context/JobContext";
+import { useJob } from "@/context/JobContext";
+import { useJobSearch } from "@/hooks/useJobSearch";
 
 export default function JobSearchBar() {
-  const supabase = useSupabase();
+  const { searchJobs, isSearching, reset } = useJobSearch();
   const {
     selectedJob,
     setSelectedJob,
@@ -22,17 +22,18 @@ export default function JobSearchBar() {
   } = useJob();
 
   const [jobNumberInput, setJobNumberInput] = useState(searchQuery);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [hasSearched, setHasSearched] = useState(matchingJobs.length > 0);
 
   useEffect(() => {
     const cleanInput = jobNumberInput.trim();
 
     if (cleanInput.length < 5) {
-      setMatchingJobs([]);
-      setSelectedJob(null);
-      setSearchQuery(cleanInput);
-      setIsVerifying(false);
+      if (matchingJobs.length > 0 || selectedJob !== null) {
+        reset();
+        setMatchingJobs([]);
+        setSelectedJob(null);
+        setSearchQuery(cleanInput);
+      }
       setHasSearched(false);
       return;
     }
@@ -45,54 +46,33 @@ export default function JobSearchBar() {
     setHasSearched(false);
     const timer = setTimeout(async () => {
       try {
-        setIsVerifying(true);
-
-        const { data, error } = await supabase
-          .from("jobs")
-          .select(
-            `
-            id, 
-            job_number,
-            sales_orders (
-              shipping_client_name,
-              shipping_street,
-              shipping_city
-            )
-          `,
-          )
-          .ilike("job_number", `%${cleanInput}%`)
-          .order("job_number", { ascending: true })
-          .limit(10);
-
-        if (error) {
-          setMatchingJobs([]);
-          setSelectedJob(null);
-          setSearchQuery(cleanInput);
-          setHasSearched(true);
-          return;
-        }
-
-        const results = (data as JobOption[]) || [];
+        const results = await searchJobs(cleanInput);
         setMatchingJobs(results);
         setSelectedJob(results.length > 0 ? results[0] : null);
         setSearchQuery(cleanInput);
         setHasSearched(true);
-      } catch (err) {
+      } catch {
         setMatchingJobs([]);
         setSelectedJob(null);
         setSearchQuery(cleanInput);
         setHasSearched(true);
-      } finally {
-        setIsVerifying(false);
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [jobNumberInput]);
+  }, [
+    jobNumberInput, 
+    searchJobs,
+    reset,
+    setMatchingJobs,
+    setSelectedJob,
+    setSearchQuery,
+  ]);
 
   const cleanLength = jobNumberInput.trim().length;
 
   const handleClearJob = () => {
+    reset();
     setJobNumberInput("");
     clearJobState();
     setHasSearched(false);
@@ -106,9 +86,7 @@ export default function JobSearchBar() {
         </Text>
         {(selectedJob || jobNumberInput.length > 0) && (
           <Pressable onPress={handleClearJob}>
-            <Text className="text-md font-semibold text-rose-600">
-              Clear
-            </Text>
+            <Text className="text-md font-semibold text-rose-600">Clear</Text>
           </Pressable>
         )}
       </View>
@@ -132,7 +110,7 @@ export default function JobSearchBar() {
           </Text>
         )}
 
-        {isVerifying && (
+        {isSearching && (
           <View className="flex-row items-center py-1">
             <ActivityIndicator size="small" color="#0f172a" />
             <Text className="text-md text-slate-600 font-medium ml-2">
@@ -141,7 +119,7 @@ export default function JobSearchBar() {
           </View>
         )}
 
-        {!isVerifying &&
+        {!isSearching &&
           hasSearched &&
           cleanLength >= 5 &&
           matchingJobs.length > 0 && (
@@ -184,18 +162,15 @@ export default function JobSearchBar() {
                       "Client Name N/A"}
                   </Text>
                   <Text className="text-sm text-slate-600 mt-0.5">
-                    {selectedJob.sales_orders?.shipping_street ||
-                      "Street N/A"}
-                    ,{" "}
-                    {selectedJob.sales_orders?.shipping_city ||
-                      "City N/A"}
+                    {selectedJob.sales_orders?.shipping_street || "Street N/A"},{" "}
+                    {selectedJob.sales_orders?.shipping_city || "City N/A"}
                   </Text>
                 </View>
               )}
             </View>
           )}
 
-        {!isVerifying &&
+        {!isSearching &&
           hasSearched &&
           cleanLength >= 5 &&
           matchingJobs.length === 0 && (

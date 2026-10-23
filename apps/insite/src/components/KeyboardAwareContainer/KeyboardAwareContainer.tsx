@@ -15,8 +15,19 @@ interface KeyboardAwareContainerProps extends ScrollViewProps {
   className?: string;
 }
 
-export const KeyboardAwareContainer = forwardRef<ScrollView, KeyboardAwareContainerProps>(
-  ({ children, className = "flex-1 px-5 pt-5", contentContainerStyle, ...scrollViewProps }, ref) => {
+export const KeyboardAwareContainer = forwardRef<
+  ScrollView,
+  KeyboardAwareContainerProps
+>(
+  (
+    {
+      children,
+      className = "flex-1 px-5 pt-5",
+      contentContainerStyle,
+      ...scrollViewProps
+    },
+    ref,
+  ) => {
     const insets = useSafeAreaInsets();
 
     return (
@@ -33,7 +44,7 @@ export const KeyboardAwareContainer = forwardRef<ScrollView, KeyboardAwareContai
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={[
               {
-                paddingBottom: insets.bottom + 120, // Static generous bottom inset
+                paddingBottom: insets.bottom + 120,
               },
               contentContainerStyle,
             ]}
@@ -46,5 +57,5 @@ export const KeyboardAwareContainer = forwardRef<ScrollView, KeyboardAwareContai
         </KeyboardAvoidingView>
       </View>
     );
-  }
+  },
 );
