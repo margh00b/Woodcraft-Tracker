@@ -1,9 +1,11 @@
 import { useAuth } from "@clerk/expo";
 import { createClient } from "@supabase/supabase-js";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 export const useSupabase = () => {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   const supabase = useMemo(() => {
     return createClient(
@@ -19,7 +21,7 @@ export const useSupabase = () => {
           fetch: async (url, options: RequestInit = {}) => {
             let clerkToken: string | null = null;
             try {
-              clerkToken = await getToken();
+              clerkToken = await getTokenRef.current();
             } catch (error: any) {
               if (error?.name !== "ClerkOfflineError") {
                 throw error;
@@ -39,7 +41,7 @@ export const useSupabase = () => {
         },
       },
     );
-  }, [getToken]);
+  }, []);
 
   return supabase;
 };

@@ -22,18 +22,18 @@ export default function ActiveJobCard({
           Active Job
         </Text>
         <View className="px-2 py-0.5 rounded bg-slate-900">
-          <Text className="text-[10px] font-semibold text-white">
+          <Text className="text-md font-semibold text-white">
             #{job.job_number}
           </Text>
         </View>
       </View>
 
       <Text
-        className={`${isCompact ? "text-sm" : "text-base"} font-bold text-slate-800`}
+        className={`${isCompact ? "text-md" : "text-lg"} font-bold text-slate-800`}
       >
         {job.sales_orders?.shipping_client_name || "Client Name N/A"}
       </Text>
-      <Text className="text-xs text-slate-600 mt-0.5">
+      <Text className="text-sm text-slate-600 mt-0.5">
         {job.sales_orders?.shipping_street || "Street Name N/A"},{" "}
         {job.sales_orders?.shipping_city || "City N/A"}
       </Text>

@@ -1,50 +1,23 @@
 import React from "react";
-import {
-  Text,
-  View,
-  Alert,
-  Pressable,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Text, View, Alert, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useUser, useAuth } from "@clerk/expo";
-import TopBar from "../components/TopBar/TopBar";
-import ActionPill from "../components/ActionPill/ActionPill";
-import JobSearchBar from "../components/JobSearchBar/JobSearchBar";
-import toCapitalize from "@/utils/capitalize";
-import { useJob } from "../context/JobContext";
+
+import ActionPill from "@/components/Shared/ActionPill/ActionPill";
+import JobSearchBar from "@/components/JobSearchBar/JobSearchBar";
+
+import { useJob } from "@/context/JobContext";
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, isLoaded: userLoaded } = useUser();
-  const { isSignedIn, isLoaded: authLoaded, signOut } = useAuth();
   const { selectedJob } = useJob();
 
-  const isLoaded = authLoaded && userLoaded;
-  const username = user?.username || "";
-  const role = (user?.publicMetadata?.role as string) || "";
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 justify-center items-center bg-slate-50">
-        <ActivityIndicator size="large" color="#0f172a" />
-      </View>
-    );
-  }
+  const { isSignedIn } = useAuth();
 
   return (
-    <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-slate-50">
       {isSignedIn ? (
         <View className="flex-1">
-          <TopBar
-            name={toCapitalize(username)}
-            role={toCapitalize(role)}
-            signout={signOut}
-          />
-
           <ScrollView
             className="flex-1 px-5 pt-4"
             keyboardShouldPersistTaps="handled"
@@ -76,7 +49,7 @@ export default function HomeScreen() {
                   if (!selectedJob) {
                     Alert.alert(
                       "Job Required",
-                      "Please search and select a verified job before opening the FLHA form.",
+                      "Please search and select a verified job before opening the Flha form.",
                     );
                     return;
                   }

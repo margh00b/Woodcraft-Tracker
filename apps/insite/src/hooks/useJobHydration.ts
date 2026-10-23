@@ -3,20 +3,18 @@ import { useState, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 import { useJob, JobOption } from "@/context/JobContext";
 
-export function useJobHydration(jobId?: string | number) {
+export function useJobHydration(jobId?: number) {
   const supabase = useSupabase();
   const { selectedJob, setSelectedJob } = useJob();
-  
-  // If we already have a selected job in context, we aren't loading. 
-  // Otherwise, if a jobId param exists, we are loading.
-  const [isLoadingJob, setIsLoadingJob] = useState(!selectedJob && !!jobId);
+
+  const isAlreadyLoaded = !!selectedJob && selectedJob.id === jobId;
+  const [isLoadingJob, setIsLoadingJob] = useState(!isAlreadyLoaded && !!jobId);
 
   useEffect(() => {
     let isCancelled = false;
 
     async function loadJob() {
-      // If we already have a job selected or no jobId was provided, skip fetching
-      if (selectedJob || !jobId) {
+      if (!jobId || (selectedJob && selectedJob.id === jobId)) {
         setIsLoadingJob(false);
         return;
       }
@@ -54,7 +52,7 @@ export function useJobHydration(jobId?: string | number) {
     return () => {
       isCancelled = true;
     };
-  }, [jobId, selectedJob, supabase, setSelectedJob]);
+  }, [jobId, selectedJob?.id, supabase]);
 
   return {
     selectedJob,

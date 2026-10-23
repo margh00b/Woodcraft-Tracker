@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,12 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
-  Keyboard,
-  Platform,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/expo";
-import { useSupabase } from "../hooks/useSupabase";
-import { KeyboardAwareContainer } from "@/components/KeyboardAwareContainer/KeyboardAwareContainer";
-import ActiveJobCard from "@/components/ActiveJobCard/ActiveJobCard";
+import { useSupabase } from "@/hooks/useSupabase";
+import { KeyboardAwareContainer } from "@/components/Shared/KeyboardAwareContainer/KeyboardAwareContainer";
+import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
 import { useJobHydration } from "@/hooks/useJobHydration";
 
 const HAZARD_CATEGORIES = [
@@ -79,8 +76,7 @@ const RATINGS: {
   },
 ];
 
-export default function FlhaScreen() {
-  const insets = useSafeAreaInsets();
+export default function NewFlha() {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string }>();
   const supabase = useSupabase();
@@ -105,21 +101,6 @@ export default function FlhaScreen() {
     weather_lighting_working_alone: "n/a",
     other_trades_public_hazard: "n/a",
   });
-
-  useEffect(() => {
-    const showSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      () => {
-        requestAnimationFrame(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        });
-      },
-    );
-
-    return () => {
-      showSub.remove();
-    };
-  }, []);
 
   const handleRatingChange = (categoryKey: string, rating: HazardRating) => {
     setHazardRatings((prev) => ({
@@ -165,7 +146,7 @@ export default function FlhaScreen() {
 
       Alert.alert(
         "Success",
-        `FLHA Assessment successfully logged for Job #${selectedJob.job_number}`,
+        `Flha Assessment successfully logged for Job #${selectedJob.job_number}`,
         [{ text: "OK", onPress: () => router.back() }],
       );
     } catch (err: any) {
@@ -179,7 +160,7 @@ export default function FlhaScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-slate-50">
       <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
@@ -187,9 +168,10 @@ export default function FlhaScreen() {
         >
           <Text className="text-slate-700 font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">FLHA Form</Text>
+        <Text className="text-lg font-bold text-slate-900">New Flha Form</Text>
         <View className="w-12" />
       </View>
+
       <KeyboardAwareContainer ref={scrollViewRef}>
         {isLoadingJob ? (
           <View className="bg-white p-6 rounded-xl border border-slate-200 mb-5 shadow-sm items-center">

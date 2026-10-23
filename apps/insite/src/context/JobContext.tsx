@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export interface JobOption {
-  id: string | number;
+  id: number;
   job_number: string;
   sales_orders?: {
     shipping_client_name?: string;
