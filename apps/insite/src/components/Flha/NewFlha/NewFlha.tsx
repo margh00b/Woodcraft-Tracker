@@ -1,112 +1,57 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/expo";
 import { useSupabase } from "@/hooks/useSupabase";
 import { KeyboardAwareContainer } from "@/components/Shared/KeyboardAwareContainer/KeyboardAwareContainer";
-import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
 import { useJobHydration } from "@/hooks/useJobHydration";
-
-const HAZARD_CATEGORIES = [
-  { key: "access_stairs_exits", label: "1) Access, stairs, and exits" },
-  { key: "tools_and_equipment", label: "2) Tools and equipment" },
-  {
-    key: "vehicles_traffic_stacking",
-    label: "3) Vehicles, Traffic and Material Stacking",
-  },
-  { key: "manual_handling_lifting", label: "4) Manual Handling and Lifting" },
-  { key: "housekeeping_on_site", label: "5) Housekeeping on site" },
-  { key: "chemicals", label: "6) Chemicals" },
-  { key: "ladders_work_at_height", label: "7) Ladders and work at height" },
-  {
-    key: "weather_lighting_working_alone",
-    label: "8) Weather, lighting or working alone",
-  },
-  {
-    key: "other_trades_public_hazard",
-    label: "9) Other Trades, public or site hazard",
-  },
-] as const;
-
-type HazardRating = "acceptable" | "low" | "medium" | "high" | "n/a";
-
-const RATINGS: {
-  label: string;
-  value: HazardRating;
-  color: string;
-  activeColor: string;
-}[] = [
-  {
-    label: "Acc",
-    value: "acceptable",
-    color: "border-emerald-200 text-emerald-700 bg-emerald-50",
-    activeColor: "bg-emerald-600 border-emerald-600 text-white",
-  },
-  {
-    label: "Low",
-    value: "low",
-    color: "border-blue-200 text-blue-700 bg-blue-50",
-    activeColor: "bg-blue-600 border-blue-600 text-white",
-  },
-  {
-    label: "Med",
-    value: "medium",
-    color: "border-amber-200 text-amber-700 bg-amber-50",
-    activeColor: "bg-amber-600 border-amber-600 text-white",
-  },
-  {
-    label: "High",
-    value: "high",
-    color: "border-rose-200 text-rose-700 bg-rose-50",
-    activeColor: "bg-rose-600 border-rose-600 text-white",
-  },
-  {
-    label: "N/A",
-    value: "n/a",
-    color: "border-slate-200 text-slate-600 bg-slate-100",
-    activeColor: "bg-slate-700 border-slate-700 text-white",
-  },
-];
+import { useFlhaForm } from "@/hooks/useFlhaForm";
+import {
+  HazardAssessmentGrid,
+  FlhaNotesField,
+  FlhaAcknowledgement,
+  FlhaSubmitButton,
+} from "@/components/Flha/FLHA Shared";
+import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
 
 export default function NewFlha() {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string }>();
   const supabase = useSupabase();
   const { user } = useUser();
-
-  const { selectedJob, isLoadingJob } = useJobHydration(params.jobId);
-  const [notes, setNotes] = useState("");
-  const [acknowledgement, setAcknowledgement] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [notesY, setNotesY] = useState(0);
 
-  const [hazardRatings, setHazardRatings] = useState<
-    Record<string, HazardRating>
-  >({
-    access_stairs_exits: "n/a",
-    tools_and_equipment: "n/a",
-    vehicles_traffic_stacking: "n/a",
-    manual_handling_lifting: "n/a",
-    housekeeping_on_site: "n/a",
-    chemicals: "n/a",
-    ladders_work_at_height: "n/a",
-    weather_lighting_working_alone: "n/a",
-    other_trades_public_hazard: "n/a",
-  });
+  const jobId = params.jobId ? Number(params.jobId) : undefined;
+  const { selectedJob } = useJobHydration(
+    isNaN(jobId as number) ? undefined : jobId,
+  );
 
-  const handleRatingChange = (categoryKey: string, rating: HazardRating) => {
-    setHazardRatings((prev) => ({
-      ...prev,
-      [categoryKey]: rating,
-    }));
+  const {
+    hazardRatings,
+    notes,
+    setNotes,
+    acknowledgement,
+    isSubmitting,
+    setIsSubmitting,
+    handleRatingChange,
+    toggleAcknowledgement,
+    buildHazardsPayload,
+  } = useFlhaForm();
+
+  const handleNotesFocus = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(0, notesY - 20),
+        animated: true,
+      });
+    }, 150);
   };
 
   const handleSubmit = async () => {
@@ -124,15 +69,11 @@ export default function NewFlha() {
 
     try {
       setIsSubmitting(true);
-
       const username = user?.username || "Unknown User";
 
       const payload = {
         job_id: selectedJob.id,
-        hazards: {
-          ...hazardRatings,
-          notes: notes.trim() || null,
-        },
+        hazards: buildHazardsPayload(),
         acknowledgement: acknowledgement,
         submitted_by: username,
       };
@@ -144,9 +85,11 @@ export default function NewFlha() {
 
       if (error) throw error;
 
+      invalidateFormDetailsCache(selectedJob.id, "flha");
+
       Alert.alert(
         "Success",
-        `Flha Assessment successfully logged for Job #${selectedJob.job_number}`,
+        `FLHA Assessment successfully logged for Job #${selectedJob.job_number}`,
         [{ text: "OK", onPress: () => router.back() }],
       );
     } catch (err: any) {
@@ -168,21 +111,12 @@ export default function NewFlha() {
         >
           <Text className="text-slate-700 font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">New Flha Form</Text>
+        <Text className="text-lg font-bold text-slate-900">New FLHA Form</Text>
         <View className="w-12" />
       </View>
 
       <KeyboardAwareContainer ref={scrollViewRef}>
-        {isLoadingJob ? (
-          <View className="bg-white p-6 rounded-xl border border-slate-200 mb-5 shadow-sm items-center">
-            <ActivityIndicator size="small" color="#0f172a" />
-            <Text className="text-xs text-slate-500 mt-2">
-              Loading job details...
-            </Text>
-          </View>
-        ) : selectedJob ? (
-          <ActiveJobCard job={selectedJob} />
-        ) : (
+        {!selectedJob && (
           <View className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-5 shadow-sm">
             <Text className="text-sm font-bold text-amber-800 mb-1">
               No Job Selected
@@ -202,104 +136,30 @@ export default function NewFlha() {
           </View>
         )}
 
-        <View className="mb-5">
-          <Text className="text-md font-semibold text-slate-500 uppercase mb-3 px-1">
-            Hazard Assessments (Select Ratings)
-          </Text>
+        <HazardAssessmentGrid
+          hazardRatings={hazardRatings}
+          onRatingChange={handleRatingChange}
+        />
 
-          {HAZARD_CATEGORIES.map((category) => {
-            const currentVal = hazardRatings[category.key];
-            return (
-              <View
-                key={category.key}
-                className="bg-white p-3.5 rounded-xl border border-slate-200 mb-3 shadow-sm"
-              >
-                <Text className="text-md font-bold text-slate-800 mb-2.5">
-                  {category.label}
-                </Text>
-                <View className="flex-row gap-1.5 justify-between">
-                  {RATINGS.map((rat) => {
-                    const isSelected = currentVal === rat.value;
-                    return (
-                      <Pressable
-                        key={rat.value}
-                        onPress={() =>
-                          handleRatingChange(category.key, rat.value)
-                        }
-                        className={`flex-1 py-2 rounded-lg border items-center justify-center ${
-                          isSelected ? rat.activeColor : rat.color
-                        }`}
-                      >
-                        <Text
-                          className={`text-[11px] font-bold ${
-                            isSelected ? "text-white" : "text-slate-700"
-                          }`}
-                        >
-                          {rat.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-          <Text className="text-md font-semibold text-slate-500 uppercase mb-2">
-            Notes
-          </Text>
-          <TextInput
-            className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm h-24"
-            placeholder="Detail any site-specific hazards or control measures..."
-            placeholderTextColor="#94a3b8"
-            multiline
-            textAlignVertical="top"
+        <View onLayout={(e) => setNotesY(e.nativeEvent.layout.y)}>
+          <FlhaNotesField
             value={notes}
             onChangeText={setNotes}
+            onFocus={handleNotesFocus}
           />
         </View>
 
-        <Pressable
-          onPress={() => setAcknowledgement(!acknowledgement)}
-          className="flex-row items-center bg-white p-4 rounded-xl border border-slate-200 mb-6 shadow-sm"
-        >
-          <View
-            className={`w-5 h-5 rounded-md border items-center justify-center mr-3 ${
-              acknowledgement
-                ? "bg-slate-900 border-slate-900"
-                : "border-slate-300 bg-slate-50"
-            }`}
-          >
-            {acknowledgement && (
-              <Text className="text-white text-md font-bold">✓</Text>
-            )}
-          </View>
-          <Text className="flex-1 text-md text-slate-700 font-medium">
-            I participated in this assessment, understand the hazards and
-            controls, confirm controls are in place, and will stop and reassess
-            if conditions change.
-          </Text>
-        </Pressable>
+        <FlhaAcknowledgement
+          checked={acknowledgement}
+          onToggle={toggleAcknowledgement}
+        />
 
-        <Pressable
-          className={`p-4 rounded-xl items-center mb-6 ${
-            selectedJob && acknowledgement && !isSubmitting
-              ? "bg-slate-900 active:bg-slate-800"
-              : "bg-slate-300"
-          }`}
-          disabled={!selectedJob || !acknowledgement || isSubmitting}
+        <FlhaSubmitButton
+          label="Submit Assessment"
+          disabled={!selectedJob || !acknowledgement}
+          isSubmitting={isSubmitting}
           onPress={handleSubmit}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <Text className="text-white font-bold text-lg">
-              Submit Assessment
-            </Text>
-          )}
-        </Pressable>
+        />
       </KeyboardAwareContainer>
     </View>
   );

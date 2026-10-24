@@ -1,14 +1,13 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
 import FlhaList from "@/components/Flha/FlhaList/FlhaList";
 import { useJobHydration } from "@/hooks/useJobHydration";
 
 export default function FlhaScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string }>();
-  const { selectedJob } = useJobHydration(
+  const { selectedJob, isLoadingJob } = useJobHydration(
     params.jobId ? Number(params.jobId) : undefined,
   );
 
@@ -22,7 +21,6 @@ export default function FlhaScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      {/* Header Bar */}
       <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
@@ -30,9 +28,7 @@ export default function FlhaScreen() {
         >
           <Text className="text-slate-700 font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">
-          FLHA Forms
-        </Text>
+        <Text className="text-lg font-bold text-slate-900">FLHA Forms</Text>
         <View className="w-12" />
       </View>
 
@@ -40,10 +36,7 @@ export default function FlhaScreen() {
         className="flex-1 px-5 pt-4"
         showsVerticalScrollIndicator={false}
       >
-        {/* Active Job Details */}
-        {selectedJob ? (
-          <ActiveJobCard job={selectedJob} />
-        ) : (
+        {!selectedJob && !isLoadingJob && (
           <View className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-5 shadow-sm">
             <Text className="text-sm font-bold text-amber-800 mb-1">
               No Job Selected
@@ -63,7 +56,6 @@ export default function FlhaScreen() {
           </View>
         )}
 
-        {/* Action Header */}
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-md font-bold text-slate-500 uppercase tracking-wider">
             Past Submissions
@@ -78,8 +70,12 @@ export default function FlhaScreen() {
           )}
         </View>
 
-        {/* Flha Submissions List */}
-        {selectedJob && <FlhaList jobId={selectedJob.id} />}
+        {selectedJob && (
+          <FlhaList
+            jobId={selectedJob.id}
+            onSelectFlha={(flhaId) => router.push(`/flha/${flhaId}`)}
+          />
+        )}
       </ScrollView>
     </View>
   );

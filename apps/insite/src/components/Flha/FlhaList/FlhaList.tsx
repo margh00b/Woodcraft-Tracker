@@ -6,10 +6,9 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import { useFormDetails, FormSubmissionMeta } from "@/hooks/useFormDetails";
+import { useFormDetails } from "@/hooks/useFormDetails";
 import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useJob } from "@/context/JobContext";
 
 interface FlhaListProps {
   jobId: number;
@@ -17,19 +16,18 @@ interface FlhaListProps {
 }
 
 export default function FlhaList({ jobId, onSelectFlha }: FlhaListProps) {
-  const { selectedJob } = useJob();
   const insets = useSafeAreaInsets();
   const { forms, isLoading, error, refetch } = useFormDetails(jobId, "flha", {
-    autoFetch: false,
+    autoFetch: true,
   });
   useFocusEffect(
     useCallback(() => {
       if (jobId) {
-        refetch();
+        refetch(false);
       }
     }, [jobId, refetch]),
   );
-  if (isLoading) {
+  if (isLoading && forms.length === 0) {
     return (
       <View className="p-8 items-center justify-center">
         <ActivityIndicator size="small" color="#0f172a" />
@@ -82,7 +80,6 @@ export default function FlhaList({ jobId, onSelectFlha }: FlhaListProps) {
             onPress={() => onSelectFlha?.(item.id)}
             className="bg-white p-4 rounded-xl border border-slate-200 mb-3 shadow-sm active:bg-slate-50"
           >
-            {/* Header Row: Title Badge & Author */}
             <View className="flex-row justify-between items-center mb-3">
               <View className="bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
                 <Text className="text-xs font-bold text-slate-800">
@@ -103,9 +100,7 @@ export default function FlhaList({ jobId, onSelectFlha }: FlhaListProps) {
               </View>
             </View>
 
-            {/* Footer Section: Timestamps */}
             <View className="pt-2 border-t border-slate-100 flex-row justify-between items-center">
-              {/* Created Date & Time */}
               <View>
                 <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
                   Created
@@ -123,7 +118,6 @@ export default function FlhaList({ jobId, onSelectFlha }: FlhaListProps) {
                 </Text>
               </View>
 
-              {/* Updated Date & Time (Renders if present) */}
               {Boolean(item.updated_at) && (
                 <View className="items-end">
                   <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
