@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 import { JobOption } from "@/context/JobContext";
+import { JOB_DETAILS_SELECT } from "@/constants/queries";
 
 export type { JobOption };
 
@@ -51,17 +52,7 @@ export function useJobSearch(
       try {
         const { data, error: queryError } = await supabase
           .from("jobs")
-          .select(
-            `
-            id, 
-            job_number,
-            sales_orders (
-              shipping_client_name,
-              shipping_street,
-              shipping_city
-            )
-          `,
-          )
+          .select(JOB_DETAILS_SELECT)
           .ilike("job_number", `%${cleanTerm}%`)
           .order("job_number", { ascending: true })
           .limit(searchLimit);

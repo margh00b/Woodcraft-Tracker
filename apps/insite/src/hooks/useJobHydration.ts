@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 import { useJob, JobOption } from "@/context/JobContext";
+import { JOB_DETAILS_SELECT } from "@/constants/queries";
 
 export function useJobHydration(jobId?: number) {
   const supabase = useSupabase();
@@ -22,17 +23,7 @@ export function useJobHydration(jobId?: number) {
       try {
         const { data, error } = await supabase
           .from("jobs")
-          .select(
-            `
-            id, 
-            job_number,
-            sales_orders (
-              shipping_client_name,
-              shipping_street,
-              shipping_city
-            )
-          `,
-          )
+          .select(JOB_DETAILS_SELECT)
           .eq("id", jobId)
           .single();
 
