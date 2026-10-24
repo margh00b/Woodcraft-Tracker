@@ -4,6 +4,7 @@ CREATE TABLE "public"."job_attachments" (
   "file_name"   text                     NOT NULL,
   "file_path"   text                     NOT NULL,
   "file_type"   text                     NOT NULL,
+  "file_tag"    text                     DEFAULT 'General'::text,
   "file_size"   bigint,
   "uploaded_by" text,
   "created_at"  timestamp with time zone NOT NULL DEFAULT now(),

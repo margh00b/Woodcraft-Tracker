@@ -247,9 +247,9 @@ export default function JobDetailsDrawer({
             </Group>
           </Group>
 
-          <Box mt="lg">
+          {/*<Box mt="lg">
             <JobAttachments jobId={jobId as number} />
-          </Box>
+          </Box>*/}
         </SectionCard>
 
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">

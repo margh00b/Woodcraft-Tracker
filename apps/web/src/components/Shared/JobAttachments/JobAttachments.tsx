@@ -5,7 +5,6 @@ import {
   Group,
   Text,
   Stack,
-  ThemeIcon,
   ActionIcon,
   Loader,
   Center,
@@ -15,12 +14,10 @@ import {
   UnstyledButton,
   Select,
   Badge,
-  SimpleGrid,
   Image,
-  Tooltip,
   Button,
-  Divider,
   Modal,
+  Menu,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Dropzone } from "@mantine/dropzone";
@@ -33,10 +30,10 @@ import {
   FaTimesCircle,
   FaChevronRight,
   FaExclamationCircle,
-  FaImage,
   FaEye,
   FaTrash,
   FaFileAlt,
+  FaEllipsisV,
 } from "react-icons/fa";
 import { useJobAttachments } from "@/hooks/useJobAttachments";
 import { linearGradients } from "@/theme";
@@ -52,7 +49,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   Inspection: "blue",
   Procurement: "violet",
   Installation: "green",
-  "Installation (Pictures)": "green",
   Sales: "cyan",
 };
 
@@ -176,148 +172,116 @@ export default function JobAttachments({
       deleteFile(file);
     }
   };
-
-  const renderThumbnailGrid = (files: typeof attachments) => {
+  const renderAttachmentList = (files: typeof attachments) => {
     if (!files) return null;
     return (
-      <SimpleGrid cols={full ? 8 : 6} spacing="xs" mt="xs">
+      <Stack gap={6} mt="xs">
         {files.map((file) => {
           const isImg = isImageFile(file.file_name);
           const url = getPublicUrl(file.file_path);
           const isPdf = file.file_name.toLowerCase().endsWith(".pdf");
 
           return (
-            <Paper
+            <Group
               key={file.id}
-              withBorder
-              radius="sm"
-              bg="gray.1"
+              justify="space-between"
+              bg="gray.0"
+              p="xs"
               style={{
-                position: "relative",
-                aspectRatio: "1 / 1",
-                overflow: "hidden",
-                transition: "box-shadow 0.2s ease",
+                borderRadius: 8,
+                border: "1px solid #eaeaea",
               }}
             >
-              <Box
-                onClick={() => window.open(url, "_blank")}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: isImg
-                    ? "black"
-                    : "var(--mantine-color-gray-0)",
-                }}
-              >
-                {isImg ? (
-                  <Image
-                    src={url}
-                    alt={file.file_name}
-                    fit="cover"
-                    w="100%"
-                    h="100%"
-                  />
-                ) : (
-                  <Stack align="center" gap={2}>
-                    {isPdf ? (
-                      <FaFilePdf size={24} color="#fa5252" />
-                    ) : (
-                      <FaFileAlt size={24} color="#7950f2" />
-                    )}
-                  </Stack>
-                )}
-              </Box>
-
-              <Group
-                gap={4}
-                style={{
-                  position: "absolute",
-                  top: 4,
-                  right: 4,
-                  zIndex: 10,
-                }}
-              >
-                <Tooltip label="View" position="top" withArrow fz="xs">
-                  <ActionIcon
-                    size="sm"
-                    variant="default"
-                    radius="xl"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(url, "_blank");
-                    }}
-                    style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-                  >
-                    <FaEye size={10} color="var(--mantine-color-blue-6)" />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Download" position="top" withArrow fz="xs">
-                  <ActionIcon
-                    size="sm"
-                    variant="default"
-                    radius="xl"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownload(url, file.file_name);
-                    }}
-                    style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-                  >
-                    <FaDownload
-                      size={10}
-                      color="var(--mantine-color-green-6)"
+              <Group gap="sm" style={{ overflow: "hidden", flex: 1 }}>
+                <Box
+                  w={50}
+                  h={50}
+                  style={{
+                    borderRadius: 6,
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "black",
+                    flexShrink: 0,
+                    border: "1px solid #dee2e6",
+                  }}
+                >
+                  {isImg ? (
+                    <Image
+                      src={url}
+                      w="100%"
+                      h="100%"
+                      fit="cover"
+                      alt={file.file_name}
                     />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Delete" position="top" withArrow fz="xs">
-                  <ActionIcon
-                    size="sm"
-                    variant="default"
-                    radius="xl"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(file);
-                    }}
-                    style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-                  >
-                    <FaTrash size={10} color="var(--mantine-color-red-6)" />
-                  </ActionIcon>
-                </Tooltip>
+                  ) : (
+                    <Center w="100%" h="100%" bg="gray.1">
+                      {isPdf ? (
+                        <FaFilePdf size={16} color="#fa5252" />
+                      ) : (
+                        <FaFileAlt size={16} color="#7950f2" />
+                      )}
+                    </Center>
+                  )}
+                </Box>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="xs" c="dimmed" mb={1}>
+                    {dayjs(file.created_at).format("MMM D, YYYY")}
+                  </Text>
+                  <Text size="sm" truncate fw={600} c="dark">
+                    {file.file_name}
+                  </Text>
+                  
+                  {file.file_tag && file.file_tag !== "General" && (
+                    <Badge size="xs" color="green" variant="light" mt={4}>
+                      {file.file_tag}
+                    </Badge>
+                  )}
+                </div>
               </Group>
 
-              <Box
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "4px 6px",
-                  background: "rgba(255, 255, 255, 0.95)",
-                  borderTop: "1px solid #eee",
-                  zIndex: 5,
-                }}
-              >
-                <Text
-                  size="10px"
-                  truncate
-                  fw={600}
-                  c="dark"
-                  lh={1.1}
-                  ta="center"
-                >
-                  {file.file_name}
-                </Text>
-                <Text size="9px" c="dimmed" truncate ta="center">
-                  {dayjs(file.created_at).format("MMM D")}
-                </Text>
-              </Box>
-            </Paper>
+              
+              <Menu position="bottom-end" shadow="md" width={140}>
+                <Menu.Target>
+                  <ActionIcon size="sm" variant="subtle" color="gray">
+                    <FaEllipsisV size={12} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={
+                      <FaEye size={12} color="var(--mantine-color-blue-6)" />
+                    }
+                    onClick={() => window.open(url, "_blank")}
+                  >
+                    View
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={
+                      <FaDownload
+                        size={12}
+                        color="var(--mantine-color-green-6)"
+                      />
+                    }
+                    onClick={() => handleDownload(url, file.file_name)}
+                  >
+                    Download
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<FaTrash size={12} />}
+                    onClick={() => handleDelete(file)}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           );
         })}
-      </SimpleGrid>
+      </Stack>
     );
   };
 
@@ -373,7 +337,7 @@ export default function JobAttachments({
                     </UnstyledButton>
 
                     <Collapse in={isOpen}>
-                      {renderThumbnailGrid(files)}
+                      {renderAttachmentList(files)}
                     </Collapse>
                   </Box>
                 );
@@ -419,7 +383,7 @@ export default function JobAttachments({
                       </Group>
                     </UnstyledButton>
                     <Collapse in={isOpen}>
-                      {renderThumbnailGrid(files)}
+                      {renderAttachmentList(files)}
                     </Collapse>
                   </Box>
                 );
@@ -460,9 +424,16 @@ export default function JobAttachments({
             allowDeselect={false}
             comboboxProps={{ withinPortal: false }}
             styles={{
-              root: { flex: 1, maxWidth: full ? "200px" : "140px" },
+              wrapper: {
+                height: "100%",
+              },
+              root: {
+                flex: 1,
+                maxWidth: full ? "200px" : "140px",
+              },
               input: {
                 fontWeight: 600,
+                height: "100%",
                 color: category ? "#4A00E0" : undefined,
                 borderColor: !category
                   ? "var(--mantine-color-red-3)"
@@ -474,7 +445,6 @@ export default function JobAttachments({
           <Dropzone
             onDrop={handleDrop}
             onReject={() => console.log("File rejected")}
-            maxSize={50 * 1024 ** 2}
             multiple
             disabled={!category}
             h={full ? undefined : 36}

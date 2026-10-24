@@ -421,14 +421,14 @@ isOneToOne: false
                   ]
                 },"job_attachments": {
                   Row: {
-                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_type": string,"id": number,"job_id": number,"updated_at": string,"uploaded_by": string | null
+                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_tag": string | null,"file_type": string,"id": number,"job_id": number,"updated_at": string,"uploaded_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_type": string,"id"?: never,"job_id": number,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_tag"?: string | null,"file_type": string,"id"?: never,"job_id": number,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Update: {
-                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_type"?: string,"id"?: never,"job_id"?: number,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_tag"?: string | null,"file_type"?: string,"id"?: never,"job_id"?: number,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Relationships: [
                     {
