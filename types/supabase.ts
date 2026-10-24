@@ -19,6 +19,20 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"install_reports": {
+                  Row: {
+                    "created_at": string,"details": NonNullable<Json>,"id": number,"job_id": number,"submitted_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"job_id": number,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"job_id"?: number,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
