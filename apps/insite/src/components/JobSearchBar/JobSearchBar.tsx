@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useJob } from "@/context/JobContext";
 import { useJobSearch } from "@/hooks/useJobSearch";
+import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
 
 export default function JobSearchBar() {
   const { searchJobs, isSearching, reset } = useJobSearch();
@@ -122,52 +123,12 @@ export default function JobSearchBar() {
         {!isSearching &&
           hasSearched &&
           cleanLength >= 5 &&
-          matchingJobs.length > 0 && (
-            <View>
-              <View className="mb-2.5">
-                <Text className="text-md font-medium text-slate-600 mb-2">
-                  {matchingJobs.length === 1
-                    ? "✓ Active job verified:"
-                    : `✓ ${matchingJobs.length} matching jobs found:`}
-                </Text>
-                <View className="flex-row gap-1.5 flex-wrap">
-                  {matchingJobs.map((job, idx) => {
-                    const isFirst = idx === 0;
-                    return (
-                      <View
-                        key={job.id}
-                        className={`px-2 py-0.5 rounded border ${
-                          isFirst
-                            ? "bg-slate-900 border-slate-900"
-                            : "bg-slate-100 border-slate-200"
-                        }`}
-                      >
-                        <Text
-                          className={`text-[10px] font-semibold ${
-                            isFirst ? "text-white" : "text-slate-600"
-                          }`}
-                        >
-                          #{job.job_number}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {selectedJob && (
-                <View className="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                  <Text className="text-sm font-bold text-slate-800">
-                    {selectedJob.sales_orders?.shipping_client_name ||
-                      "Client Name N/A"}
-                  </Text>
-                  <Text className="text-sm text-slate-600 mt-0.5">
-                    {selectedJob.sales_orders?.shipping_street || "Street N/A"},{" "}
-                    {selectedJob.sales_orders?.shipping_city || "City N/A"}
-                  </Text>
-                </View>
-              )}
-            </View>
+          selectedJob && (
+            <ActiveJobCard
+              job={selectedJob}
+              variant="compact"
+              className="mt-3 bg-slate-50"
+            />
           )}
 
         {!isSearching &&

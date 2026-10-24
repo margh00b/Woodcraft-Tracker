@@ -1,4 +1,3 @@
-// hooks/useJobHydration.ts
 import { useState, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 import { useJob, JobOption } from "@/context/JobContext";
@@ -52,7 +51,7 @@ export function useJobHydration(jobId?: number) {
     return () => {
       isCancelled = true;
     };
-  }, [jobId, selectedJob?.id, supabase]);
+  }, [jobId, selectedJob?.id, supabase, setSelectedJob]);
 
   return {
     selectedJob,
