@@ -1,15 +1,9 @@
 import React, { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useUser } from "@clerk/expo";
 import { useSupabase } from "@/hooks/useSupabase";
-import { KeyboardAwareContainer } from "@/components/Shared/KeyboardAwareContainer/KeyboardAwareContainer";
+import { KeyboardAwareContainer } from "@/components/Common/KeyboardAwareContainer/KeyboardAwareContainer";
 import { useJobHydration } from "@/hooks/useJobHydration";
 import { useFlhaForm } from "@/hooks/useFlhaForm";
 import {

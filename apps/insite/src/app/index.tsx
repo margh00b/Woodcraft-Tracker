@@ -1,18 +1,28 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Text, View, Alert, Pressable, ScrollView } from "react-native";
-import { useRouter } from "expo-router";
-import { useUser, useAuth } from "@clerk/expo";
-
-import ActionPill from "@/components/Shared/ActionPill/ActionPill";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useAuth } from "@clerk/expo";
+import ActionPill from "@/components/Common/ActionPill/ActionPill";
 import JobSearchBar from "@/components/JobSearchBar/JobSearchBar";
-
 import { useJob } from "@/context/JobContext";
+import { useFormDetails } from "@/hooks/useFormDetails";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { selectedJob } = useJob();
-
   const { isSignedIn } = useAuth();
+
+  const { forms, refetch } = useFormDetails(selectedJob?.id, "flha", {
+    autoFetch: !!selectedJob?.id,
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedJob?.id) {
+        refetch(false);
+      }
+    }, [selectedJob?.id, refetch]),
+  );
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -39,9 +49,10 @@ export default function HomeScreen() {
 
               <ActionPill
                 title="Field Level Hazard Assessment"
+                badge={selectedJob ? forms.length : undefined}
                 description={
                   selectedJob
-                    ? `Job #${selectedJob.job_number} selected`
+                    ? `${forms.length} form${forms.length === 1 ? "" : "s"} submitted`
                     : "Mandatory site safety check"
                 }
                 icon="⚠️"

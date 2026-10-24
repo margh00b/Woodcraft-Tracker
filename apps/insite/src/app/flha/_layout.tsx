@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Stack, useGlobalSearchParams } from "expo-router";
 import { useJob } from "@/context/JobContext";
 import { useJobHydration } from "@/hooks/useJobHydration";
-import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
+import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 
 export default function FlhaLayout() {
   const params = useGlobalSearchParams<{ jobId?: string }>();

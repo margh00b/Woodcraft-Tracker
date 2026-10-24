@@ -5,6 +5,7 @@ interface ActionPillProps {
   title: string;
   description: string;
   icon: string;
+  badge?: string | number;
   onPress: () => void;
 }
 
@@ -12,6 +13,7 @@ export default function ActionPill({
   title,
   description,
   icon,
+  badge,
   onPress,
 }: ActionPillProps) {
   return (
@@ -30,7 +32,13 @@ export default function ActionPill({
         <Text className="text-xs text-slate-500">{description}</Text>
       </View>
 
-      <Text className="text-lg font-bold text-primary-300 ml-2">→</Text>
+      {badge !== undefined && (
+        <View className="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 mr-2">
+          <Text className="text-xs font-bold text-slate-800">{badge}</Text>
+        </View>
+      )}
+
+      <Text className="text-lg font-bold text-slate-400">→</Text>
     </TouchableOpacity>
   );
 }

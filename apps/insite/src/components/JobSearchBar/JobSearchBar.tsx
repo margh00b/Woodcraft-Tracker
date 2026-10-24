@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useJob } from "@/context/JobContext";
 import { useJobSearch } from "@/hooks/useJobSearch";
-import ActiveJobCard from "@/components/Shared/ActiveJobCard/ActiveJobCard";
+import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 
 export default function JobSearchBar() {
   const { searchJobs, isSearching, reset } = useJobSearch();
@@ -62,7 +62,7 @@ export default function JobSearchBar() {
 
     return () => clearTimeout(timer);
   }, [
-    jobNumberInput, 
+    jobNumberInput,
     searchJobs,
     reset,
     setMatchingJobs,
@@ -120,16 +120,13 @@ export default function JobSearchBar() {
           </View>
         )}
 
-        {!isSearching &&
-          hasSearched &&
-          cleanLength >= 5 &&
-          selectedJob && (
-            <ActiveJobCard
-              job={selectedJob}
-              variant="compact"
-              className="mt-3 bg-slate-50"
-            />
-          )}
+        {!isSearching && hasSearched && cleanLength >= 5 && selectedJob && (
+          <ActiveJobCard
+            job={selectedJob}
+            variant="compact"
+            className="mt-3 bg-slate-50"
+          />
+        )}
 
         {!isSearching &&
           hasSearched &&
