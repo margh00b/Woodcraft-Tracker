@@ -21,14 +21,14 @@ export type Database = {
                   ]
                 },"install_reports": {
                   Row: {
-                    "created_at": string,"details": NonNullable<Json>,"id": number,"job_id": number,"submitted_by": string | null,"updated_at": string
+                    "created_at": string,"details": NonNullable<Json>,"id": number,"idempotency_key": string | null,"job_id": number,"submitted_by": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"job_id": number,"submitted_by"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"idempotency_key"?: string | null,"job_id": number,"submitted_by"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"job_id"?: number,"submitted_by"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"idempotency_key"?: string | null,"job_id"?: number,"submitted_by"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -39,7 +39,12 @@ export type Database = {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "submit_install_report":
+{ Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_submitted_by": string }; Returns: number
+                           },
+"update_install_report":
+{ Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_new_attachments": Json,"p_report_id": number }; Returns: undefined
+                           }
           }
           Enums: {
             "flha_rating": "acceptable"|"low"|"medium"|"high"|"n/a"
@@ -435,14 +440,14 @@ isOneToOne: false
                   ]
                 },"job_attachments": {
                   Row: {
-                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_tag": string | null,"file_type": string,"id": number,"job_id": number,"updated_at": string,"uploaded_by": string | null
+                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_tag": string | null,"file_type": string,"id": number,"install_report_id": number | null,"job_id": number,"updated_at": string,"uploaded_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_tag"?: string | null,"file_type": string,"id"?: never,"job_id": number,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_tag"?: string | null,"file_type": string,"id"?: never,"install_report_id"?: number | null,"job_id": number,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Update: {
-                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_tag"?: string | null,"file_type"?: string,"id"?: never,"job_id"?: number,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_tag"?: string | null,"file_type"?: string,"id"?: never,"install_report_id"?: number | null,"job_id"?: number,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Relationships: [
                     {

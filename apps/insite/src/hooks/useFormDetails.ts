@@ -1,11 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 
-export type FormType =
-  | "flha"
-  | "equipment_log"
-  | "timecard"
-  | "incident_report";
+export type FormType = "flha" | "install_reports";
 
 export interface FormSubmissionMeta {
   id: number;
@@ -59,13 +55,14 @@ export function useFormDetails(
   );
 
   const latestRequestId = useRef(0);
-  const fetchRef = useRef<
-    (
-      id: number,
-      type?: FormType,
-      force?: boolean,
-    ) => Promise<FormSubmissionMeta[]>
-  >(null);
+  const fetchRef =
+    useRef<
+      (
+        id: number,
+        type?: FormType,
+        force?: boolean,
+      ) => Promise<FormSubmissionMeta[]>
+    >(null);
 
   const reset = useCallback(() => {
     latestRequestId.current += 1;
@@ -153,7 +150,9 @@ export function useFormDetails(
   const refetch = useCallback(
     (force = false) => {
       if (jobId) {
-        return fetchRef.current?.(jobId, formType, force) ?? Promise.resolve([]);
+        return (
+          fetchRef.current?.(jobId, formType, force) ?? Promise.resolve([])
+        );
       }
       return Promise.resolve([]);
     },

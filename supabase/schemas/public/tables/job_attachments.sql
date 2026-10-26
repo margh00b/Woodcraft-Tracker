@@ -1,17 +1,19 @@
 CREATE TABLE "public"."job_attachments" (
-  "id"          bigint                   GENERATED ALWAYS AS IDENTITY NOT NULL,
-  "job_id"      bigint                   NOT NULL,
-  "file_name"   text                     NOT NULL,
-  "file_path"   text                     NOT NULL,
-  "file_type"   text                     NOT NULL,
-  "file_tag"    text                     DEFAULT 'General'::text,
-  "file_size"   bigint,
-  "uploaded_by" text,
-  "created_at"  timestamp with time zone NOT NULL DEFAULT now(),
-  "category"    text                     NOT NULL DEFAULT 'General'::text,
-  "updated_at"  timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT "job_attachments_pkey" PRIMARY KEY (id),
-  CONSTRAINT "job_attachments_job_id_fkey" FOREIGN KEY (job_id) REFERENCES public.jobs(id) ON DELETE CASCADE
+  "id" bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  "job_id" bigint NOT NULL,
+  "install_report_id" bigint NULL,
+  "file_name" text NOT NULL,
+  "file_path" text NOT NULL,
+  "file_type" text NOT NULL,
+  "file_tag" text DEFAULT 'General'::text,
+  "file_size" bigint NULL,
+  "uploaded_by" text NULL,
+  "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "category" text NOT NULL DEFAULT 'General'::text,
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "job_attachments_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "job_attachments_job_id_fkey" FOREIGN KEY ("job_id") REFERENCES "public"."jobs"("id") ON DELETE CASCADE,
+  CONSTRAINT "job_attachments_install_report_id_fkey" FOREIGN KEY ("install_report_id") REFERENCES "insite"."install_reports"("id") ON DELETE CASCADE
 );
 
 ALTER TABLE "public"."job_attachments"

@@ -12,18 +12,27 @@ export default function HomeScreen() {
   const { selectedJob } = useJob();
   const { isSignedIn } = useAuth();
 
-  const { forms, refetch } = useFormDetails(selectedJob?.id, "flha", {
-    autoFetch: !!selectedJob?.id,
-  });
+  const { forms: flhaForms, refetch: refetchFlhaForms } = useFormDetails(
+    selectedJob?.id,
+    "flha",
+    {
+      autoFetch: !!selectedJob?.id,
+    },
+  );
+
+  const { forms: installationReports, refetch: refetchInstallationReports } =
+    useFormDetails(selectedJob?.id, "install_reports", {
+      autoFetch: !!selectedJob?.id,
+    });
 
   useFocusEffect(
     useCallback(() => {
       if (selectedJob?.id) {
-        refetch(false);
+        refetchFlhaForms(false);
+        refetchInstallationReports(false);
       }
-    }, [selectedJob?.id, refetch]),
+    }, [selectedJob?.id, refetchFlhaForms, refetchInstallationReports]),
   );
-
   return (
     <View className="flex-1 bg-slate-50">
       {isSignedIn ? (
@@ -49,10 +58,10 @@ export default function HomeScreen() {
 
               <ActionPill
                 title="Field Level Hazard Assessment"
-                badge={selectedJob ? forms.length : undefined}
+                badge={selectedJob ? flhaForms.length : undefined}
                 description={
                   selectedJob
-                    ? `${forms.length} form${forms.length === 1 ? "" : "s"} submitted`
+                    ? `${flhaForms.length} form${flhaForms.length === 1 ? "" : "s"} submitted`
                     : "Mandatory site safety check"
                 }
                 icon="⚠️"
@@ -66,6 +75,32 @@ export default function HomeScreen() {
                   }
                   router.push({
                     pathname: "/flha",
+                    params: { jobId: String(selectedJob.id) },
+                  });
+                }}
+              />
+              <ActionPill
+                title="Installation Reports"
+                badge={selectedJob ? installationReports.length : undefined}
+                description={
+                  selectedJob
+                    ? `${installationReports.length} report${
+                        installationReports.length === 1 ? "" : "s"
+                      } submitted`
+                    : "Document installation work"
+                }
+                icon="🛠️"
+                onPress={() => {
+                  if (!selectedJob) {
+                    Alert.alert(
+                      "Job Required",
+                      "Please search and select a verified job before opening Installation Reports.",
+                    );
+                    return;
+                  }
+
+                  router.push({
+                    pathname: "/install-reports",
                     params: { jobId: String(selectedJob.id) },
                   });
                 }}

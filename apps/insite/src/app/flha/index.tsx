@@ -2,14 +2,11 @@ import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import FlhaList from "@/components/Flha/FlhaList/FlhaList";
-import { useJobHydration } from "@/hooks/useJobHydration";
+import { useJob } from "@/context/JobContext";
 
 export default function FlhaScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ jobId?: string }>();
-  const { selectedJob, isLoadingJob } = useJobHydration(
-    params.jobId ? Number(params.jobId) : undefined,
-  );
+  const { selectedJob } = useJob();
 
   const handleCreateNew = () => {
     if (!selectedJob) return;
@@ -36,7 +33,7 @@ export default function FlhaScreen() {
         className="flex-1 px-5 pt-4"
         showsVerticalScrollIndicator={false}
       >
-        {!selectedJob && !isLoadingJob && (
+        {!selectedJob && (
           <View className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-5 shadow-sm">
             <Text className="text-sm font-bold text-amber-800 mb-1">
               No Job Selected

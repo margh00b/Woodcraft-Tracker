@@ -5,6 +5,7 @@ CREATE TABLE "insite"."install_reports" (
   "submitted_by" text,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
   "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "idempotency_key" uuid UNIQUE,
 
   CONSTRAINT "install_reports_pkey" PRIMARY KEY (id),
   CONSTRAINT "install_reports_job_id_fkey" FOREIGN KEY (job_id) REFERENCES public.jobs(id) ON DELETE CASCADE
