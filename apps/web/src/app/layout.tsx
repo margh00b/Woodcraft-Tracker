@@ -2,15 +2,15 @@
 import "./globals.css";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "@mantine/core/styles/baseline.css";
-import "@mantine/core/styles/default-css-variables.css";
-import "@mantine/core/styles/global.css";
-import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@mantine/dropzone/styles.css";
 
-import { MantineProvider, mantineHtmlProps } from "@mantine/core";
+import {
+  ColorSchemeScript,
+  MantineProvider,
+  mantineHtmlProps,
+} from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 
 import { Notifications } from "@mantine/notifications";
@@ -170,6 +170,12 @@ const dashboardLinks: SidebarLink[] = [
     path: "/dashboard/installers",
     allowedRoles: ["admin", "installation", "service"],
   },
+  {
+    iconName: "UserCog",
+    label: "User Management",
+    path: "/admin/users",
+    allowedRoles: ["admin"],
+  },
 ];
 
 export default function RootLayout({
@@ -181,7 +187,9 @@ export default function RootLayout({
   const showSidebar = pathname.startsWith("/dashboard");
   return (
     <html lang="en" {...mantineHtmlProps}>
-      <head></head>
+      <head>
+        <ColorSchemeScript />
+      </head>
 
       <body className={`${Quicksand.className} `}>
         <SupabaseProvider>

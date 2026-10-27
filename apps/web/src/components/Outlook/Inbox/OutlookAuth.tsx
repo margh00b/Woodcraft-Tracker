@@ -8,8 +8,6 @@ import {
 } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 
-console.log("Env Var (Redirect):", process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI);
-
 const msalConfig = {
   auth: {
     clientId: "3ea61d91-6068-4812-aadf-d4735e9992e0",
