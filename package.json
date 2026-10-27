@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
-    "baseline-browser-mapping": "^2.11.29",
+    "baseline-browser-mapping": "^2.11.33",
     "supabase": "^2.121.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.23.15"

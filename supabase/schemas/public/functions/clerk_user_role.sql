@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION public.clerk_user_role()
-  RETURNS text
-  LANGUAGE sql
-  STABLE
-  AS $function$
-  select (auth.jwt() ->> 'user_role')::text
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $function$
+  SELECT auth.jwt() -> 'app_metadata' ->> 'role';
 $function$;
 
 GRANT EXECUTE ON FUNCTION "public"."clerk_user_role"() TO PUBLIC, "anon", "authenticated";

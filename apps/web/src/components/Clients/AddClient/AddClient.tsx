@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { ClientFormValues, ClientSchema } from "@/zod/client.schema";
-import { useUser } from "@clerk/nextjs";
+
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useEffect } from "react";
@@ -22,8 +22,10 @@ interface AddClientModalProps {
   onClose: () => void;
 }
 export default function AddClient({ opened, onClose }: AddClientModalProps) {
-  const { user, isLoaded } = useUser();
-  const { supabase } = useSupabase();
+  const { supabase, user, isLoading } = useSupabase();
+
+  const username =
+    user?.user_metadata?.username ?? user?.email?.split("@")[0] ?? "";
   const queryClient = useQueryClient();
 
   const form = useForm<ClientFormValues>({
@@ -42,22 +44,23 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
   });
 
   useEffect(() => {
-    if (isLoaded && user?.username && form.values.designer === "") {
-      form.setFieldValue("designer", user.username);
+    if (!isLoading && username && form.values.designer === "") {
+      form.setFieldValue("designer", username);
     }
-  }, [isLoaded, user?.username, form]);
+  }, [isLoading, username, form]);
 
   const addMutation = useMutation({
     mutationFn: async (values: ClientFormValues) => {
-      if (!isLoaded || !user?.username) {
-        throw new Error("User info not loaded yet. Please wait...");
+      if (isLoading || !username) {
+        throw new Error("User information is not available. Please try again.");
       }
+
       const validatedInput = ClientSchema.parse(values);
-      validatedInput.designer = user.username;
+      validatedInput.designer = username;
 
       const { data: newClient, error: dbError } = await supabase
         .from("client")
-        .insert(values)
+        .insert(validatedInput)
         .select()
         .single();
 
@@ -141,7 +144,7 @@ export default function AddClient({ opened, onClose }: AddClientModalProps) {
           <Group justify="flex-end" mt="md">
             <Button
               type="submit"
-              loading={addMutation.isPending || !isLoaded}
+              loading={addMutation.isPending || isLoading}
               style={{
                 background: "linear-gradient(135deg, #28a745 0%, #218838 100%)",
                 color: "white",

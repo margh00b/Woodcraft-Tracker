@@ -11,7 +11,6 @@
   "dependencies": {
     "@azure/msal-browser": "^4.27.0",
     "@azure/msal-react": "^3.0.23",
-    "@clerk/nextjs": "^6.35.1",
     "@mantine/charts": "^8.3.9",
     "@mantine/core": "^8.3.9",
     "@mantine/dates": "^8.3.9",

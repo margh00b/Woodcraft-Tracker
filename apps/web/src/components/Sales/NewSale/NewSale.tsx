@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -105,8 +104,12 @@ interface NewDoorStyleState {
 }
 
 export default function NewSale() {
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const {
+    supabase,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    user,
+  } = useSupabase();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -525,7 +528,10 @@ export default function NewSale() {
         order_type: order_type,
         delivery_type: delivery_type,
         cabinet: cabinetPayload,
-        designer: user?.username || "Staff",
+        designer:
+          user?.user_metadata?.username ??
+          user?.email?.split("@")[0] ??
+          "Staff",
         flooring_type: flooring_type,
         flooring_clearance: flooring_clearance,
         shipping: shipping,
@@ -724,11 +730,19 @@ export default function NewSale() {
     });
   };
 
-  if (!isAuthenticated) {
+  if (isAuthLoading) {
     return (
       <Center style={{ height: "100vh", width: "100%" }}>
         <Loader />
         <Text ml="md">Loading...</Text>
+      </Center>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Center style={{ height: "100vh", width: "100%" }}>
+        <Text>You must be signed in to create a sale.</Text>
       </Center>
     );
   }

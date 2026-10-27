@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -21,7 +20,6 @@ import {
   Center,
   Select,
   Box,
-  Timeline,
   Grid,
   ThemeIcon,
   Badge,
@@ -37,7 +35,6 @@ import {
   FaCut,
   FaDoorOpen,
   FaFire,
-  FaIndustry,
   FaPaintBrush,
   FaShippingFast,
 } from "react-icons/fa";
@@ -52,6 +49,7 @@ import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 import utc from "dayjs/plugin/utc";
 import JobAttachments from "@/components/Shared/JobAttachments/JobAttachments";
 import PlantActuals from "@/components/Shared/PlantActuals/PlantActuals";
+import { useProductionScheduler } from "@/hooks/useProductionScheduler";
 
 dayjs.extend(utc);
 
@@ -68,80 +66,17 @@ type SchedulingFormValues = TablesUpdate<"production_schedule"> & {
   wrap_date?: string | null;
 };
 
-type JobType = Tables<"jobs"> & {
-  sales_orders: SalesOrderType;
-  production_schedule: SchedulingFormValues;
-  installation: Tables<"installation">;
-};
-
 export default function EditProductionSchedulePage({
   jobId,
 }: {
   jobId: number;
 }) {
   const router = useRouter();
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const { supabase, isLoading: isAuthLoading } = useSupabase();
   const queryClient = useQueryClient();
   const [isBackorderPromptOpen, setIsBackorderPromptOpen] = useState(false);
   const [isAddBackorderModalOpen, setIsAddBackorderModalOpen] = useState(false);
-  const { data, isLoading } = useQuery<JobType>({
-    queryKey: ["production-schedule", jobId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select(
-          `
-          *,
-          production_schedule:production_schedule (*),
-          installation:installation (wrap_date),
-          sales_orders:sales_orders (
-            id,
-            shipping_street,
-            shipping_city,
-            shipping_province,
-            shipping_zip,
-            shipping_client_name,
-            project_name,
-            shipping_phone_1,
-            shipping_email_1,
-            shipping_phone_2,
-            shipping_email_2,
-            order_type,
-            delivery_type,
-            install,
-            is_canopy_required,
-            is_woodtop_required,
-            is_custom_cab_required,
-            cabinet:cabinets (
-              id,
-              box,
-              glass,
-              glaze,
-              finish,
-              interior,
-              drawer_box,
-              glass_type,
-              piece_count,
-              doors_parts_only,
-              handles_selected,
-              handles_supplied,
-              hinge_soft_close,
-              top_drawer_front,
-              door_styles(name),
-              species(Species),
-              colors(Name)
-            )
-          )
-        `
-        )
-        .eq("id", jobId)
-        .single();
-      if (error) throw error;
-      return data as JobType;
-    },
-    enabled: isAuthenticated && !!jobId,
-  });
+  const { data, isLoading, error } = useProductionScheduler(jobId);
 
   const handleBackorderPromptDecision = (isCompleteShipment: boolean) => {
     setIsBackorderPromptOpen(false);
@@ -200,10 +135,6 @@ export default function EditProductionSchedulePage({
 
   const updateMutation = useMutation({
     mutationFn: async (values: SchedulingFormValues) => {
-      if (!user) throw new Error("User not authenticated");
-      if (!data?.production_schedule?.prod_id)
-        throw new Error("Production schedule data missing");
-
       const prodId = data.production_schedule.prod_id;
       const { wrap_date, ...scheduleValues } = values;
       if (
@@ -257,14 +188,13 @@ export default function EditProductionSchedulePage({
       }),
   });
 
-  if (isLoading || !data)
+  if (isAuthLoading || isLoading || !data)
     return (
       <Center h="100vh">
         <Loader />
         <Text ml="md">Loading...</Text>
       </Center>
     );
-
   const cabinet = data.sales_orders?.cabinet;
   const shipping = data.sales_orders
     ? {
@@ -395,7 +325,7 @@ export default function EditProductionSchedulePage({
                               "in_plant_actual",
                               e.currentTarget.checked
                                 ? new Date().toISOString()
-                                : null
+                                : null,
                             )
                           }
                           styles={{ label: { fontWeight: 600 } }}
@@ -410,7 +340,7 @@ export default function EditProductionSchedulePage({
                               "in_plant_cabinets_actual",
                               e.currentTarget.checked
                                 ? new Date().toISOString()
-                                : null
+                                : null,
                             )
                           }
                           styles={{ label: { fontWeight: 600 } }}
@@ -547,7 +477,7 @@ export default function EditProductionSchedulePage({
                               key={key}
                               label={label}
                               {...form.getInputProps(
-                                key as keyof SchedulingFormValues
+                                key as keyof SchedulingFormValues,
                               )}
                               highlightToday
                               clearable

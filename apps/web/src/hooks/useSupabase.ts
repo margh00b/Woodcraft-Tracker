@@ -1,19 +1,16 @@
 "use client";
 
-import { useContext } from "react";
-import { SupabaseContext } from "@/providers/SupabaseProvider";
-import { ClerkTokenContext } from "@/providers/ClerkTokenProvider";
+import { useSupabaseContext } from "@/providers/SupabaseProvider";
 
 export function useSupabase() {
-  const supabase = useContext(SupabaseContext);
-  const token = useContext(ClerkTokenContext);
-
-  if (!supabase) {
-    throw new Error("useSupabase must be used within SupabaseProvider");
-  }
+  const { supabase, isAuthenticated, isLoading, session, user } =
+    useSupabaseContext();
 
   return {
     supabase,
-    isAuthenticated: !!token,
+    isAuthenticated,
+    isLoading,
+    session,
+    user,
   };
 }

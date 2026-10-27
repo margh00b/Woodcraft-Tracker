@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useUser } from "@clerk/nextjs";
 import {
   Grid,
   Paper,
@@ -220,8 +219,7 @@ const SalesSpikeChart = ({
 };
 
 export default function ManagerDashboardClient() {
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const { supabase, isAuthenticated, user } = useSupabase();
   const permissions = usePermissions();
 
   const [currentView, setCurrentView] = useState<DashboardView>("OVERVIEW");
@@ -233,7 +231,13 @@ export default function ManagerDashboardClient() {
     else if (permissions.isService) setCurrentView("SERVICE");
     else if (permissions.isPlant) setCurrentView("PLANT");
     else setCurrentView("OVERVIEW");
-  }, [permissions]);
+  }, [
+    permissions.isDesigner,
+    permissions.isScheduler,
+    permissions.isInstaller,
+    permissions.isService,
+    permissions.isPlant,
+  ]);
 
   const {
     data: metrics,
@@ -371,7 +375,7 @@ export default function ManagerDashboardClient() {
             supabase
               .from("jobs")
               .select(
-                "job_base_number, installation!inner(wrap_completed, wrap_date)"
+                "job_base_number, installation!inner(wrap_completed, wrap_date)",
               )
               .eq("is_active", true)
               .not("installation.wrap_date", "is", null)
@@ -392,7 +396,7 @@ export default function ManagerDashboardClient() {
           ]);
 
         const { finalChartData, topDesigners } = processSalesChart(
-          (salesData.data as any[]) || []
+          (salesData.data as any[]) || [],
         );
 
         return {
@@ -401,7 +405,7 @@ export default function ManagerDashboardClient() {
           openServiceOrders: service.count || 0,
           prodTotalJobs: getUniqueCount(
             activeJobs.data || [],
-            "job_base_number"
+            "job_base_number",
           ),
           fiscalLabel: fiscalYearLabel,
           monthlyChartData: finalChartData,
@@ -432,7 +436,7 @@ export default function ManagerDashboardClient() {
             supabase
               .from("production_schedule")
               .select(
-                "prod_id, placement_date, jobs!inner(job_number, created_at)"
+                "prod_id, placement_date, jobs!inner(job_number, created_at)",
               )
               .is("placement_date", null)
               .eq("jobs.is_active", true)
@@ -441,7 +445,7 @@ export default function ManagerDashboardClient() {
             supabase
               .from("purchasing_table_view")
               .select(
-                "job_base_number, doors_ordered_at, doors_received_at, glass_ordered_at, glass_received_at, handles_ordered_at, handles_received_at, acc_ordered_at, acc_received_at"
+                "job_base_number, doors_ordered_at, doors_received_at, glass_ordered_at, glass_received_at, handles_ordered_at, handles_received_at, acc_ordered_at, acc_received_at",
               )
               .gte("ship_schedule", startOfWeek)
               .lte("ship_schedule", endOfWeek),
@@ -451,7 +455,7 @@ export default function ManagerDashboardClient() {
           const rawPending = (pendingOrders.data || []).filter((row) => {
             const isPending = (
               ordered: string | null,
-              received: string | null
+              received: string | null,
             ) => ordered && !received;
 
             return (
@@ -468,7 +472,7 @@ export default function ManagerDashboardClient() {
           prodTotalJobs: getUniqueCount(
             pendingCount.data || [],
             "jobs",
-            "job_base_number"
+            "job_base_number",
           ),
           prodPendingOrders: pendingOrdersUniqueCount,
           upcomingShipments: flattenJobRelation(shipments.data || []),
@@ -485,7 +489,7 @@ export default function ManagerDashboardClient() {
             supabase
               .from("jobs")
               .select(
-                "job_base_number, installation!inner(wrap_completed, wrap_date)"
+                "job_base_number, installation!inner(wrap_completed, wrap_date)",
               )
               .eq("is_active", true)
               .not("installation.wrap_date", "is", null)
@@ -503,18 +507,18 @@ export default function ManagerDashboardClient() {
               .gte("ship_schedule", todayISO)
               .order("ship_schedule", { ascending: true })
               .limit(5),
-          ]
+          ],
         );
 
         return {
           plantActiveJobs: getUniqueCount(
             activeNotWrapped.data || [],
-            "job_base_number"
+            "job_base_number",
           ),
           plantShipmentsMonth: getUniqueCount(
             shipmentsMonth.data || [],
             "jobs",
-            "job_base_number"
+            "job_base_number",
           ),
           upcomingShipments: flattenJobRelation(shipments.data || []),
         };
@@ -541,12 +545,12 @@ export default function ManagerDashboardClient() {
           pendingInstalls: getUniqueCount(
             pending.data || [],
             "jobs",
-            "job_base_number"
+            "job_base_number",
           ),
           completedInstallsYear: getUniqueCount(
             completedYear.data || [],
             "jobs",
-            "job_base_number"
+            "job_base_number",
           ),
           activeInstallers: active.count || 0,
         };
@@ -577,23 +581,32 @@ export default function ManagerDashboardClient() {
             .from("sales_orders")
             .select("*", { count: "exact", head: true })
             .eq("stage", "QUOTE")
-            .ilike("designer", `%${user?.username || ""}%`),
+            .ilike(
+              "designer",
+              `%${user?.user_metadata?.username?.trim() || ""}%`,
+            ),
           supabase
             .from("sales_orders")
             .select("id, jobs!inner(job_base_number)")
             .eq("stage", "SOLD")
             .gte("created_at", fiscalStartISO)
-            .ilike("designer", `%${user?.username || ""}%`),
+            .ilike(
+              "designer",
+              `%${user?.user_metadata?.username?.trim() || ""}%`,
+            ),
           supabase
             .from("sales_orders")
             .select("designer, created_at, jobs!inner(job_base_number)")
             .eq("stage", "SOLD")
             .gte("created_at", fiscalStartISO)
-            .ilike("designer", `%${user?.username || ""}%`),
+            .ilike(
+              "designer",
+              `%${user?.user_metadata?.username?.trim() || ""}%`,
+            ),
         ]);
 
         const { finalChartData, topDesigners } = processSalesChart(
-          (salesData.data as any[]) || []
+          (salesData.data as any[]) || [],
         );
 
         return {
@@ -601,7 +614,7 @@ export default function ManagerDashboardClient() {
           myTotalSold: getUniqueCount(
             sold.data || [],
             "jobs",
-            "job_base_number"
+            "job_base_number",
           ),
           fiscalLabel: fiscalYearLabel,
           monthlyChartData: finalChartData,

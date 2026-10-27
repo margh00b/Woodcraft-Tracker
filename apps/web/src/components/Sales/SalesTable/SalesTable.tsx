@@ -59,7 +59,6 @@ import {
   serviceStatusGradients,
   serviceStatusGradientsLight,
 } from "@/theme";
-import { useUser } from "@clerk/nextjs";
 import { usePermissions } from "@/hooks/usePermissions";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { TbCurrencyDollar } from "react-icons/tb";
@@ -70,8 +69,7 @@ type SalesTableView = Views<"sales_table_view">;
 export default function SalesTable() {
   const permission = usePermissions();
   const router = useRouter();
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const { supabase, isAuthenticated, user } = useSupabase();
   const [exportLoading, setExportLoading] = useState(false);
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -771,7 +769,7 @@ export default function SalesTable() {
                   checked={!!getInputFilterValue("my_jobs")}
                   onChange={(e) => {
                     const val = e.currentTarget.checked
-                      ? user?.username
+                      ? user?.user_metadata?.username
                       : undefined;
                     setInputFilterValue("my_jobs", val);
                     const otherFilters = inputFilters.filter(

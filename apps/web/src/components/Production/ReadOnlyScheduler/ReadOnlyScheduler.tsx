@@ -1,9 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useSupabase } from "@/hooks/useSupabase";
 import { Tables } from "@/types/db";
 import {
   Container,
@@ -41,6 +37,7 @@ import OrderDetails from "@/components/Shared/OrderDetails/OrderDetails";
 import RelatedBackorders from "@/components/Shared/RelatedBO/RelatedBO";
 import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
 import PlantActuals from "@/components/Shared/PlantActuals/PlantActuals";
+import { useProductionScheduler } from "@/hooks/useProductionScheduler";
 
 type CabinetSpecsJoined = Tables<"cabinets"> & {
   door_styles: { name: string } | null;
@@ -103,66 +100,8 @@ const DateBlock = ({
 );
 
 export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
-  const router = useRouter();
-  const { supabase, isAuthenticated } = useSupabase();
 
-  const { data, isLoading } = useQuery<JobType>({
-    queryKey: ["production-schedule-readonly", jobId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select(
-          `
-          *,
-          production_schedule:production_schedule (*),
-          installation:installation (wrap_date),
-          sales_orders:sales_orders (
-            id,
-            shipping_street,
-            shipping_city,
-            shipping_province,
-            shipping_zip,
-            shipping_client_name,
-            project_name,
-            shipping_phone_1,
-            shipping_email_1,
-            shipping_phone_2,
-            shipping_email_2,
-            order_type,
-            delivery_type,
-            install,
-            is_canopy_required,
-            is_woodtop_required,
-            is_custom_cab_required,
-            cabinet:cabinets (
-              id,
-              box,
-              glass,
-              glaze,
-              finish,
-              interior,
-              drawer_box,
-              glass_type,
-              piece_count,
-              doors_parts_only,
-              handles_selected,
-              handles_supplied,
-              hinge_soft_close,
-              top_drawer_front,
-              door_styles(name),
-              species(Species),
-              colors(Name)
-            )
-          )
-        `
-        )
-        .eq("id", jobId)
-        .single();
-      if (error) throw error;
-      return data as unknown as JobType;
-    },
-    enabled: isAuthenticated && !!jobId,
-  });
+  const { data, isLoading, error } = useProductionScheduler(jobId);
 
   if (isLoading || !data) {
     return (
@@ -307,8 +246,8 @@ export default function ReadOnlyScheduler({ jobId }: { jobId: number }) {
                             schedule.ship_status === "confirmed"
                               ? "green"
                               : schedule.ship_status === "tentative"
-                              ? "orange"
-                              : "gray"
+                                ? "orange"
+                                : "gray"
                           }
                         >
                           {schedule.ship_status || "Unprocessed"}

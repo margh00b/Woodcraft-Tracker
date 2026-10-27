@@ -57,15 +57,14 @@ import { notifications } from "@mantine/notifications";
 import { useWrapScheduleTable } from "@/hooks/useWrapScheduleTable";
 import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
-import { useUser } from "@clerk/nextjs";
 import WrapPdfPreviewModal from "./WrapPdfPreviewModal";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export type WrapTableData = Views<"plant_wrap_view">;
 
 export default function WrapScheduleTable() {
-  const [userRole, setUserRole] = useState<any>("admin");
-  const [subRole, setSubRole] = useState<any>("assembly");
+  const { role: userRole, subRole } = usePermissions();
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 

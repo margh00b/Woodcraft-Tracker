@@ -23,11 +23,9 @@ import {
   Text,
   Box,
   Badge,
-  rem,
   Accordion,
   SimpleGrid,
   Tooltip,
-  Checkbox,
   Stack,
   Title,
   ThemeIcon,
@@ -43,13 +41,7 @@ import {
   FaBoxOpen,
   FaCheck,
   FaPrint,
-  FaDoorOpen,
-  FaCut,
-  FaPaintBrush,
-  FaCogs,
   FaBan,
-  FaPlus,
-  FaMinus,
 } from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import dayjs from "dayjs";
@@ -57,14 +49,13 @@ import { notifications } from "@mantine/notifications";
 import { useProductionScheduleTable } from "@/hooks/useProductionScheduleTable";
 import { Views } from "@/types/db";
 import { useDisclosure } from "@mantine/hooks";
-import { useUser } from "@clerk/nextjs";
 import ProductionPdfPreviewModal from "./ProductionPdfPreviewModal";
 import JobDetailsDrawer from "@/components/Shared/JobDetailsDrawer/JobDetailsDrawer";
+import { usePermissions } from "@/hooks/usePermissions";
 export type PlantTableData = Views<"plant_production_view">;
 
 export default function ProductionScheduleTable() {
-  const [userRole, setUserRole] = useState<any>("admin");
-  const [subRole, setSubRole] = useState<any>("assembly");
+  const { role: userRole, subRole } = usePermissions();
   const { supabase, isAuthenticated } = useSupabase();
   const queryClient = useQueryClient();
 
@@ -1056,7 +1047,7 @@ export default function ProductionScheduleTable() {
                 placeholder="Pick dates range"
                 value={dateRange}
                 onChange={(val) =>
-                  setDateRange( val as unknown as [Date | null, Date | null])
+                  setDateRange(val as unknown as [Date | null, Date | null])
                 }
                 clearable
                 leftSection={<FaCalendarAlt size={14} />}

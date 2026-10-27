@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -82,8 +81,13 @@ interface NewDoorStyleState {
 }
 
 export default function EditSale({ salesOrderId }: EditSaleProps) {
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const {
+    supabase,
+    isAuthenticated,
+    user,
+    isLoading: isAuthLoading,
+  } = useSupabase();
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -310,7 +314,11 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       }),
   });
 
-  const { data: salesOrderData, isLoading: salesOrderLoading } = useQuery({
+  const {
+    data: salesOrderData,
+    isLoading: salesOrderLoading,
+    error: salesOrderError,
+  } = useQuery({
     queryKey: ["sales-order", salesOrderId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -334,7 +342,11 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       if (error) throw error;
       return data as any;
     },
-    enabled: isAuthenticated && !!salesOrderId,
+    enabled:
+      !isAuthLoading &&
+      isAuthenticated &&
+      Number.isFinite(salesOrderId) &&
+      salesOrderId > 0,
   });
 
   const jobId = salesOrderData?.job?.id;
@@ -500,10 +512,12 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           : "",
       };
 
-      await supabase
+      const { error: cabinetError } = await supabase
         .from("cabinets")
         .update(cabinetPayload)
         .eq("id", salesOrderData.cabinet.id);
+
+      if (cabinetError) throw cabinetError;
 
       if (isRevertingToQuote) {
         const { error: rpcError } = await supabase.rpc("revert_job_to_quote", {
@@ -600,11 +614,31 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     },
   });
 
-  if (salesOrderLoading) {
+  if (isAuthLoading || salesOrderLoading) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader />
         <Text ml="md">Loading...</Text>
+      </Center>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Center style={{ height: "100vh" }}>
+        <Text>You must be signed in to view this sales order.</Text>
+      </Center>
+    );
+  }
+
+  if (salesOrderError || !salesOrderData) {
+    return (
+      <Center style={{ height: "100vh" }}>
+        <Text c="red">
+          {salesOrderError instanceof Error
+            ? salesOrderError.message
+            : "Unable to load this sales order."}
+        </Text>
       </Center>
     );
   }

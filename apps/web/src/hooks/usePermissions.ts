@@ -1,11 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export function usePermissions() {
-  const { user, isLoaded } = useUser();
-  const role = user?.publicMetadata?.role as string | undefined;
-  const subRole = user?.publicMetadata?.sub_role as string | undefined;
+  const { user, isLoading } = useSupabase();
+
+  const role = user?.app_metadata?.role as string | undefined;
+  const subRole = user?.app_metadata?.sub_role as string | undefined;
 
   const isAdmin = role === "admin";
   const isDesigner = role === "designer";
@@ -37,13 +38,12 @@ export function usePermissions() {
   const canDelete = isAdmin;
 
   return {
-    isLoaded,
+    isLoaded: !isLoading,
     role,
     isAdmin,
     isDesigner,
     isScheduler,
     isInstaller,
-
     isService,
     isPlant,
     isReception,

@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-
 export type PlantStatusItem = {
   id: number;
   job_number: string;

@@ -13,11 +13,9 @@ import "@mantine/dropzone/styles.css";
 import { MantineProvider, mantineHtmlProps } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 
-import { ClerkProvider } from "@clerk/nextjs";
 import { Notifications } from "@mantine/notifications";
 import localFont from "next/font/local";
 import QueryProvider from "@/components/providers/QueryProvider";
-import ClerkTokenProvider from "@/providers/ClerkTokenProvider";
 import SupabaseProvider from "@/providers/SupabaseProvider";
 import Sidebar, { SidebarLink } from "@/components/Sidebar/Sidebar";
 import { usePathname } from "next/navigation";
@@ -182,54 +180,50 @@ export default function RootLayout({
   const pathname = usePathname();
   const showSidebar = pathname.startsWith("/dashboard");
   return (
-    <ClerkProvider>
-      <html lang="en" {...mantineHtmlProps}>
-        <head></head>
+    <html lang="en" {...mantineHtmlProps}>
+      <head></head>
 
-        <body className={`${Quicksand.className} `}>
-          <ClerkTokenProvider>
-            <SupabaseProvider>
-              <QueryProvider>
-                <MantineProvider>
-                  <DatesProvider
-                    settings={{ firstDayOfWeek: 0, weekendDays: [0, 6] }}
+      <body className={`${Quicksand.className} `}>
+        <SupabaseProvider>
+          <QueryProvider>
+            <MantineProvider>
+              <DatesProvider
+                settings={{ firstDayOfWeek: 0, weekendDays: [0, 6] }}
+              >
+                <Notifications />
+                <NavigationGuardProvider>
+                  <div
+                    style={{
+                      display: "flex",
+                      minHeight: "100vh",
+                    }}
                   >
-                    <Notifications />
-                    <NavigationGuardProvider>
-                      <div
-                        style={{
-                          display: "flex",
-                          minHeight: "100vh",
-                        }}
-                      >
-                        {showSidebar && (
-                          <Sidebar
-                            links={dashboardLinks}
-                            autoCollapsePatterns={[
-                              "/dashboard/installation",
-                              "/dashboard/sales/newsale",
-                            ]}
-                          />
-                        )}
-                        <div
-                          style={{
-                            flex: 1,
-                            minWidth: 0,
-                          }}
-                        >
-                          <div style={{ flex: 1, position: "relative" }}>
-                            {children}
-                          </div>
-                        </div>
+                    {showSidebar && (
+                      <Sidebar
+                        links={dashboardLinks}
+                        autoCollapsePatterns={[
+                          "/dashboard/installation",
+                          "/dashboard/sales/newsale",
+                        ]}
+                      />
+                    )}
+                    <div
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      <div style={{ flex: 1, position: "relative" }}>
+                        {children}
                       </div>
-                    </NavigationGuardProvider>
-                  </DatesProvider>
-                </MantineProvider>
-              </QueryProvider>
-            </SupabaseProvider>
-          </ClerkTokenProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+                    </div>
+                  </div>
+                </NavigationGuardProvider>
+              </DatesProvider>
+            </MantineProvider>
+          </QueryProvider>
+        </SupabaseProvider>
+      </body>
+    </html>
   );
 }

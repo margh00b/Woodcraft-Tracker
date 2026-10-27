@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -141,8 +140,12 @@ const mapServiceOrderToFormValues = (
 export default function EditServiceOrder({
   serviceOrderId,
 }: EditServiceOrderProps) {
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const {
+    supabase,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    user,
+  } = useSupabase();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -211,67 +214,71 @@ export default function EditServiceOrder({
     search: installerSearch,
   } = useInstallerSearch(form.values.installer_id);
 
-  const { data: serviceOrderData, isLoading: soLoading } =
-    useQuery<ServiceOrderData>({
-      queryKey: ["service_order", serviceOrderId],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("service_orders")
-          .select(
-            `
-          *,
-          service_order_parts (*),
-          installers:installer_id (
-            first_name,
-            last_name,
-            company_name
-          ),
-          jobs:job_id (
-            job_number,
-            homeowners_info (*),
-            sales_orders:sales_orders (
-              designer,
-              shipping_street,
-              shipping_city,
-              shipping_province,
-              shipping_zip,
-              shipping_client_name,
-              project_name,
-              shipping_phone_1,
-              shipping_phone_2,
-              shipping_email_1,
-              shipping_email_2,
-              order_type,
-              delivery_type,
-              install,
-              cabinet:cabinets (
-                box,
-                glass,
-                interior,
-                drawer_box,
-                drawer_hardware,
-                glass_type,
-                piece_count,
-                doors_parts_only,
-                handles_selected,
-                handles_supplied,
-                top_drawer_front,
-                door_styles(name),
-                species(Species),
-                colors(Name)
-              )
+  const {
+    data: serviceOrderData,
+    isLoading: soLoading,
+    error: serviceOrderError,
+  } = useQuery<ServiceOrderData>({
+    queryKey: ["service_order", serviceOrderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_orders")
+        .select(
+          `
+        *,
+        service_order_parts (*),
+        installers:installer_id (
+          first_name,
+          last_name,
+          company_name
+        ),
+        jobs:job_id (
+          job_number,
+          homeowners_info (*),
+          sales_orders:sales_orders (
+            designer,
+            shipping_street,
+            shipping_city,
+            shipping_province,
+            shipping_zip,
+            shipping_client_name,
+            project_name,
+            shipping_phone_1,
+            shipping_phone_2,
+            shipping_email_1,
+            shipping_email_2,
+            order_type,
+            delivery_type,
+            install,
+            cabinet:cabinets (
+              box,
+              glass,
+              interior,
+              drawer_box,
+              drawer_hardware,
+              glass_type,
+              piece_count,
+              doors_parts_only,
+              handles_selected,
+              handles_supplied,
+              top_drawer_front,
+              door_styles(name),
+              species(Species),
+              colors(Name)
             )
           )
-        `,
-          )
-          .eq("service_order_id", serviceOrderId)
-          .single();
+        )
+      `,
+        )
+        .eq("service_order_id", serviceOrderId)
+        .single();
 
-        if (error) throw error;
-        return data as unknown as ServiceOrderData;
-      },
-      enabled: isAuthenticated,
-    });
+      if (error) throw error;
+
+      return data as unknown as ServiceOrderData;
+    },
+    enabled: !isAuthLoading && isAuthenticated && !!serviceOrderId,
+  });
 
   const { setIsDirty } = useNavigationGuard();
   const isDirty = form.isDirty();
@@ -506,11 +513,31 @@ export default function EditServiceOrder({
     }
   };
 
-  if (soLoading) {
+  if (isAuthLoading || soLoading) {
     return (
       <Center h="100vh">
         <Loader />
         <Text ml="md">Loading Service Order...</Text>
+      </Center>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Center h="100vh">
+        <Text>You must be signed in to view this service order.</Text>
+      </Center>
+    );
+  }
+
+  if (serviceOrderError || !serviceOrderData) {
+    return (
+      <Center h="100vh">
+        <Text c="red">
+          {serviceOrderError instanceof Error
+            ? serviceOrderError.message
+            : "Unable to load this service order."}
+        </Text>
       </Center>
     );
   }

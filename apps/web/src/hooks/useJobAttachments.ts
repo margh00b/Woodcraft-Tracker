@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "@/hooks/useSupabase";
 import { notifications } from "@mantine/notifications";
-import { useUser } from "@clerk/nextjs";
 import { Tables } from "@/types/db";
 
 export function useJobAttachments(jobId: number) {
-  const { supabase } = useSupabase();
+  const { supabase, user, isLoading: isAuthLoading } = useSupabase();
   const queryClient = useQueryClient();
-  const { user } = useUser();
+
+  const username =
+    user?.user_metadata?.username ?? user?.email?.split("@")[0] ?? "Staff";
 
   const { data: attachments, isLoading } = useQuery({
     queryKey: ["job_attachments", jobId],
@@ -21,7 +22,7 @@ export function useJobAttachments(jobId: number) {
       if (error) throw error;
       return data as Tables<"job_attachments">[];
     },
-    enabled: !!jobId,
+    enabled: !isAuthLoading && !!user && !!jobId,
   });
 
   const uploadMutation = useMutation({
@@ -34,10 +35,10 @@ export function useJobAttachments(jobId: number) {
       category: string;
       silent?: boolean;
     }) => {
-      const fileExt = file.name.split(".").pop();
+      if (!user) throw new Error("You must be signed in to upload files.");
+
       const uniqueSuffix = Math.random().toString(36).substring(2, 10);
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-
       const fileName = `${jobId}/${category}/${Date.now()}_${uniqueSuffix}_${sanitizedName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -52,11 +53,21 @@ export function useJobAttachments(jobId: number) {
         file_path: fileName,
         file_type: file.type,
         file_size: file.size,
-        uploaded_by: user?.username || "Staff",
-        category: category,
+        uploaded_by: username,
+        category,
       });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        const { error: cleanupError } = await supabase.storage
+          .from("job_files")
+          .remove([fileName]);
+
+        if (cleanupError) {
+          console.error("Failed to clean up uploaded file:", cleanupError);
+        }
+
+        throw dbError;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["job_attachments", jobId] });
@@ -69,7 +80,7 @@ export function useJobAttachments(jobId: number) {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       notifications.show({
         title: "Upload Failed",
         message: error.message,
@@ -101,7 +112,7 @@ export function useJobAttachments(jobId: number) {
         color: "green",
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       notifications.show({
         title: "Delete Failed",
         message: error.message,
@@ -117,7 +128,7 @@ export function useJobAttachments(jobId: number) {
 
   return {
     attachments,
-    isLoading,
+    isLoading: isAuthLoading || isLoading,
     uploadFile: uploadMutation.mutate,
     uploadFileAsync: uploadMutation.mutateAsync,
     deleteFile: deleteMutation.mutate,

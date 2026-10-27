@@ -18,7 +18,6 @@ import {
 } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "@mantine/hooks";
-import { SignedIn, UserButton } from "@clerk/nextjs";
 import {
   TbLayoutDashboard,
   TbInbox,
@@ -53,6 +52,10 @@ import TopNavigationBar from "../Shared/TopNavigationBar/TopNavigationBar";
 import Link from "next/link";
 import { colors, linearGradients } from "@/theme";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRouter } from "next/navigation";
+import { Button } from "@mantine/core";
+import { TbLogout, TbUserCircle } from "react-icons/tb";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export type UserRole =
   | "admin"
@@ -119,9 +122,10 @@ function MainLink({
   const { navigatePush } = useNavigationGuard();
 
   const isChildActive = hasLinks
-    ? item.links?.some(
-        (link) => pathname === link.path || pathname.startsWith(link.path + "/")
-      ) ?? false
+    ? (item.links?.some(
+        (link) =>
+          pathname === link.path || pathname.startsWith(link.path + "/"),
+      ) ?? false)
     : false;
 
   const isActive = item.path
@@ -314,13 +318,41 @@ export default function Sidebar({
   const [collapsed, setCollapsed] = useState(false);
   const { hasAnyRole } = usePermissions();
   const pathname = usePathname();
+  const router = useRouter();
+  const { supabase, user } = useSupabase();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Failed to sign out:", error);
+        return;
+      }
+
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
+  const username =
+    user?.user_metadata?.username ?? user?.email?.split("@")[0] ?? "Account";
+
+  const role = user?.app_metadata?.role;
 
   useEffect(() => {
     if (isSmallScreen) {
       setCollapsed(true);
     } else {
       const shouldAutoCollapse = autoCollapsePatterns.some((pattern) =>
-        pathname.startsWith(pattern)
+        pathname.startsWith(pattern),
       );
       setCollapsed(shouldAutoCollapse);
     }
@@ -456,29 +488,94 @@ export default function Sidebar({
       </ScrollArea>
 
       <Box p="md" mt="auto">
-        <SignedIn>
-          <UserButton
-            showName={!collapsed}
-            appearance={{
-              elements: {
-                rootBox: { width: "100%" },
-                userButtonTrigger: {
-                  width: "100%",
-                  justifyContent: "center",
-                  background: linearGradients.lightViolet,
-                  padding: collapsed ? "8px 0" : "8px 12px",
-                  borderRadius: "8px",
-                  transition: "padding 250ms ease",
-                },
-                userButtonOuterIdentifier: {
-                  color: colors.violet.primary,
-                  fontWeight: 700,
-                  display: collapsed ? "none" : "block",
+        <Stack gap="sm">
+          <Group
+            gap="sm"
+            wrap="nowrap"
+            justify={collapsed ? "center" : "flex-start"}
+            style={{
+              padding: collapsed ? "8px 0" : "10px 12px",
+              background:
+                "linear-gradient(135deg, rgba(76, 39, 147, 0.6) 0%, rgba(0, 132, 214, 0.4) 100%)",
+              backdropFilter: "blur(8px)",
+              borderRadius: "12px",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            <Box
+              style={{
+                background: !collapsed ? "rgba(255, 255, 255, 0.1)" : "",
+                padding: "8px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: !collapsed ? "1px solid rgba(255, 255, 255, 0.08)" : "",
+              }}
+            >
+              <TbUserCircle size={22} color="#ffffff" />
+            </Box>
+
+            {!collapsed && (
+              <Box style={{ minWidth: 0, flex: 1 }}>
+                <Text
+                  size="sm"
+                  fw={600}
+                  c="white"
+                  truncate
+                  style={{ letterSpacing: "0.3px", lineHeight: 1.2 }}
+                >
+                  {username}
+                </Text>
+
+                {role && (
+                  <Text
+                    size="xs"
+                    c="rgba(216, 180, 254, 0.9)" // Soft glowing light purple tint for the role
+                    truncate
+                    tt="capitalize"
+                    style={{ marginTop: "2px" }}
+                  >
+                    {role}
+                  </Text>
+                )}
+              </Box>
+            )}
+          </Group>
+
+          <Button
+            variant="subtle"
+            fullWidth
+            loading={signingOut}
+            onClick={handleSignOut}
+            leftSection={<TbLogout size={16} />}
+            styles={{
+              root: {
+                backgroundColor: "rgba(0, 0, 0, 0.25)",
+                color: "#ffffffff",
+                border: "1px solid rgba(255, 255, 255, 0.18)",
+                borderRadius: "10px",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  backgroundColor: "rgba(239, 68, 68, 0.2)",
+                  color: "#fff",
+                  borderColor: "rgba(239, 68, 68, 0.4)",
                 },
               },
+              section: {
+                marginRight: collapsed ? 0 : undefined,
+              },
+              label: {
+                display: collapsed ? "none" : undefined,
+                fontWeight: 500,
+              },
             }}
-          />
-        </SignedIn>
+            aria-label="Sign out"
+          >
+            Sign out
+          </Button>
+        </Stack>
       </Box>
     </Box>
   );

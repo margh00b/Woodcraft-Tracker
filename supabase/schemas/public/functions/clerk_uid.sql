@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION public.clerk_uid()
-  RETURNS text
-  LANGUAGE sql
-  STABLE
-  AS $function$
-  select (auth.jwt() ->> 'user_id')::text
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $function$
+  SELECT auth.uid()::text;
 $function$;
 
 GRANT EXECUTE ON FUNCTION "public"."clerk_uid"() TO PUBLIC, "anon", "authenticated";

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -92,8 +91,12 @@ function ServiceOrderFormContent({
   preselectedJobId,
   onReset,
 }: NewServiceOrderProps & { onReset: () => void }) {
-  const { supabase, isAuthenticated } = useSupabase();
-  const { user } = useUser();
+  const {
+    supabase,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    user,
+  } = useSupabase();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -191,7 +194,7 @@ function ServiceOrderFormContent({
 
   useEffect(() => {
     const fetchHomeownerInfo = async () => {
-      if (!form.values.job_id) return;
+      if (isAuthLoading || !isAuthenticated || !form.values.job_id) return;
 
       const { data } = await supabase
         .from("homeowners_info")
@@ -208,7 +211,7 @@ function ServiceOrderFormContent({
     };
 
     fetchHomeownerInfo();
-  }, [form.values.job_id, supabase]);
+  }, [form.values.job_id, supabase, isAuthLoading, isAuthenticated]);
 
   useEffect(() => {
     const fetchSoNumber = async () => {
@@ -248,7 +251,7 @@ function ServiceOrderFormContent({
     };
     const fetchJobDetails = async () => {
       const jobId = form.values.job_id;
-      if (!jobId) return;
+      if (isAuthLoading || !isAuthenticated || !jobId) return;
 
       try {
         const { data: jobData, error: jobError } = await supabase
@@ -285,7 +288,7 @@ function ServiceOrderFormContent({
                 colors(Name)
               )
             )
-          `
+          `,
           )
           .eq("id", jobId)
           .single();
@@ -299,7 +302,7 @@ function ServiceOrderFormContent({
     };
     fetchJobDetails();
     fetchSoNumber();
-  }, [form.values.job_id]);
+  }, [form.values.job_id, supabase, isAuthLoading, isAuthenticated]);
 
   const cabinet = jobData?.sales_orders?.cabinet;
   const shipping = jobData?.sales_orders
@@ -347,7 +350,10 @@ function ServiceOrderFormContent({
           installer_requested: values.installer_requested,
           warranty_order_cost: values.warranty_order_cost,
           comments: values.comments,
-          created_by: user.username || "Staff",
+          created_by:
+            user.user_metadata?.username ??
+            user.email?.split("@")[0] ??
+            "Unknown",
         })
         .select("service_order_id")
         .single();
@@ -392,7 +398,7 @@ function ServiceOrderFormContent({
               homeowner_email: values.homeowner_email,
               homeowner_details: values.homeowner_details,
             },
-            { onConflict: "job_id" }
+            { onConflict: "job_id" },
           );
 
         if (hoError) throw hoError;
@@ -437,11 +443,19 @@ function ServiceOrderFormContent({
     });
   };
 
-  if (jobsLoading || installersLoading) {
+  if (isAuthLoading || jobsLoading || installersLoading) {
     return (
       <Center h="100vh">
         <Loader />
         <Text ml="md">Loading Resources...</Text>
+      </Center>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Center h="100vh">
+        <Text>You must be signed in to create a service order.</Text>
       </Center>
     );
   }
@@ -616,7 +630,7 @@ function ServiceOrderFormContent({
                             onClick={() =>
                               form.setFieldValue(
                                 "installer_requested",
-                                !form.values.installer_requested
+                                !form.values.installer_requested,
                               )
                             }
                           >
@@ -713,8 +727,8 @@ function ServiceOrderFormContent({
                     form.values.chargeable === true
                       ? "true"
                       : form.values.chargeable === false
-                      ? "false"
-                      : ""
+                        ? "false"
+                        : ""
                   }
                   onChange={(val) =>
                     form.setFieldValue("chargeable", val === "true")
@@ -790,7 +804,7 @@ function ServiceOrderFormContent({
                           data={serviceorderLocationOptions}
                           {...form.getInputProps(`parts.${index}.location`)}
                           leftSection={getLocationIcon(
-                            form.values.parts[index].location
+                            form.values.parts[index].location,
                           )}
                           renderOption={({ option }) => (
                             <Group gap="sm">
@@ -823,7 +837,7 @@ function ServiceOrderFormContent({
                           valueFormat="YYYY-MM-DD"
                           clearable
                           {...form.getInputProps(
-                            `parts.${index}.part_due_date`
+                            `parts.${index}.part_due_date`,
                           )}
                         />
                       </Table.Td>

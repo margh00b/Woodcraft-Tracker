@@ -1,49 +1,92 @@
 "use client";
 
-import React, { ReactNode, createContext } from "react";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import useClerkToken from "@/hooks/useClerkToken";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
-export const SupabaseContext = createContext<SupabaseClient | null>(null);
+type SupabaseContextValue = {
+  supabase: SupabaseClient;
+  session: Session | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+};
 
-let currentClerkToken: string | null | undefined = null;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-    global: {
-      fetch: async (url, options: RequestInit = {}) => {
-        const headers = new Headers(options?.headers);
-        if (currentClerkToken) {
-          headers.set("Authorization", `Bearer ${currentClerkToken}`);
-        }
-        return fetch(url, {
-          ...options,
-          headers,
-        });
-      },
-    },
-  },
-);
+const SupabaseContext = createContext<SupabaseContextValue | null>(null);
 
 export default function SupabaseProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const token = useClerkToken();
+  const [supabase] = useState(() => createClient());
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  currentClerkToken = token;
+  useEffect(() => {
+    let mounted = true;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setSession(session);
+        setIsLoading(false);
+      }
+    });
+
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!mounted) return;
+
+        if (error) {
+          console.error("Failed to load Supabase session:", error);
+        }
+
+        setSession(data.session);
+        setIsLoading(false);
+      })
+      .catch((error: unknown) => {
+        if (!mounted) return;
+
+        console.error("Failed to load Supabase session:", error);
+        setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   return (
-    <SupabaseContext.Provider value={supabase}>
+    <SupabaseContext.Provider
+      value={{
+        supabase,
+        session,
+        user: session?.user ?? null,
+        isAuthenticated: !!session?.user,
+        isLoading,
+      }}
+    >
       {children}
     </SupabaseContext.Provider>
   );
+}
+
+export function useSupabaseContext() {
+  const context = useContext(SupabaseContext);
+
+  if (!context) {
+    throw new Error("SupabaseProvider is missing");
+  }
+
+  return context;
 }
