@@ -11,7 +11,7 @@ import {
   Modal,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/expo";
+
 import * as ImagePicker from "expo-image-picker";
 import * as Crypto from "expo-crypto";
 import { File } from "expo-file-system";
@@ -128,9 +128,11 @@ export default function EditInstallReport({
 }: EditInstallReportProps) {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string; reportId?: string }>();
-  const supabase = useSupabase();
-  const { user } = useUser();
-
+  const { supabase, user } = useSupabase();
+  const username =
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    "Unknown User";
   const parsedJobId = params.jobId ? Number(params.jobId) : undefined;
   const parsedReportId = reportId ? Number(reportId) : undefined;
 
@@ -625,7 +627,7 @@ export default function EditInstallReport({
           file_size: att.file_size,
           category: att.category,
           file_tag: att.file_tag,
-          uploaded_by: user?.username || user?.id || "Unknown User",
+          uploaded_by: username,
         }));
 
         const { error: insertErr } = await supabase

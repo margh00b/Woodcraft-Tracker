@@ -24,7 +24,7 @@ export function useJobSearch(
   options: UseJobSearchOptions = {},
 ): UseJobSearchReturn {
   const { limit = 10, debounceMs = 300, minLength = 5 } = options;
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [jobs, setJobs] = useState<JobOption[]>([]);

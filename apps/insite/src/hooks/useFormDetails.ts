@@ -43,7 +43,7 @@ export function useFormDetails(
   const autoFetch = options.autoFetch ?? true;
   const staleTime = options.staleTime ?? 60000;
 
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
 
   const cacheKey = jobId ? `${formType}_${jobId}` : "";
   const initialCached = cacheKey ? formCache.get(cacheKey) : undefined;

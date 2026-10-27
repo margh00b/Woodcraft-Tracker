@@ -11,7 +11,7 @@ import {
   Modal,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/expo";
+
 import * as ImagePicker from "expo-image-picker";
 import * as Crypto from "expo-crypto";
 import { File } from "expo-file-system";
@@ -122,8 +122,11 @@ function getErrorMessage(error: unknown): string {
 export default function NewInstallReport() {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string }>();
-  const supabase = useSupabase();
-  const { user } = useUser();
+  const { supabase, user } = useSupabase();
+  const username =
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    "Unknown User";
 
   const parsedJobId = params.jobId ? Number(params.jobId) : undefined;
   const validJobId =
@@ -450,7 +453,7 @@ export default function NewInstallReport() {
             notes: notes.trim() || null,
             measurements,
           },
-          p_submitted_by: user?.username || user?.id || "Unknown User",
+          p_submitted_by: username,
           p_idempotency_key: submissionId,
           p_attachments: attachments,
         });

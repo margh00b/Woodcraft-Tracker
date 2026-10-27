@@ -4,7 +4,7 @@ import { useJob, JobOption } from "@/context/JobContext";
 import { JOB_DETAILS_SELECT } from "@/constants/queries";
 
 export function useJobHydration(jobId?: number) {
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
   const { selectedJob, setSelectedJob } = useJob();
 
   const isAlreadyLoaded = !!selectedJob && selectedJob.id === jobId;

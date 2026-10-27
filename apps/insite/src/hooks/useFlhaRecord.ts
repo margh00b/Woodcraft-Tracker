@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 
 export function useFlhaRecord(flhaId?: string | number) {
-  const supabase = useSupabase();
+  const { supabase } = useSupabase();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(!!flhaId);
   const [error, setError] = useState<Error | null>(null);

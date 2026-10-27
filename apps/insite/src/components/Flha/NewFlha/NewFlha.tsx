@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/expo";
 import { useSupabase } from "@/hooks/useSupabase";
 import { KeyboardAwareContainer } from "@/components/Common/KeyboardAwareContainer/KeyboardAwareContainer";
 import { useJobHydration } from "@/hooks/useJobHydration";
@@ -17,8 +16,12 @@ import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
 export default function NewFlha() {
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string }>();
-  const supabase = useSupabase();
-  const { user } = useUser();
+  const { supabase, user } = useSupabase();
+
+  const username =
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    "Unknown User";
   const scrollViewRef = useRef<ScrollView>(null);
   const [notesY, setNotesY] = useState(0);
 
@@ -63,7 +66,6 @@ export default function NewFlha() {
 
     try {
       setIsSubmitting(true);
-      const username = user?.username || "Unknown User";
 
       const payload = {
         job_id: selectedJob.id,

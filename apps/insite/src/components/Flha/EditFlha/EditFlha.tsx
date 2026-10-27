@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useUser } from "@clerk/expo";
 import { useSupabase } from "@/hooks/useSupabase";
 import { KeyboardAwareContainer } from "@/components/Common/KeyboardAwareContainer/KeyboardAwareContainer";
 import { useJobHydration } from "@/hooks/useJobHydration";
@@ -28,8 +27,11 @@ interface EditFlhaProps {
 
 export default function EditFlha({ flhaId }: EditFlhaProps) {
   const router = useRouter();
-  const supabase = useSupabase();
-  const { user } = useUser();
+  const { supabase, user } = useSupabase();
+  const username =
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    "Unknown User";
   const scrollViewRef = useRef<ScrollView>(null);
   const [notesY, setNotesY] = useState(0);
 
@@ -77,7 +79,6 @@ export default function EditFlha({ flhaId }: EditFlhaProps) {
 
     try {
       setIsSubmitting(true);
-      const username = user?.username || "Unknown User";
 
       const payload = {
         hazards: buildHazardsPayload(),

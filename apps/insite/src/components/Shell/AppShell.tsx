@@ -1,19 +1,47 @@
+import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUser, useAuth } from "@clerk/expo";
-import { Slot } from "expo-router";
+import { Slot, useRouter, useSegments } from "expo-router";
+import { useSupabase } from "@/hooks/useSupabase";
 import TopBar from "@/components/TopBar/TopBar";
 import toCapitalize from "@/utils/capitalize";
+
 export default function AppShell() {
   const insets = useSafeAreaInsets();
-  const { user, isLoaded: userLoaded } = useUser();
-  const { isSignedIn, isLoaded: authLoaded, signOut } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
 
-  const isLoaded = authLoaded && userLoaded;
-  const username = user?.username || "";
-  const role = (user?.publicMetadata?.role as string) || "";
+  const { supabase, session, user, isAuthenticated, isLoading } = useSupabase();
 
-  if (!isLoaded) {
+  useEffect(() => {
+    if (isLoading) return;
+
+    const onSignInScreen = segments[0] === "signin";
+
+    if (!isAuthenticated && !onSignInScreen) {
+      router.replace("/signin");
+    } else if (isAuthenticated && onSignInScreen) {
+      router.replace("/");
+    }
+  }, [isLoading, isAuthenticated, segments, router]);
+
+  const username =
+    typeof user?.user_metadata?.username === "string"
+      ? user.user_metadata.username
+      : (user?.email?.split("@")[0] ?? "");
+
+  const role =
+    typeof user?.app_metadata?.role === "string" ? user.app_metadata.role : "";
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Sign out failed:", error.message);
+    }
+  };
+
+  if (isLoading) {
     return (
       <View
         className="flex-1 justify-center items-center bg-slate-50"
@@ -26,11 +54,11 @@ export default function AppShell() {
 
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
-      {isSignedIn && (
+      {session && (
         <TopBar
           name={toCapitalize(username)}
           role={toCapitalize(role)}
-          signout={signOut}
+          signout={handleSignOut}
         />
       )}
       <Slot />

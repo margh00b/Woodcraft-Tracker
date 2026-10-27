@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
-    "@clerk/expo": "^4.13.0",
     "@clerk/expo-native-components": "^0.2.0",
     "@expo/ui": "^57.0.25",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@supabase/supabase-js": "^2.118.0",
     "base64-arraybuffer": "^1.0.2",
     "expo": "~57.0.0",
     "expo-crypto": "~57.0.4",
+    "expo-dev-client": "~57.0.20",
     "expo-file-system": "~57.0.7",
     "expo-image-manipulator": "~57.0.21",
     "expo-image-picker": "~57.0.20",
@@ -34,8 +35,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "private": true

@@ -129,6 +129,22 @@ export default function InstallReportList({
                     : "—"}
                 </Text>
               </View>
+              {Boolean(item.updated_at) && (
+                <View className="items-end">
+                  <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
+                    Updated
+                  </Text>
+                  <Text className="text-xs font-medium text-slate-600">
+                    {new Date(item.updated_at!).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </View>
+              )}
             </View>
           </Pressable>
         )}

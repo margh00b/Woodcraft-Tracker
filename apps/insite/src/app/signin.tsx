@@ -7,44 +7,49 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useSignIn } from "@clerk/expo/legacy";
-import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export default function SignInScreen() {
-  const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn } = useAuth();
   const router = useRouter();
+  const { supabase, isAuthenticated, isLoading } = useSupabase();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (!isLoading && isAuthenticated) {
       router.replace("/");
     }
-  }, [isSignedIn]);
+  }, [isLoading, isAuthenticated, router]);
 
   const onSignInPress = async () => {
-    if (!isLoaded) return;
+    const normalizedUsername = username.trim().toLowerCase();
+
+    if (!normalizedUsername || !password) {
+      Alert.alert("Sign In", "Enter your username and password.");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const signInAttempt = await signIn.create({
-        identifier: username,
+      const { error } = await supabase.auth.signInWithPassword({
+        email: `${normalizedUsername}@auth.woodcraftkc.com`,
         password,
       });
 
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/");
-      } else {
-        Alert.alert("Notice", "Further authentication steps required.");
+      if (error) {
+        Alert.alert("Authentication Failed", error.message);
+        return;
       }
-    } catch (err: any) {
+
+      router.replace("/");
+    } catch (error: any) {
       Alert.alert(
         "Authentication Failed",
-        err.errors?.[0]?.message || err.message,
+        error?.message || "Unable to sign in.",
       );
     } finally {
       setLoading(false);
@@ -61,9 +66,9 @@ export default function SignInScreen() {
 
         <TextInput
           autoCapitalize="none"
-          keyboardType="default"
+          autoCorrect={false}
           value={username}
-          placeholder="username"
+          placeholder="Username"
           onChangeText={setUsername}
           className="border border-slate-300 rounded-lg p-3.5 mb-4 text-slate-900 bg-white"
         />
@@ -73,13 +78,14 @@ export default function SignInScreen() {
           placeholder="Password"
           secureTextEntry
           onChangeText={setPassword}
+          onSubmitEditing={onSignInPress}
           className="border border-slate-300 rounded-lg p-3.5 mb-6 text-slate-900 bg-white"
         />
 
         <Pressable
           className="bg-slate-900 p-4 rounded-xl items-center"
           onPress={onSignInPress}
-          disabled={loading}
+          disabled={loading || isLoading}
         >
           {loading ? (
             <ActivityIndicator color="#ffffff" />
