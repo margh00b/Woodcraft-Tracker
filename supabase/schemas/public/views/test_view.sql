@@ -12,10 +12,10 @@ CREATE VIEW "public"."test_view" AS  SELECT b.id,
      LEFT JOIN public.jobs j ON ((b.job_id = j.id)))
      LEFT JOIN public.sales_orders so ON ((j.sales_order_id = so.id)));
 
-GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."backorders_view" TO "anon", "authenticated";
+GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."test_view" TO "anon", "authenticated";
 
-GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."backorders_view" TO "service_role";
+GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."test_view" TO "service_role";
 
-REVOKE ALL ON TABLE "public"."backorders_view" FROM "postgres";
+REVOKE ALL ON TABLE "public"."test_view" FROM "postgres";
 
-GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."backorders_view" TO "postgres";
+GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."test_view" TO "postgres";

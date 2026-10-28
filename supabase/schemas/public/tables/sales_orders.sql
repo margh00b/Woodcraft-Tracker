@@ -1,49 +1,8 @@
 CREATE TABLE "public"."sales_orders" (
-  "id"                     bigint                   NOT NULL DEFAULT nextval('public.sales_orders_id_seq'::regclass),
-  "sales_order_number"     text,
-  "client_id"              bigint                   NOT NULL,
-  "cabinet_id"             bigint                   NOT NULL,
-  "total"                  numeric(10,2),
-  "deposit"                numeric(10,2),
-  "designer"               text,
-  "comments"               text,
-  "install"                boolean                  NOT NULL DEFAULT false,
-  "delivery_type"          text,
-  "order_type"             text,
-  "counter_by"             text,
-  "counter_top"            text,
-  "counter_color"          text,
-  "counter_type"           text,
-  "shipping_client_name"   text,
-  "shipping_street"        text,
-  "shipping_city"          text,
-  "shipping_province"      text,
-  "shipping_zip"           text,
-  "shipping_phone_1"       text,
-  "shipping_phone_2"       text,
-  "shipping_email_1"       text,
-  "shipping_email_2"       text,
-  "layout_date"            timestamp with time zone,
-  "client_meeting_date"    timestamp with time zone,
-  "follow_up_date"         timestamp with time zone,
-  "appliance_specs_date"   timestamp with time zone,
-  "selections_date"        timestamp with time zone,
-  "flooring_type"          text,
-  "flooring_clearance"     text,
-  "markout_date"           timestamp with time zone,
-  "review_date"            timestamp with time zone,
-  "second_markout_date"    timestamp with time zone,
-  "created_at"             timestamp with time zone NOT NULL DEFAULT now(),
-  "updated_at"             timestamp with time zone NOT NULL DEFAULT now(),
-  "is_memo"                boolean                  DEFAULT false,
-  "date_sold"              timestamp with time zone,
-  "project_name"           text,
-  "is_canopy_required"     boolean,
-  "is_woodtop_required"    boolean,
-  "is_custom_cab_required" boolean,
-  "is_cod"                 boolean                  DEFAULT false,
-  "payment_received"       boolean                  DEFAULT false,
-  "site_prep"              boolean                  DEFAULT false,
+  "id"                 bigint NOT NULL DEFAULT nextval('public.sales_orders_id_seq'::regclass),
+  "sales_order_number" text,
+  "client_id"          bigint NOT NULL,
+  "cabinet_id"         bigint NOT NULL,
   CONSTRAINT "sales_orders_cabinet_id_fkey" FOREIGN KEY (cabinet_id) REFERENCES public.cabinets(id) ON DELETE RESTRICT,
   CONSTRAINT "sales_orders_client_id_fkey" FOREIGN KEY (client_id) REFERENCES public.client(id) ON DELETE RESTRICT,
   CONSTRAINT "sales_orders_pkey" PRIMARY KEY (id),
@@ -56,10 +15,133 @@ ALTER TABLE "public"."sales_orders"
 ALTER SEQUENCE "public"."sales_orders_id_seq" OWNED BY "public"."sales_orders"."id";
 
 ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "stage" public."SalesStage" NOT NULL DEFAULT 'QUOTE'::public."SalesStage";
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "total" numeric(10,2);
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "deposit" numeric(10,2);
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "designer" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "comments" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "install" boolean NOT NULL DEFAULT false;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "delivery_type" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "order_type" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "counter_by" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "counter_top" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "counter_color" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "counter_type" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_client_name" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_street" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_city" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_province" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_zip" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_phone_1" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_phone_2" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_email_1" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "shipping_email_2" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "layout_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "client_meeting_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "follow_up_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "appliance_specs_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "selections_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "flooring_type" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "flooring_clearance" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "markout_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "review_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "second_markout_date" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "created_at" timestamp WITH time zone NOT NULL DEFAULT now();
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "updated_at" timestamp WITH time zone NOT NULL DEFAULT now();
+
+ALTER TABLE "public"."sales_orders"
   ADD COLUMN "invoice_balance" numeric GENERATED ALWAYS AS ((total - deposit)) STORED;
 
 ALTER TABLE "public"."sales_orders"
-  ADD COLUMN "stage" public."SalesStage" NOT NULL DEFAULT 'QUOTE'::public."SalesStage";
+  ADD COLUMN "is_memo" boolean DEFAULT false;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "date_sold" timestamp WITH time zone;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "project_name" text;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "is_canopy_required" boolean;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "is_woodtop_required" boolean;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "is_custom_cab_required" boolean;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "is_cod" boolean DEFAULT false;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "payment_received" boolean DEFAULT false;
+
+ALTER TABLE "public"."sales_orders"
+  ADD COLUMN "site_prep" boolean DEFAULT false;
 
 CREATE INDEX sales_orders_client_id_idx ON public.sales_orders USING btree (client_id);
 

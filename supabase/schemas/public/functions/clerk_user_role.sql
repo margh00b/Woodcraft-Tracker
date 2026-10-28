@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION public.clerk_user_role()
-RETURNS text
-LANGUAGE sql
-STABLE
-AS $function$
+  RETURNS text
+  LANGUAGE sql
+  STABLE
+  AS $function$
   SELECT auth.jwt() -> 'app_metadata' ->> 'role';
 $function$;
 

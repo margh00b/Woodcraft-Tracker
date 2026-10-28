@@ -121,18 +121,6 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION insite.submit_install_report(
-  bigint,
-  jsonb,
-  text,
-  uuid,
-  jsonb
-) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid, jsonb) TO "authenticated";
 
-GRANT EXECUTE ON FUNCTION insite.submit_install_report(
-  bigint,
-  jsonb,
-  text,
-  uuid,
-  jsonb
-) TO authenticated;
+REVOKE ALL ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid, jsonb) FROM PUBLIC;

@@ -1,14 +1,13 @@
-CREATE OR REPLACE FUNCTION insite.update_install_report(
-  p_report_id bigint,
-  p_details jsonb,
+CREATE OR REPLACE FUNCTION insite.update_install_report (
+  p_report_id              bigint,
+  p_details                jsonb,
   p_deleted_attachment_ids bigint[],
-  p_new_attachments jsonb
+  p_new_attachments        jsonb
 )
-RETURNS void
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = ''
-AS $$
+  RETURNS void
+  LANGUAGE plpgsql
+  SET search_path TO ''
+  AS $function$
 DECLARE
   v_job_id bigint;
   v_attachment jsonb;
@@ -64,8 +63,8 @@ BEGIN
     END LOOP;
   END IF;
 END;
-$$;
+$function$;
 
--- Grant permissions
-REVOKE ALL ON FUNCTION insite.update_install_report(bigint, jsonb, bigint[], jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION insite.update_install_report(bigint, jsonb, bigint[], jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION "insite"."update_install_report"(bigint, jsonb, bigint[], jsonb) TO "authenticated";
+
+REVOKE ALL ON FUNCTION "insite"."update_install_report"(bigint, jsonb, bigint[], jsonb) FROM PUBLIC;

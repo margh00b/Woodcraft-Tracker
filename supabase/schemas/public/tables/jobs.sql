@@ -2,6 +2,7 @@ CREATE TABLE "public"."jobs" (
   "id"              bigint                   NOT NULL DEFAULT nextval('public.jobs_id_seq'::regclass),
   "job_base_number" text                     NOT NULL,
   "job_suffix"      text,
+  "job_number"      text                     GENERATED ALWAYS AS ((job_base_number || COALESCE(('-'::text || job_suffix), ''::text))) STORED NOT NULL,
   "created_at"      timestamp with time zone NOT NULL DEFAULT now(),
   "updated_at"      timestamp with time zone NOT NULL DEFAULT now(),
   "sales_order_id"  bigint,
@@ -10,6 +11,7 @@ CREATE TABLE "public"."jobs" (
   "is_active"       boolean                  NOT NULL DEFAULT true,
   CONSTRAINT "fk_installation_id" FOREIGN KEY (installation_id) REFERENCES public.installation(installation_id) ON DELETE SET NULL,
   CONSTRAINT "jobs_installation_id_key" UNIQUE (installation_id),
+  CONSTRAINT "jobs_job_number_key" UNIQUE (job_number),
   CONSTRAINT "jobs_pkey" PRIMARY KEY (id),
   CONSTRAINT "uq_jobs_sales_order_id" UNIQUE (sales_order_id),
   CONSTRAINT "jobs_prod_id_fkey" FOREIGN KEY (prod_id) REFERENCES public.production_schedule(prod_id) ON DELETE SET NULL,
@@ -20,12 +22,6 @@ ALTER TABLE "public"."jobs"
   ENABLE ROW LEVEL SECURITY;
 
 ALTER SEQUENCE "public"."jobs_id_seq" OWNED BY "public"."jobs"."id";
-
-ALTER TABLE "public"."jobs"
-  ADD COLUMN "job_number" text GENERATED ALWAYS AS ((job_base_number || COALESCE(('-'::text || job_suffix), ''::text))) STORED NOT NULL;
-
-ALTER TABLE "public"."jobs"
-  ADD CONSTRAINT "jobs_job_number_key" UNIQUE (job_number);
 
 CREATE INDEX idx_jobs_base_number ON public.jobs USING btree (job_base_number);
 

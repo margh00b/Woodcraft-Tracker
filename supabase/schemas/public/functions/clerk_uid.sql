@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION public.clerk_uid()
-RETURNS text
-LANGUAGE sql
-STABLE
-AS $function$
+  RETURNS text
+  LANGUAGE sql
+  STABLE
+  AS $function$
   SELECT auth.uid()::text;
 $function$;
 
