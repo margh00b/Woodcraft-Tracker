@@ -17,6 +17,8 @@ interface JobContextType {
   setSearchQuery: (query: string) => void;
   matchingJobs: JobOption[];
   setMatchingJobs: (jobs: JobOption[]) => void;
+  assignedJobs: JobOption[];
+  setAssignedJobs: (jobs: JobOption[]) => void;
   clearJobState: () => void;
 }
 
@@ -26,7 +28,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [matchingJobs, setMatchingJobs] = useState<JobOption[]>([]);
-
+  const [assignedJobs, setAssignedJobs] = useState<JobOption[]>([]);
   const clearJobState = () => {
     setSelectedJob(null);
     setSearchQuery("");
@@ -43,6 +45,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
         matchingJobs,
         setMatchingJobs,
         clearJobState,
+        assignedJobs,
+        setAssignedJobs,
       }}
     >
       {children}

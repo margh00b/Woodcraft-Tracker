@@ -14,29 +14,30 @@ export default function ActiveJobCard({
   className = "",
 }: ActiveJobCardProps) {
   const isCompact = variant === "compact";
-  const { matchingJobs } = useJob();
+  const { assignedJobs } = useJob();
 
-  const baseJobNumber = job.job_number.includes("-")
-    ? job.job_number.split("-")[0]
-    : job.job_number;
+  const baseJobNumber = job.job_number.split("-")[0];
 
-  const listToProcess =
-    matchingJobs.length > 0 &&
-    matchingJobs.some((m) => m.job_number.startsWith(baseJobNumber))
-      ? matchingJobs.filter((m) => m.job_number.startsWith(baseJobNumber))
-      : [job];
+  const listToProcess = [
+    ...assignedJobs.filter(
+      (item) =>
+        item.job_number === baseJobNumber ||
+        item.job_number.startsWith(`${baseJobNumber}-`),
+    ),
+    job,
+  ];
 
   const suffixes = Array.from(
     new Set(
       listToProcess
         .map((item) =>
-          item.job_number.includes("-")
-            ? item.job_number.split("-").slice(1).join("-")
+          item.job_number.startsWith(`${baseJobNumber}-`)
+            ? item.job_number.slice(baseJobNumber.length + 1)
             : "",
         )
         .filter(Boolean),
     ),
-  );
+  ).sort();
 
   return (
     <View
@@ -44,18 +45,20 @@ export default function ActiveJobCard({
         isCompact ? "p-3.5" : "p-4 mb-5"
       } ${className || "bg-white"}`}
     >
-      <View className="flex-row items-center justify-between mb-1.5">
-        <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+      <View className="mb-1.5 flex-row items-center justify-between">
+        <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
           Active Job
         </Text>
-        <View className="flex-row gap-1.5 flex-wrap items-center">
-          <View className="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-900">
+
+        <View className="flex-row flex-wrap items-center gap-1.5">
+          <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
             <Text className="text-xs font-bold text-white">
               #{baseJobNumber}
             </Text>
           </View>
+
           {suffixes.length > 0 && (
-            <View className="px-2 py-0.5 rounded border bg-slate-100 border-slate-200">
+            <View className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
               <Text className="text-[11px] font-semibold text-slate-600">
                 - {suffixes.join(", ")}
               </Text>
@@ -71,7 +74,8 @@ export default function ActiveJobCard({
       >
         {job.sales_orders?.shipping_client_name || "Client Name N/A"}
       </Text>
-      <Text className="text-sm text-slate-600 mt-0.5">
+
+      <Text className="mt-0.5 text-sm text-slate-600">
         {job.sales_orders?.shipping_street || "Street Name N/A"},{" "}
         {job.sales_orders?.shipping_city || "City N/A"}
       </Text>
