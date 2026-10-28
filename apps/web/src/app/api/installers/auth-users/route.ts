@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const users = data.users
+    const authUsers: User[] = data.users;
+
+    const users = authUsers
       .filter((authUser) => authUser.app_metadata?.role === "installer")
       .map((authUser) => ({
         id: authUser.id,
@@ -61,7 +63,6 @@ export async function GET(request: NextRequest) {
             ? authUser.user_metadata.username
             : null,
       }));
-
     return NextResponse.json({ users });
   } catch (error) {
     console.error("Failed to retrieve installer auth users:", error);
