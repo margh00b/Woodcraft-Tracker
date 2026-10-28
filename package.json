@@ -12,18 +12,19 @@
     "insite:dev": "npm --workspace=apps/insite run start"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.0.0",
     "baseline-browser-mapping": "^2.11.33",
     "supabase": "^2.121.0",
-    "tailwindcss": "^4.0.0",
     "tsx": "^4.23.15"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "dotenv": "^18.0.9",
-    "xlsx": "^0.20.3",
-    "expo": "~58.0.14",
-    "react": "19.3.0",
-    "react-native": "0.88.0"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "expo": "~57.0.0",
+    "react-native": "0.86.3"
   }
 }
