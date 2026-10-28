@@ -1,15 +1,14 @@
-CREATE OR REPLACE FUNCTION insite.submit_install_report(
-  p_job_id bigint,
-  p_details jsonb,
-  p_submitted_by text,
+CREATE OR REPLACE FUNCTION insite.submit_install_report (
+  p_job_id          bigint,
+  p_details         jsonb,
+  p_submitted_by    text,
   p_idempotency_key uuid,
-  p_attachments jsonb
+  p_attachments     jsonb
 )
-RETURNS bigint
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = ''
-AS $$
+  RETURNS bigint
+  LANGUAGE plpgsql
+  SET search_path TO ''
+  AS $function$
 DECLARE
   v_report_id bigint;
   v_attachment jsonb;
@@ -120,7 +119,7 @@ BEGIN
 
   RETURN v_report_id;
 END;
-$$;
+$function$;
 
 REVOKE ALL ON FUNCTION insite.submit_install_report(
   bigint,

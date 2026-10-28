@@ -322,14 +322,14 @@ isOneToOne: false
                   ]
                 },"installers": {
                   Row: {
-                    "acc_number": string | null,"city": string | null,"company_name": string | null,"created_at": string,"email": string | null,"first_name": string | null,"gst_number": string | null,"has_first_aid": boolean | null,"has_insurance": boolean | null,"installer_id": number,"is_active": boolean,"last_name": string | null,"legacy_installer_id": string | null,"notes": string | null,"phone_number": string | null,"street_address": string | null,"updated_at": string,"wcb_number": string | null,"zip_code": string | null
+                    "acc_number": string | null,"auth_user_id": string | null,"city": string | null,"company_name": string | null,"created_at": string,"email": string | null,"first_name": string | null,"gst_number": string | null,"has_first_aid": boolean | null,"has_insurance": boolean | null,"installer_id": number,"is_active": boolean,"is_servicetech": boolean,"last_name": string | null,"legacy_installer_id": string | null,"notes": string | null,"phone_number": string | null,"street_address": string | null,"updated_at": string,"wcb_number": string | null,"zip_code": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "acc_number"?: string | null,"city"?: string | null,"company_name"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string | null,"gst_number"?: string | null,"has_first_aid"?: boolean | null,"has_insurance"?: boolean | null,"installer_id"?: number,"is_active"?: boolean,"last_name"?: string | null,"legacy_installer_id"?: string | null,"notes"?: string | null,"phone_number"?: string | null,"street_address"?: string | null,"updated_at"?: string,"wcb_number"?: string | null,"zip_code"?: string | null
+                    "acc_number"?: string | null,"auth_user_id"?: string | null,"city"?: string | null,"company_name"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string | null,"gst_number"?: string | null,"has_first_aid"?: boolean | null,"has_insurance"?: boolean | null,"installer_id"?: number,"is_active"?: boolean,"is_servicetech"?: boolean,"last_name"?: string | null,"legacy_installer_id"?: string | null,"notes"?: string | null,"phone_number"?: string | null,"street_address"?: string | null,"updated_at"?: string,"wcb_number"?: string | null,"zip_code"?: string | null
                   }
                   Update: {
-                    "acc_number"?: string | null,"city"?: string | null,"company_name"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string | null,"gst_number"?: string | null,"has_first_aid"?: boolean | null,"has_insurance"?: boolean | null,"installer_id"?: number,"is_active"?: boolean,"last_name"?: string | null,"legacy_installer_id"?: string | null,"notes"?: string | null,"phone_number"?: string | null,"street_address"?: string | null,"updated_at"?: string,"wcb_number"?: string | null,"zip_code"?: string | null
+                    "acc_number"?: string | null,"auth_user_id"?: string | null,"city"?: string | null,"company_name"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string | null,"gst_number"?: string | null,"has_first_aid"?: boolean | null,"has_insurance"?: boolean | null,"installer_id"?: number,"is_active"?: boolean,"is_servicetech"?: boolean,"last_name"?: string | null,"legacy_installer_id"?: string | null,"notes"?: string | null,"phone_number"?: string | null,"street_address"?: string | null,"updated_at"?: string,"wcb_number"?: string | null,"zip_code"?: string | null
                   }
                   Relationships: [
                     
@@ -1085,7 +1085,7 @@ isOneToOne: true
           Views: {
             "backorders_view": {
                   Row: {
-                    "comments": string | null,"complete": boolean | null,"created_at": string | null,"date_entered": string | null,"due_date": string | null,"id": number | null,"job_id": number | null,"job_number": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"site_address": string | null
+                    "comments": string | null,"complete": boolean,"created_at": string,"date_entered": string | null,"due_date": string | null,"id": number,"job_id": number,"job_number": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1173,7 +1173,7 @@ isOneToOne: false
                   ]
                 },"inspection_table_view": {
                   Row: {
-                    "inspection_completed": string | null,"inspection_date": string | null,"installation_date": string | null,"installation_id": number | null,"installer_company": string | null,"installer_first_name": string | null,"installer_id": number | null,"installer_last_name": string | null,"job_id": number | null,"job_number": string | null,"rush": boolean | null,"shipping_client_name": string | null,"site_address": string | null
+                    "inspection_completed": string | null,"inspection_date": string | null,"installation_date": string | null,"installation_id": number,"installer_company": string | null,"installer_first_name": string | null,"installer_id": number | null,"installer_last_name": string | null,"job_id": number,"job_number": string,"rush": boolean | null,"shipping_client_name": string | null,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1187,7 +1187,7 @@ isOneToOne: false
                   ]
                 },"installation_table_view": {
                   Row: {
-                    "box": number | null,"cabinet_color": string | null,"created_at": string | null,"has_shipped": boolean | null,"inspection_completed": string | null,"inspection_date": string | null,"installation_completed": string | null,"installation_date": string | null,"installation_id": number | null,"installer_company": string | null,"installer_first_name": string | null,"installer_id": number | null,"installer_last_name": string | null,"is_cod": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"partially_shipped": boolean | null,"payment_received": boolean | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"rush": boolean | null,"sales_order_id": number | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_client_name": string | null,"site_address": string | null,"wrap_date": string | null
+                    "box": number | null,"cabinet_color": string | null,"created_at": string,"has_shipped": boolean,"inspection_completed": string | null,"inspection_date": string | null,"installation_completed": string | null,"installation_date": string | null,"installation_id": number,"installer_company": string | null,"installer_first_name": string | null,"installer_id": number | null,"installer_last_name": string | null,"is_cod": boolean | null,"job_id": number,"job_number": string,"order_type": string | null,"partially_shipped": boolean | null,"payment_received": boolean | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"rush": boolean | null,"sales_order_id": number | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_client_name": string | null,"site_address": string | null,"wrap_date": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1225,7 +1225,7 @@ isOneToOne: false
                   ]
                 },"job_status_report_view": {
                   Row: {
-                    "has_shipped": boolean | null,"inspection_completed": string | null,"inspection_date": string | null,"installation_completed": string | null,"installation_date": string | null,"job_id": number | null,"job_number": string | null,"service_order_count": number | null,"ship_schedule": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_street": string | null,"shipping_zip": string | null
+                    "has_shipped": boolean,"inspection_completed": string | null,"inspection_date": string | null,"installation_completed": string | null,"installation_date": string | null,"job_id": number,"job_number": string,"service_order_count": number | null,"ship_schedule": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_street": string | null,"shipping_zip": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1233,7 +1233,7 @@ isOneToOne: false
                   ]
                 },"plant_production_view": {
                   Row: {
-                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_interior": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"custom_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean | null,"installation_id": number | null,"installation_notes": string | null,"is_canopy_required": boolean | null,"is_custom_cab_required": boolean | null,"is_woodtop_required": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"paint_canopy_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
+                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_interior": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"custom_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean,"installation_id": number,"installation_notes": string | null,"is_canopy_required": boolean | null,"is_custom_cab_required": boolean | null,"is_woodtop_required": boolean | null,"job_id": number,"job_number": string,"order_type": string | null,"paint_canopy_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1253,7 +1253,7 @@ isOneToOne: false
                   ]
                 },"plant_service_orders_view": {
                   Row: {
-                    "chargeable": boolean | null,"client_name": string | null,"due_date": string | null,"job_id": number | null,"job_number": string | null,"pending_parts": Json | null,"pending_parts_count": number | null,"project_name": string | null,"service_order_id": number | null,"service_order_number": string | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null
+                    "chargeable": boolean | null,"client_name": string | null,"due_date": string | null,"job_id": number,"job_number": string,"pending_parts": Json | null,"pending_parts_count": number | null,"project_name": string | null,"service_order_id": number,"service_order_number": string,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1333,7 +1333,7 @@ isOneToOne: false
                   ]
                 },"plant_shipping_view": {
                   Row: {
-                    "cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"client_name": string | null,"dropoff_date": string | null,"has_shipped": boolean | null,"in_warehouse": string | null,"installation_completed": string | null,"installation_id": number | null,"installation_notes": string | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"partially_shipped": boolean | null,"pickup_date": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"wrap_completed": string | null,"wrap_date": string | null
+                    "cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"client_name": string | null,"dropoff_date": string | null,"has_shipped": boolean,"in_warehouse": string | null,"installation_completed": string | null,"installation_id": number,"installation_notes": string | null,"job_id": number,"job_number": string,"order_type": string | null,"partially_shipped": boolean | null,"pickup_date": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"wrap_completed": string | null,"wrap_date": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1353,7 +1353,7 @@ isOneToOne: false
                   ]
                 },"plant_table_view": {
                   Row: {
-                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"cust_fin_assembled_completed_actual": string | null,"cust_fin_parts_cut_completed_actual": string | null,"custom_finish_completed_actual": string | null,"cut_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean | null,"in_warehouse": string | null,"installation_completed": string | null,"installation_id": number | null,"installation_notes": string | null,"job_id": number | null,"job_number": string | null,"paint_canopy_completed_actual": string | null,"paint_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"partially_shipped": boolean | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
+                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"cust_fin_assembled_completed_actual": string | null,"cust_fin_parts_cut_completed_actual": string | null,"custom_finish_completed_actual": string | null,"cut_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean,"in_warehouse": string | null,"installation_completed": string | null,"installation_id": number,"installation_notes": string | null,"job_id": number,"job_number": string,"paint_canopy_completed_actual": string | null,"paint_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"partially_shipped": boolean | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1373,7 +1373,7 @@ isOneToOne: false
                   ]
                 },"plant_wrap_view": {
                   Row: {
-                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"custom_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean | null,"installation_id": number | null,"installation_notes": string | null,"is_canopy_required": boolean | null,"is_custom_cab_required": boolean | null,"is_woodtop_required": boolean | null,"job_id": number | null,"job_number": string | null,"paint_canopy_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
+                    "assembly_completed_actual": string | null,"cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"canopy_completed_actual": string | null,"client_name": string | null,"custom_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"has_shipped": boolean,"installation_id": number,"installation_notes": string | null,"is_canopy_required": boolean | null,"is_custom_cab_required": boolean | null,"is_woodtop_required": boolean | null,"job_id": number,"job_number": string,"paint_canopy_completed_actual": string | null,"paint_cust_cab_completed_actual": string | null,"paint_doors_completed_actual": string | null,"panel_completed_actual": string | null,"placement_date": string | null,"prod_id": number | null,"project_name": string | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"woodtop_completed_actual": string | null,"wrap_completed": string | null,"wrap_date": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1393,7 +1393,7 @@ isOneToOne: false
                   ]
                 },"prod_table_view": {
                   Row: {
-                    "cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"created_at": string | null,"has_shipped": boolean | null,"id": number | null,"job_number": string | null,"partially_shipped": boolean | null,"placement_date": string | null,"prod_id": number | null,"received_date": string | null,"rush": boolean | null,"sales_order_id": number | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"] | null,"shipping_client_name": string | null,"site_address": string | null
+                    "cabinet_box": number | null,"cabinet_color": string | null,"cabinet_door_style": string | null,"cabinet_species": string | null,"created_at": string | null,"has_shipped": boolean | null,"id": number,"job_number": string,"partially_shipped": boolean | null,"placement_date": string | null,"prod_id": number,"received_date": string | null,"rush": boolean,"sales_order_id": number | null,"ship_schedule": string | null,"ship_status": Database["public"]['Enums']["ShippingStatus"],"shipping_client_name": string | null,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1413,7 +1413,7 @@ isOneToOne: true
                   ]
                 },"purchasing_table_view": {
                   Row: {
-                    "acc_ordered_at": string | null,"acc_received_at": string | null,"acc_received_incomplete_at": string | null,"client_name": string | null,"door_made_in_house": boolean | null,"door_style_name": string | null,"doors_ordered_at": string | null,"doors_received_at": string | null,"doors_received_incomplete_at": string | null,"glass_ordered_at": string | null,"glass_received_at": string | null,"glass_received_incomplete_at": string | null,"handles_ordered_at": string | null,"handles_received_at": string | null,"handles_received_incomplete_at": string | null,"job_id": number | null,"job_number": string | null,"purchase_check_id": number | null,"purchasing_comments": string | null,"sales_order_id": number | null,"ship_schedule": string | null
+                    "acc_ordered_at": string | null,"acc_received_at": string | null,"acc_received_incomplete_at": string | null,"client_name": string | null,"door_made_in_house": boolean | null,"door_style_name": string | null,"doors_ordered_at": string | null,"doors_received_at": string | null,"doors_received_incomplete_at": string | null,"glass_ordered_at": string | null,"glass_received_at": string | null,"glass_received_incomplete_at": string | null,"handles_ordered_at": string | null,"handles_received_at": string | null,"handles_received_incomplete_at": string | null,"job_id": number,"job_number": string,"purchase_check_id": number,"purchasing_comments": string | null,"sales_order_id": number | null,"ship_schedule": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1505,7 +1505,7 @@ isOneToOne: true
                   ]
                 },"sales_table_view": {
                   Row: {
-                    "cabinet_box": number | null,"cabinet_color": string | null,"created_at": string | null,"deposit": number | null,"designer": string | null,"id": number | null,"invoice_balance": number | null,"job_id": number | null,"job_number": string | null,"project_name": string | null,"sales_order_number": string | null,"ship_schedule": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"stage": Database["public"]['Enums']["SalesStage"] | null,"total": number | null
+                    "cabinet_box": number | null,"cabinet_color": string | null,"created_at": string,"deposit": number | null,"designer": string | null,"id": number,"invoice_balance": number | null,"job_id": number | null,"job_number": string | null,"project_name": string | null,"sales_order_number": string | null,"ship_schedule": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"stage": Database["public"]['Enums']["SalesStage"],"total": number | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1513,7 +1513,7 @@ isOneToOne: true
                   ]
                 },"service_orders_table_view": {
                   Row: {
-                    "client_name": string | null,"completed_at": string | null,"date_entered": string | null,"due_date": string | null,"installer_company": string | null,"installer_first": string | null,"installer_last": string | null,"installer_requested": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"sales_order_id": number | null,"service_order_id": number | null,"service_order_number": string | null,"site_address": string | null
+                    "client_name": string | null,"completed_at": string | null,"date_entered": string,"due_date": string | null,"installer_company": string | null,"installer_first": string | null,"installer_last": string | null,"installer_requested": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"sales_order_id": number | null,"service_order_id": number,"service_order_number": string,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1533,7 +1533,7 @@ isOneToOne: true
                   ]
                 },"shipped_not_invoiced_view": {
                   Row: {
-                    "id": number | null,"job_number": string | null,"ship_date": string | null,"shipping_address": string | null,"shipping_client_name": string | null
+                    "id": number,"job_number": string,"ship_date": string | null,"shipping_address": string | null,"shipping_client_name": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1541,7 +1541,7 @@ isOneToOne: true
                   ]
                 },"test_view": {
                   Row: {
-                    "created_at": string | null,"id": number | null,"job_id": number | null,"job_number": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"site_address": string | null
+                    "created_at": string,"id": number,"job_id": number,"job_number": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
