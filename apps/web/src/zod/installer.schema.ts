@@ -15,7 +15,7 @@ export const InstallerSchema = z.object({
 
   gst_number: z.string().optional().nullable(),
   wcb_number: z.string().optional().nullable(),
-
+  is_servicetech: z.boolean().default(false),
   is_active: z.boolean().default(true),
   has_first_aid: z.boolean().default(false),
   has_insurance: z.boolean().default(false),

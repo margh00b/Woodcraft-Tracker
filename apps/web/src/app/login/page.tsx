@@ -47,13 +47,21 @@ function LoginPageContent() {
     try {
       const normalizedUsername = username.trim().toLowerCase();
 
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: `${normalizedUsername}@auth.woodcraftkc.com`,
-        password,
-      });
+      const { data, error: loginError } =
+        await supabase.auth.signInWithPassword({
+          email: `${normalizedUsername}@auth.woodcraftkc.com`,
+          password,
+        });
 
       if (loginError) {
         setError("Invalid username or password.");
+        return;
+      }
+      const RoleType = data.user.app_metadata?.role;
+
+      if (RoleType === "installer") {
+        await supabase.auth.signOut();
+        setError("This account is not authorized to access the web app.");
         return;
       }
 

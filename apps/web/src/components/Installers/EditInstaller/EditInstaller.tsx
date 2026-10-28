@@ -1,23 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import {
-  Modal,
-  TextInput,
-  Button,
-  Group,
-  SimpleGrid,
-  Checkbox,
-  Textarea,
-  LoadingOverlay,
-} from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InstallerSchema, InstallerFormValues } from "@/zod/installer.schema";
-import { Tables } from "@/types/db";
-import { useSupabase } from "@/hooks/useSupabase";
 import { notifications } from "@mantine/notifications";
+import type { Tables } from "@/types/db";
+import { InstallerSchema, InstallerFormValues } from "@/zod/installer.schema";
+import { useSupabase } from "@/hooks/useSupabase";
+import { useInstallerAuthUsers } from "@/hooks/useInstallerAuthUsers";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
+import InstallerForm from "@/components/Installers/InstallerForm/InstallerForm";
 
 interface EditInstallerProps {
   opened: boolean;
@@ -32,6 +24,23 @@ export default function EditInstaller({
 }: EditInstallerProps) {
   const { supabase } = useSupabase();
   const queryClient = useQueryClient();
+
+  const [authUserId, setAuthUserId] = useState<string | null>(
+    installer.auth_user_id ?? null,
+  );
+
+  const {
+    data: authUsers = [],
+    isLoading: authUsersLoading,
+    error: authUsersQueryError,
+  } = useInstallerAuthUsers();
+
+  const authUsersError =
+    authUsersQueryError instanceof Error
+      ? authUsersQueryError
+      : authUsersQueryError
+        ? new Error("Failed to load Auth users.")
+        : null;
 
   const form = useForm<InstallerFormValues>({
     mode: "uncontrolled",
@@ -50,53 +59,66 @@ export default function EditInstaller({
       is_active: true,
       has_first_aid: false,
       has_insurance: false,
+      is_servicetech: false,
       notes: "",
     },
     validate: zodResolver(InstallerSchema),
   });
 
   useEffect(() => {
-    if (opened) {
-      form.setValues({
-        first_name: installer.first_name || "",
-        last_name: installer.last_name || "",
-        company_name: installer.company_name || "",
-        acc_number: installer.acc_number || "",
-        email: installer.email || "",
-        phone_number: installer.phone_number || "",
-        street_address: installer.street_address || "",
-        city: installer.city || "",
-        zip_code: installer.zip_code || "",
-        gst_number: installer.gst_number || "",
-        wcb_number: installer.wcb_number || "",
-        is_active: installer.is_active ?? true,
-        has_first_aid: installer.has_first_aid ?? false,
-        has_insurance: installer.has_insurance ?? false,
-        notes: installer.notes || "",
-      });
+    if (!opened) return;
 
-      form.resetDirty();
-    }
+    const values: InstallerFormValues = {
+      first_name: installer.first_name ?? "",
+      last_name: installer.last_name ?? "",
+      company_name: installer.company_name ?? "",
+      acc_number: installer.acc_number ?? "",
+      email: installer.email ?? "",
+      phone_number: installer.phone_number ?? "",
+      street_address: installer.street_address ?? "",
+      city: installer.city ?? "",
+      zip_code: installer.zip_code ?? "",
+      gst_number: installer.gst_number ?? "",
+      wcb_number: installer.wcb_number ?? "",
+      is_active: installer.is_active ?? true,
+      has_first_aid: installer.has_first_aid ?? false,
+      has_insurance: installer.has_insurance ?? false,
+      is_servicetech: installer.is_servicetech ?? false,
+      notes: installer.notes ?? "",
+    };
+
+    form.setInitialValues(values);
+    form.setValues(values);
+    form.resetDirty(values);
+    setAuthUserId(installer.auth_user_id ?? null);
   }, [installer, opened]);
 
   const updateMutation = useMutation({
     mutationFn: async (values: InstallerFormValues) => {
       const { error } = await supabase
         .from("installers")
-        .update(values)
+        .update({
+          ...values,
+          auth_user_id: authUserId,
+        })
         .eq("installer_id", installer.installer_id);
+
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       notifications.show({
         title: "Success",
-        message: "Installer updated successfully",
+        message: "Installer updated successfully.",
         color: "green",
       });
-      queryClient.invalidateQueries({ queryKey: ["installers"] });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["installers"],
+      });
+
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       notifications.show({
         title: "Error",
         message: error.message,
@@ -105,84 +127,29 @@ export default function EditInstaller({
     },
   });
 
+  const isDirty =
+    form.isDirty() || authUserId !== (installer.auth_user_id ?? null);
+
+  function handleClose() {
+    if (updateMutation.isPending) return;
+    onClose();
+  }
+
   return (
-    <Modal opened={opened} onClose={onClose} title="Edit Installer" size="lg">
-      <LoadingOverlay visible={updateMutation.isPending} />
-      <form onSubmit={form.onSubmit((values) => updateMutation.mutate(values))}>
-        <SimpleGrid cols={2}>
-          <TextInput
-            label="First Name"
-            withAsterisk
-            {...form.getInputProps("first_name")}
-          />
-          <TextInput
-            label="Last Name"
-            withAsterisk
-            {...form.getInputProps("last_name")}
-          />
-          <TextInput
-            label="Company Name"
-            {...form.getInputProps("company_name")}
-          />
-          <TextInput label="Account #" {...form.getInputProps("acc_number")} />
-          <TextInput label="Email" {...form.getInputProps("email")} />
-          <TextInput label="Phone" {...form.getInputProps("phone_number")} />
-          <TextInput
-            label="Street Address"
-            {...form.getInputProps("street_address")}
-          />
-          <Group grow>
-            <TextInput label="City" {...form.getInputProps("city")} />
-            <TextInput label="Zip Code" {...form.getInputProps("zip_code")} />
-          </Group>
-          <TextInput label="GST #" {...form.getInputProps("gst_number")} />
-          <TextInput label="WCB #" {...form.getInputProps("wcb_number")} />
-        </SimpleGrid>
-
-        <Group mt="md">
-          <Checkbox
-            color="purple"
-            label="Active Installer"
-            {...form.getInputProps("is_active", { type: "checkbox" })}
-          />
-          <Checkbox
-            color="purple"
-            label="Has First Aid"
-            {...form.getInputProps("has_first_aid", { type: "checkbox" })}
-          />
-          <Checkbox
-            color="purple"
-            label="Has Insurance"
-            {...form.getInputProps("has_insurance", { type: "checkbox" })}
-          />
-        </Group>
-
-        <Textarea
-          label="Notes"
-          mt="md"
-          autosize
-          minRows={2}
-          {...form.getInputProps("notes")}
-        />
-
-        <Group justify="flex-end" mt="xl">
-          <Button
-            type="submit"
-            loading={form.submitting}
-            disabled={!form.isDirty()}
-            style={{
-              background: !form.isDirty()
-                ? "linear-gradient(135deg, #c6e2c6 0%, #a1d6a1 100%)"
-                : "linear-gradient(135deg, #28a745 0%, #218838 100%)",
-              color: !form.isDirty() ? "gray" : "white",
-              border: "none",
-              cursor: !form.isDirty() ? "not-allowed" : "pointer",
-            }}
-          >
-            Save Changes
-          </Button>
-        </Group>
-      </form>
-    </Modal>
+    <InstallerForm
+      title="Edit Installer"
+      submitLabel="Save Changes"
+      opened={opened}
+      onClose={handleClose}
+      onSubmit={form.onSubmit((values) => updateMutation.mutate(values))}
+      form={form}
+      authUserId={authUserId}
+      onAuthUserIdChange={setAuthUserId}
+      authUsers={authUsers}
+      authUsersLoading={authUsersLoading}
+      authUsersError={authUsersError}
+      isSubmitting={updateMutation.isPending}
+      submitDisabled={!isDirty}
+    />
   );
 }
