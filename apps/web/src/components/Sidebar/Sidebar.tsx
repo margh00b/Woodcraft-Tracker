@@ -411,7 +411,7 @@ export default function Sidebar({
               fw={800}
               style={{ color: "white", whiteSpace: "nowrap" }}
             >
-              WCKC Tracker{" "}
+              WCKC Core{" "}
               <Code
                 style={{
                   fontSize: "8px",
@@ -419,7 +419,7 @@ export default function Sidebar({
                   backgroundColor: "#5700bbff",
                 }}
               >
-                v1.0.3
+                v1.1.0
               </Code>
             </Text>
           )}

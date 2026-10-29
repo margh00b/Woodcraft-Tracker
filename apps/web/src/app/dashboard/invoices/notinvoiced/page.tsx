@@ -1,7 +1,7 @@
 import NotInvoicedTable from "@/components/Invoices/NotInvoicedTable/NotInvoicedTable";
 
 export const metadata = {
-  title: "Not Invoiced | WCKC Tracker",
+  title: "Not Invoiced | WCKC Core",
   description: "Jobs shipped but not yet invoiced",
 };
 

@@ -1,7 +1,7 @@
 import ServiceOrdersChargeableTable from "@/components/Invoices/ServiceOrdersChargeableTable/ServiceOrdersChargeableTable";
 
 export const metadata = {
-  title: "Chargeable Service Orders | WCKC Tracker",
+  title: "Chargeable Service Orders | WCKC Core",
   description: "Service Orders waiting to be invoiced",
 };
 
