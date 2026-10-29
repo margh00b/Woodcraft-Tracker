@@ -7,6 +7,7 @@ CREATE OR REPLACE FUNCTION insite.submit_install_report (
 )
   RETURNS bigint
   LANGUAGE plpgsql
+  SECURITY DEFINER
   SET search_path TO ''
   AS $function$
 DECLARE
@@ -58,7 +59,7 @@ BEGIN
     END LOOP;
   END IF;
 
-  INSERT INTO insite.install_reports (
+   INSERT INTO insite.install_reports (
     job_id,
     details,
     submitted_by,
@@ -83,39 +84,61 @@ BEGIN
       RAISE EXCEPTION 'Unable to resolve existing install report for idempotency key'
         USING ERRCODE = '40001';
     END IF;
-
-    RETURN v_report_id;
+  ELSE
+    IF p_attachments IS NOT NULL THEN
+      FOR v_attachment IN
+        SELECT value
+        FROM jsonb_array_elements(p_attachments)
+      LOOP
+        INSERT INTO public.job_attachments (
+          job_id,
+          install_report_id,
+          file_name,
+          file_path,
+          file_type,
+          file_size,
+          category,
+          file_tag,
+          uploaded_by
+        )
+        VALUES (
+          p_job_id,
+          v_report_id,
+          v_attachment->>'file_name',
+          v_attachment->>'file_path',
+          v_attachment->>'file_type',
+          (v_attachment->>'file_size')::bigint,
+          v_attachment->>'category',
+          v_attachment->>'file_tag',
+          p_submitted_by
+        );
+      END LOOP;
+    END IF;
   END IF;
 
-  IF p_attachments IS NOT NULL THEN
-    FOR v_attachment IN
-      SELECT value
-      FROM jsonb_array_elements(p_attachments)
-    LOOP
-      INSERT INTO public.job_attachments (
-        job_id,
-        install_report_id,
-        file_name,
-        file_path,
-        file_type,
-        file_size,
-        category,
-        file_tag,
-        uploaded_by
-      )
-      VALUES (
-        p_job_id,
-        v_report_id,
-        v_attachment->>'file_name',
-        v_attachment->>'file_path',
-        v_attachment->>'file_type',
-        (v_attachment->>'file_size')::bigint,
-        v_attachment->>'category',
-        v_attachment->>'file_tag',
-        p_submitted_by
-      );
-    END LOOP;
+  UPDATE public.installation AS i
+SET installation_report_received = NOW()
+FROM public.jobs AS j
+WHERE j.id = p_job_id
+  AND i.installation_id = j.installation_id
+  AND i.installation_report_received IS NULL;
+
+IF NOT FOUND THEN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.jobs AS j
+    JOIN public.installation AS i
+      ON i.installation_id = j.installation_id
+    WHERE j.id = p_job_id
+      AND i.installation_report_received IS NULL
+  ) THEN
+    NULL;
+  ELSE
+    RAISE EXCEPTION
+      'Failed to update installation_report_received for job %',
+      p_job_id;
   END IF;
+END IF;
 
   RETURN v_report_id;
 END;
