@@ -30,6 +30,19 @@ import {
   useInstallationReports,
 } from "@/hooks/useInstallationReports";
 
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[character] ?? character;
+  });
+}
+
 function displayValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
@@ -130,19 +143,19 @@ function InstallationReportsContent() {
     if (!selectedReport) return;
     const photoMarkup = (photosQuery.data ?? [])
       .filter((photo) => photo.file_type?.startsWith("image/"))
-      .map((photo) => `<figure><img src="${photo.signedUrl}" alt="${photo.file_name}" /><figcaption>${photo.file_name}</figcaption></figure>`)
+      .map((photo) => `<figure><img src="${escapeHtml(photo.signedUrl)}" alt="${escapeHtml(photo.file_name)}" /><figcaption>${escapeHtml(photo.file_name)}</figcaption></figure>`)
       .join("");
     const detailsMarkup = Object.entries(selectedReport.details ?? {})
       .map(([key, value]) => {
         const text = typeof value === "object" && value !== null
           ? JSON.stringify(value, null, 2)
           : displayValue(value);
-        return `<section><h3>${key.replace(/([A-Z])/g, " $1")}</h3><pre>${text}</pre></section>`;
+        return `<section><h3>${escapeHtml(key.replace(/([A-Z])/g, " $1"))}</h3><pre>${escapeHtml(text)}</pre></section>`;
       })
       .join("");
     const printWindow = window.open("", "_blank", "width=1000,height=800");
     if (!printWindow) return;
-    printWindow.document.write(`<!doctype html><html><head><title>Installation Report #${selectedReport.id}</title><style>body{font:14px Arial,sans-serif;color:#222;margin:32px}h1{margin-bottom:4px}h2{margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:8px}section{border:1px solid #ddd;border-radius:8px;padding:12px;margin:12px 0;break-inside:avoid}pre{font:13px Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0} .photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}figure{margin:0;break-inside:avoid}img{width:100%;max-height:420px;object-fit:contain}figcaption{font-size:11px;color:#555;margin-top:4px}@media print{body{margin:12mm}}</style></head><body><h1>Installation Report #${selectedReport.id}</h1><p>Job #${selectedReport.job_number ?? selectedReport.job_id} · Submitted ${new Date(selectedReport.created_at).toLocaleString()}</p><p>Submitted by: ${selectedReport.submitted_by ?? "—"}</p><h2>Report details</h2>${detailsMarkup}<h2>Attachments</h2><div class="photos">${photoMarkup}</div><script>window.onload=()=>{window.print()}</script></body></html>`);
+    printWindow.document.write(`<!doctype html><html><head><title>Installation Report #${selectedReport.id}</title><style>body{font:14px Arial,sans-serif;color:#222;margin:32px}h1{margin-bottom:4px}h2{margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:8px}section{border:1px solid #ddd;border-radius:8px;padding:12px;margin:12px 0;break-inside:avoid}pre{font:13px Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0} .photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}figure{margin:0;break-inside:avoid}img{width:100%;max-height:420px;object-fit:contain}figcaption{font-size:11px;color:#555;margin-top:4px}@media print{body{margin:12mm}}</style></head><body><h1>Installation Report #${selectedReport.id}</h1><p>Job #${escapeHtml(String(selectedReport.job_number ?? selectedReport.job_id))} · Submitted ${escapeHtml(new Date(selectedReport.created_at).toLocaleString())}</p><p>Submitted by: ${escapeHtml(selectedReport.submitted_by ?? "—")}</p><h2>Report details</h2>${detailsMarkup}<h2>Attachments</h2><div class="photos">${photoMarkup}</div><script>window.onload=()=>{window.print()}</script></body></html>`);
     printWindow.document.close();
   };
 
