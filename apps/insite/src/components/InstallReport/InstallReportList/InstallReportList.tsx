@@ -44,7 +44,7 @@ export default function InstallReportList({
     return (
       <View className="p-8 items-center justify-center">
         <ActivityIndicator size="small" color="#0f172a" />
-        <Text className="text-xs text-slate-500 mt-2">
+        <Text className="text-sm text-slate-500 mt-2">
           Loading installation reports...
         </Text>
       </View>
@@ -61,7 +61,7 @@ export default function InstallReportList({
           onPress={() => refetch()}
           className="mt-2 bg-rose-600 px-3 py-1.5 rounded-lg self-start"
         >
-          <Text className="text-xs text-white font-medium">Retry</Text>
+          <Text className="text-sm text-white font-medium">Retry</Text>
         </Pressable>
       </View>
     );
@@ -73,7 +73,7 @@ export default function InstallReportList({
         <Text className="text-base font-semibold text-slate-800">
           No Reports Logged
         </Text>
-        <Text className="text-xs text-slate-500 text-center mt-1">
+        <Text className="text-sm text-slate-500 text-center mt-1">
           There are no installation reports submitted for this job yet.
         </Text>
       </View>
@@ -94,7 +94,7 @@ export default function InstallReportList({
           >
             <View className="flex-row justify-between items-center mb-3">
               <View className="bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                <Text className="text-xs font-bold text-slate-800">
+                <Text className="text-sm font-bold text-slate-800">
                   Report #{item.id}
                 </Text>
               </View>
@@ -104,7 +104,7 @@ export default function InstallReportList({
                   Submitted By
                 </Text>
                 <Text
-                  className="text-xs font-semibold text-slate-800"
+                  className="text-sm font-semibold text-slate-800"
                   numberOfLines={1}
                 >
                   {item.submitted_by || "Unknown"}
@@ -117,7 +117,7 @@ export default function InstallReportList({
                 <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
                   Created
                 </Text>
-                <Text className="text-xs font-medium text-slate-600">
+                <Text className="text-sm font-medium text-slate-600">
                   {item.created_at
                     ? new Date(item.created_at).toLocaleDateString(undefined, {
                         month: "short",
@@ -134,7 +134,7 @@ export default function InstallReportList({
                   <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
                     Updated
                   </Text>
-                  <Text className="text-xs font-medium text-slate-600">
+                  <Text className="text-sm font-medium text-slate-600">
                     {new Date(item.updated_at!).toLocaleDateString(undefined, {
                       month: "short",
                       day: "numeric",

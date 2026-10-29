@@ -55,14 +55,14 @@ export default function InstallReportScreen() {
             <Text className="text-sm font-bold text-amber-800 mb-1">
               No Job Selected
             </Text>
-            <Text className="text-xs text-amber-700 mb-3">
+            <Text className="text-sm text-amber-700 mb-3">
               Please select a job from the dashboard to view or create reports.
             </Text>
             <Pressable
               className="bg-amber-600 py-2 px-3 rounded-lg self-start"
               onPress={() => router.back()}
             >
-              <Text className="text-xs font-semibold text-white">
+              <Text className="text-sm font-semibold text-white">
                 ← Return to Dashboard
               </Text>
             </Pressable>
@@ -78,7 +78,7 @@ export default function InstallReportScreen() {
               onPress={handleCreateNew}
               className="bg-slate-900 px-3.5 py-2 rounded-lg shadow-sm active:opacity-80"
             >
-              <Text className="text-white text-xs font-bold">+ New Report</Text>
+              <Text className="text-white text-sm font-bold">+ New Report</Text>
             </Pressable>
           )}
         </View>
