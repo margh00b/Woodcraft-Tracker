@@ -246,7 +246,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
     validate: zodResolver(installationSchema),
   });
 
-  const { setIsDirty } = useNavigationGuard();
+  const { setIsDirty, navigatePush } = useNavigationGuard();
   const isDirty = form.isDirty();
   useEffect(() => {
     setIsDirty(isDirty);
@@ -581,6 +581,18 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                         </Text>
                       </Stack>
                     </Group>
+                    <Button
+                      variant="light"
+                      color="violet"
+                      leftSection={<FaClipboardList size={15} />}
+                      onClick={() =>
+                        navigatePush(
+                          `/dashboard/installation-reports?jobId=${jobId}`,
+                        )
+                      }
+                    >
+                      View Reports
+                    </Button>
                   </Group>
                 </Paper>
                 <Divider my="sm" color={colors.violet.primary} />
