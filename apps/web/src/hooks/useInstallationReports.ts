@@ -31,39 +31,56 @@ export function useInstallationReports(jobId?: number | null) {
     queryKey: ["installation-reports", jobId ?? "all"],
     queryFn: async () => {
       const insite = supabase.schema("insite") as any;
-      let reportQuery = insite
-        .from("install_reports")
-        .select("id, job_id, details, submitted_by, created_at, updated_at")
-        .order("created_at", { ascending: false })
-        .limit(500);
+      const reportRows: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        let reportQuery = insite
+          .from("install_reports")
+          .select("id, job_id, details, submitted_by, created_at, updated_at")
+          .order("created_at", { ascending: false })
+          .range(from, from + 999);
 
-      if (jobId) reportQuery = reportQuery.eq("job_id", jobId);
+        if (jobId) reportQuery = reportQuery.eq("job_id", jobId);
 
-      const { data: reportRows, error: reportError } = await reportQuery;
-      if (reportError) throw reportError;
-      if (!reportRows?.length) return [];
+        const { data: page, error } = await reportQuery;
+        if (error) throw error;
+        reportRows.push(...(page ?? []));
+        if (!page || page.length < 1000) break;
+      }
+
+      if (!reportRows.length) return [];
 
       const jobIds = [...new Set(reportRows.map((report: any) => report.job_id))];
       const reportIds = reportRows.map((report: any) => report.id);
 
-      const [{ data: jobs, error: jobsError }, { data: attachments, error: attachmentsError }] =
-        await Promise.all([
-          supabase.from("jobs").select("id, job_number").in("id", jobIds),
-          supabase
-            .from("job_attachments")
-            .select("id, install_report_id")
-            .in("install_report_id", reportIds),
-        ]);
+      const jobs: Array<{ id: number; job_number: number | string | null }> = [];
+      const attachments: Array<{ id: number; install_report_id: number | null }> = [];
 
-      if (jobsError) throw jobsError;
-      if (attachmentsError) throw attachmentsError;
+      for (let index = 0; index < jobIds.length; index += 500) {
+        const batch = jobIds.slice(index, index + 500);
+        const { data, error } = await supabase
+          .from("jobs")
+          .select("id, job_number")
+          .in("id", batch);
+        if (error) throw error;
+        jobs.push(...(data ?? []));
+      }
+
+      for (let index = 0; index < reportIds.length; index += 500) {
+        const batch = reportIds.slice(index, index + 500);
+        const { data, error } = await supabase
+          .from("job_attachments")
+          .select("id, install_report_id")
+          .in("install_report_id", batch);
+        if (error) throw error;
+        attachments.push(...(data ?? []));
+      }
 
       const jobNumberById = new Map(
-        (jobs ?? []).map((job) => [job.id, job.job_number]),
+        jobs.map((job) => [job.id, job.job_number]),
       );
       const attachmentCountByReportId = new Map<number, number>();
 
-      for (const attachment of attachments ?? []) {
+      for (const attachment of attachments) {
         if (attachment.install_report_id == null) continue;
         attachmentCountByReportId.set(
           attachment.install_report_id,
