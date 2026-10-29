@@ -153,6 +153,12 @@ const dashboardLinks: SidebarLink[] = [
     allowedRoles: ["admin", "designer"],
   },
   {
+    iconName: "ClipboardCheck",
+    label: "Installation Reports",
+    path: "/dashboard/installation-reports",
+    allowedRoles: ["admin", "installation", "service", "manager", "inspection", "scheduler", "reception"],
+  },
+  {
     iconName: "FileChartColumn",
     label: "Reports",
     path: "/dashboard/reports",
