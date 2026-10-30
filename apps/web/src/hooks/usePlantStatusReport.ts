@@ -1,6 +1,7 @@
 import { useSupabase } from "@/hooks/useSupabase";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+
 export type PlantStatusItem = {
   id: number;
   job_number: string;
@@ -15,17 +16,15 @@ export type PlantStatusItem = {
   paint: string | null;
   assembly: string | null;
   wrap: string | null;
-
   completion_percentage: number;
+  ship_schedule: string | null;
 };
 
-type DateRange = [Date | null, Date | null];
-
-export function usePlantStatusReport(dateRange: DateRange) {
+export function usePlantStatusReport() {
   const { supabase, isAuthenticated } = useSupabase();
 
   return useQuery({
-    queryKey: ["plant_status_report", dateRange],
+    queryKey: ["plant_status_report"],
     queryFn: async () => {
       let query = supabase
         .from("jobs")
@@ -43,43 +42,34 @@ export function usePlantStatusReport(dateRange: DateRange) {
           ),
           production_schedule!inner (
             ship_schedule,
+            in_plant_actual,
+            in_plant_cabinets_actual,
             cut_melamine_completed_actual,
             cut_finish_completed_actual,
             custom_finish_completed_actual,
             doors_completed_actual,
             drawer_completed_actual,
             paint_completed_actual,
-            assembly_completed_actual,
-            in_plant_actual
+            assembly_completed_actual
           ),
           installation!inner (
             wrap_completed,
             has_shipped
           )
-        `
+        `,
         )
         .eq("installation.has_shipped", false)
-        .not("production_schedule.in_plant_actual", "is", null);
-
-      if (dateRange[0]) {
-        query = query.gte(
-          "sales_orders.date_sold",
-          dayjs(dateRange[0]).format("YYYY-MM-DD")
+        .or(
+          "in_plant_actual.not.is.null,in_plant_cabinets_actual.not.is.null",
+          { foreignTable: "production_schedule" },
         );
-      }
-      if (dateRange[1]) {
-        query = query.lte(
-          "sales_orders.date_sold",
-          dayjs(dateRange[1]).format("YYYY-MM-DD")
-        );
-      }
 
       const { data, error } = await query;
       if (error) throw error;
 
       const sortedData = data.sort((a: any, b: any) => {
-        const dateA = new Date(a.sales_orders.date_sold).getTime();
-        const dateB = new Date(b.sales_orders.date_sold).getTime();
+        const dateA = new Date(a.production_schedule.ship_schedule).getTime();
+        const dateB = new Date(b.production_schedule.ship_schedule).getTime();
         return dateB - dateA;
       });
 
@@ -100,7 +90,7 @@ export function usePlantStatusReport(dateRange: DateRange) {
         ];
 
         const completedSteps = steps.filter(
-          (step) => step !== null && step !== false
+          (step) => step !== null && step !== false,
         ).length;
         const percentage = Math.round((completedSteps / steps.length) * 100);
 
@@ -128,6 +118,7 @@ export function usePlantStatusReport(dateRange: DateRange) {
           assembly: prod.assembly_completed_actual,
           wrap: inst?.wrap_completed || null,
           completion_percentage: percentage,
+          ship_schedule: prod?.ship_schedule,
         };
       }) as PlantStatusItem[];
     },

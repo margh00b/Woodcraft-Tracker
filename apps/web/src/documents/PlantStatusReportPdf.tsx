@@ -41,8 +41,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.gray.title,
   },
-  colClient: { width: "20%", color: colors.gray.title },
-  colAddress: { width: "23%", color: colors.gray.title },
+  colClient: { width: "16%", color: colors.gray.title },
+  colAddress: { width: "17%", color: colors.gray.title, paddingRight: 4 },
+  colShipDate: { width: "10%", color: colors.gray.title, textAlign: "center" },
 
   colStatusGroup: {
     width: "40%",
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   colStatusItem: { width: "12.5%", alignItems: "center" },
 
   colPercent: {
-    width: "9%",
+    width: "8%",
     textAlign: "center",
     fontWeight: "bold",
     color: colors.blue.primary,
@@ -87,7 +88,7 @@ export const PlantStatusPdf = ({ data }: { data: PlantStatusItem[] }) => (
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>Plant Status Report</Text>
-        <Text>(Job's In Plant)</Text>
+        <Text>(Jobs In Plant)</Text>
         <View>
           <Text style={styles.meta}>
             Generated: {dayjs().format("DD-MMM-YY HH:mm")}
@@ -102,6 +103,7 @@ export const PlantStatusPdf = ({ data }: { data: PlantStatusItem[] }) => (
         <Text style={styles.colJob}>Job #</Text>
         <Text style={styles.colClient}>Client</Text>
         <Text style={styles.colAddress}>Shipping Address</Text>
+        <Text style={styles.colShipDate}>Ship Date</Text>
         <View style={styles.colStatusGroup}>
           <Text
             style={[styles.colStatusItem, { fontSize: 8, textAlign: "center" }]}
@@ -152,6 +154,11 @@ export const PlantStatusPdf = ({ data }: { data: PlantStatusItem[] }) => (
           <Text style={styles.colJob}>{item.job_number}</Text>
           <Text style={styles.colClient}>{item.shipping_client_name}</Text>
           <Text style={styles.colAddress}>{item.shipping_address}</Text>
+          <Text style={styles.colShipDate}>
+            {item.ship_schedule
+              ? dayjs(item.ship_schedule).format("DD-MMM-YY")
+              : "TBD"}
+          </Text>
 
           <View style={styles.colStatusGroup}>
             <StatusCell isActive={!!item.cut_melamine} />

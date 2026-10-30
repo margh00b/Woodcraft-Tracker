@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   Paper,
@@ -14,14 +14,12 @@ import {
   Center,
   Loader,
 } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
-import { FaTasks, FaCalendarAlt, FaFileExcel } from "react-icons/fa";
-import dayjs from "dayjs";
+import { FaTasks, FaFileExcel } from "react-icons/fa";
 import { usePlantStatusReport } from "@/hooks/usePlantStatusReport";
 import { colors } from "@/theme";
-import "@mantine/dates/styles.css";
 import { PlantStatusPdf } from "@/documents/PlantStatusReportPdf";
 import { exportToExcel } from "@/utils/exportToExcel";
+import dayjs from "dayjs";
 
 const PDFViewer = dynamic(
   () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
@@ -36,27 +34,13 @@ const PDFViewer = dynamic(
 );
 
 export default function PlantStatusReport() {
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    dayjs().startOf("month").toDate(),
-    dayjs().endOf("month").toDate(),
-  ]);
-
-  const [queryRange, setQueryRange] =
-    useState<[Date | null, Date | null]>(dateRange);
-
-  useEffect(() => {
-    const [start, end] = dateRange;
-    if (start && end) {
-      setQueryRange(dateRange);
-    }
-  }, [dateRange]);
-
   const {
     data: reportData,
     isLoading,
     isError,
     error,
-  } = usePlantStatusReport(queryRange);
+  } = usePlantStatusReport();
+
   const memoizedPreview = useMemo(
     () => (
       <PDFViewer width="100%" height="100%" style={{ border: "none" }}>
@@ -65,6 +49,7 @@ export default function PlantStatusReport() {
     ),
     [reportData],
   );
+
   const handleExport = () => {
     if (!reportData) return;
 
@@ -72,6 +57,9 @@ export default function PlantStatusReport() {
       "Job #": item.job_number,
       Client: item.shipping_client_name,
       "Shipping Address": item.shipping_address,
+      "Ship Date": item.ship_schedule
+        ? dayjs(item.ship_schedule).format("DD-MMM-YY")
+        : "TBD",
       "Cut Mel": item.cut_melamine ? "Yes" : "No",
       "Cut Fin": item.cut_finish ? "Yes" : "No",
       "Cust Fin": item.custom_finish ? "Yes" : "No",
@@ -115,20 +103,6 @@ export default function PlantStatusReport() {
             </Group>
 
             <Group align="flex-end">
-              <DatePickerInput
-                allowSingleDateInRange
-                type="range"
-                label="Filter by Date Sold"
-                placeholder="Select date range"
-                value={dateRange}
-                onChange={(value) =>
-                  setDateRange(value as unknown as [Date | null, Date | null])
-                }
-                leftSection={
-                  <FaCalendarAlt size={16} color={colors.violet.primary} />
-                }
-                w={350}
-              />
               <Button
                 onClick={handleExport}
                 disabled={!reportData || reportData.length === 0}
