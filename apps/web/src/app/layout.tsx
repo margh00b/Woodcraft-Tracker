@@ -81,6 +81,11 @@ const dashboardLinks: SidebarLink[] = [
         label: "Warehouse",
         path: "/dashboard/installation/warehouse",
       },
+      {
+        iconName: "ClipboardCheck",
+        label: "Install Reports",
+        path: "/dashboard/installation-reports",
+      },
     ],
   },
   {
@@ -151,12 +156,6 @@ const dashboardLinks: SidebarLink[] = [
     label: "Dead Jobs",
     path: "/dashboard/deadjobs",
     allowedRoles: ["admin", "designer"],
-  },
-  {
-    iconName: "ClipboardCheck",
-    label: "Installation Reports",
-    path: "/dashboard/installation-reports",
-    allowedRoles: ["admin"],
   },
   {
     iconName: "FileChartColumn",
