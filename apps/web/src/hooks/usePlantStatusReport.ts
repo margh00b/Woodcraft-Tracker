@@ -67,10 +67,15 @@ export function usePlantStatusReport() {
       const { data, error } = await query;
       if (error) throw error;
 
-      const sortedData = data.sort((a: any, b: any) => {
-        const dateA = new Date(a.production_schedule.ship_schedule).getTime();
-        const dateB = new Date(b.production_schedule.ship_schedule).getTime();
-        return dateB - dateA;
+      const sortedData = [...data].sort((a: any, b: any) => {
+        const dateA = a.production_schedule?.ship_schedule
+          ? new Date(a.production_schedule.ship_schedule).getTime()
+          : Infinity;
+        const dateB = b.production_schedule?.ship_schedule
+          ? new Date(b.production_schedule.ship_schedule).getTime()
+          : Infinity;
+
+        return dateA - dateB;
       });
 
       return sortedData.map((job: any) => {
