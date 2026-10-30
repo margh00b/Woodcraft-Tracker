@@ -36,14 +36,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   colJob: {
-    width: "9%",
+    width: "7%",
     paddingLeft: 2,
     fontWeight: "bold",
     color: colors.gray.title,
   },
   colClient: { width: "16%", color: colors.gray.title },
-  colAddress: { width: "17%", color: colors.gray.title, paddingRight: 4 },
-  colShipDate: { width: "10%", color: colors.gray.title, textAlign: "center" },
+  colAddress: { width: "22%", color: colors.gray.title, paddingRight: 4 },
+  colShipDate: { width: "9%", color: colors.gray.title, textAlign: "center" },
 
   colStatusGroup: {
     width: "40%",
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   colStatusItem: { width: "12.5%", alignItems: "center" },
 
   colPercent: {
-    width: "8%",
+    width: "6%",
     textAlign: "center",
     fontWeight: "bold",
     color: colors.blue.primary,
@@ -88,7 +88,7 @@ export const PlantStatusPdf = ({ data }: { data: PlantStatusItem[] }) => (
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>Plant Status Report</Text>
-        <Text>(Jobs In Plant)</Text>
+        <Text>All Jobs currently in Plant (Not Shipped)</Text>
         <View>
           <Text style={styles.meta}>
             Generated: {dayjs().format("DD-MMM-YY HH:mm")}
