@@ -59,6 +59,7 @@ export function usePlantStatusReport() {
         `,
         )
         .eq("installation.has_shipped", false)
+        .eq("is_active", true)
         .or(
           "in_plant_actual.not.is.null,in_plant_cabinets_actual.not.is.null",
           { foreignTable: "production_schedule" },
