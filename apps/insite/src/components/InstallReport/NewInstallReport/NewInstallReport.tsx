@@ -6,6 +6,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -48,6 +49,7 @@ import {
   getErrorMessage,
   validateMandatoryOpenings,
 } from "@/utils/installReports/photos";
+import { getWebAPIUrl } from "@/utils/api";
 
 export default function NewInstallReport() {
   const router = useRouter();
@@ -379,7 +381,49 @@ export default function NewInstallReport() {
           "The server returned no report ID. Uploaded photos were retained for safety.",
         );
       }
+      if (reportId == null) {
+        await setPendingSubmissionStatus(submissionId, "unknown");
 
+        throw new Error(
+          "The server returned no report ID. Uploaded photos were retained for safety.",
+        );
+      }
+
+      try {
+        const apiUrl = getWebAPIUrl();
+
+        const requestHeaders = new Headers();
+        requestHeaders.append("Content-Type", "application/json");
+
+        const appSecret =
+          process.env.EXPO_PUBLIC_SUPER_SECRET || "missing_secret";
+        requestHeaders.append("x-app-secret", appSecret);
+
+        fetch(`${apiUrl}/api/send-email`, {
+          method: "POST",
+          headers: requestHeaders,
+          body: JSON.stringify({
+            reportId: String(reportId),
+            installerName: String(username),
+            jobId: String(selectedJob.id),
+            jobNumber: String(selectedJob.job_number)
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => console.log("Email trigger response:", data))
+          .catch((err) => {
+            console.warn("Background email trigger failed:", err);
+          });
+      } catch (emailError) {
+        console.warn("Could not construct email request:", emailError);
+      }
+      // -------------------------------
+
+      await clearPendingSubmission(submissionId);
+
+      submissionIdRef.current = null;
+
+      invalidateFormDetailsCache(selectedJob.id, "install_reports");
       await clearPendingSubmission(submissionId);
 
       submissionIdRef.current = null;

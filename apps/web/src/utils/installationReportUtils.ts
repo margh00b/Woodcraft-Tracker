@@ -36,15 +36,20 @@ export function formatDate(value: string | null | undefined): string {
 }
 
 export function formatSectionTitle(value: string): string {
+  const normalizedKey = value.toLowerCase();
+
   const labels: Record<string, string> = {
-    notApplicableOpenings: "Not Applicable Openings",
-    Cabinets_site_cleaned: "Cabinets Site Cleaned",
-    Excess_material_removed: "Excess Material Removed",
-    Final_adjustment: "Final Adjustment",
-    Missing_materials_damages: "Missing Materials / Damages",
+    notapplicableopenings: "Not Applicable",
+    site_cleaned: "Site Cleaned",
+    cabinets_cleaned: "Cabinets Cleaned",
+    excess_material_removed: "Excess Material Removed",
+    final_adjustment: "Final Adjustments",
+    missing_materials_damages: "Missing Materials / Damages",
   };
 
-  if (labels[value]) return labels[value];
+  if (labels[normalizedKey]) {
+    return labels[normalizedKey];
+  }
 
   return value
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")

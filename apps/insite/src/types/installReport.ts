@@ -32,12 +32,13 @@ export type AttachmentPayload = {
 };
 
 export const CHECKLIST_ITEMS = [
-  { key: "cabinets_site_cleaned", label: "1) Cabinets & Site cleaned" },
-  { key: "excess_material_removed", label: "2) Excess material removed" },
-  { key: "final_adjustment", label: "3) Final Adjustment" },
+  { key: "site_cleaned", label: "1) Site cleaned" },
+  { key: "cabinets_cleaned", label: "2) Cabinets cleaned" },
+  { key: "excess_material_removed", label: "3) Excess material removed" },
+  { key: "final_adjustment", label: "4) Final Adjustment" },
   {
     key: "missing_materials_damages",
-    label: "4) Report Missing Materials or damages",
+    label: "5) Report Missing Materials or damages",
   },
 ] as const;
 
@@ -46,7 +47,8 @@ export type ChecklistKey = (typeof CHECKLIST_ITEMS)[number]["key"];
 export type ChecklistState = Record<ChecklistKey, boolean>;
 
 export const INITIAL_CHECKLIST: ChecklistState = {
-  cabinets_site_cleaned: false,
+  site_cleaned: false,
+  cabinets_cleaned: false,
   excess_material_removed: false,
   final_adjustment: false,
   missing_materials_damages: false,

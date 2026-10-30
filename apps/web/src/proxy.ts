@@ -34,9 +34,13 @@ export async function proxy(request: NextRequest) {
 
   const isProtectedPage = request.nextUrl.pathname.startsWith("/dashboard");
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
+  const isInternalApiRoute = request.nextUrl.pathname === "/api/send-email";
   const isLoginPage = request.nextUrl.pathname === "/login";
 
-  if ((isProtectedPage || isApiRoute) && (!user || error)) {
+  if (
+    (isProtectedPage || (isApiRoute && !isInternalApiRoute)) &&
+    (!user || error)
+  ) {
     if (isApiRoute) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

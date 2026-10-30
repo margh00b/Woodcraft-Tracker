@@ -70,7 +70,7 @@ export default function InstallationReportsTable({
   onPaginationChange,
   onSelectReport,
 }: Props) {
-  const displayedJobNumber = jobNumber ?? jobId;
+  const displayedJobNumber = String(jobNumber).replace(/[^0-9]+$/, "");
   const pageCount = Math.max(1, Math.ceil(total / pagination.pageSize));
   const hasFilters = Object.values(filters).some((value) => value !== "");
 

@@ -34,13 +34,15 @@ export function createPhotoInfo(
 
 export function validateMandatoryOpenings(openings: OpeningEntry[]): string[] {
   return openings
-    .filter(
-      (opening) =>
-        opening.isMandatory &&
-        !opening.isNotApplicable &&
-        (!opening.measurement.trim() ||
-          !Number.isFinite(Number(opening.measurement)) ||
-          opening.photos.length === 0),
-    )
+    .filter((opening) => {
+      if (!opening.isMandatory || opening.isNotApplicable) return false;
+
+      const measurement = opening.measurement.trim();
+      const hasPhotos = opening.photos.length > 0;
+
+      const hasNumber = /\d+(\.\d+)?/.test(measurement);
+
+      return !hasNumber || !hasPhotos;
+    })
     .map((opening) => opening.label);
 }

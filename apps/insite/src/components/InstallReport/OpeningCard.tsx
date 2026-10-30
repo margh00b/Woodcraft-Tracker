@@ -1,6 +1,7 @@
 import { Pressable, Switch, Text, TextInput, View } from "react-native";
 import type { OpeningEntry } from "@/types/installReport";
 import { PhotoGrid } from "./PhotoGrid";
+import { useState } from "react";
 
 type OpeningCardProps = {
   opening: OpeningEntry;
@@ -23,6 +24,20 @@ export function OpeningCard({
   isNotApplicable,
   onToggleNotApplicable,
 }: OpeningCardProps) {
+  const [top, setTop] = useState(
+    opening.measurement?.split(",")[0]?.replace("Top:", "").trim() ||
+      opening.measurement ||
+      "",
+  );
+  const [bottom, setBottom] = useState(
+    opening.measurement?.split(",")[1]?.replace("Bottom:", "").trim() || "",
+  );
+
+  const updateMeasurementString = (t: string, b: string) => {
+    setTop(t);
+    setBottom(b);
+    onMeasurementChange(`Top: ${t || "—"}, Bottom: ${b || "—"}`);
+  };
   return (
     <View
       className={`mb-4 rounded-xl border p-4 shadow-sm ${
@@ -60,15 +75,38 @@ export function OpeningCard({
           className={isNotApplicable ? "opacity-30" : ""}
           pointerEvents={isNotApplicable ? "none" : "auto"}
         >
-          <TextInput
-            className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-3"
-            placeholder="Enter exact measurement/location (e.g., 36.5)"
-            placeholderTextColor="#94a3b8"
-            keyboardType="decimal-pad"
-            value={opening.measurement}
-            onChangeText={onMeasurementChange}
-            editable={!disabled && !isNotApplicable}
-          />
+          {opening.id != "fridge_opening" ? (
+            <TextInput
+              className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-3"
+              placeholder="Enter exact measurement/location (e.g., 36.5)"
+              placeholderTextColor="#94a3b8"
+              keyboardType="decimal-pad"
+              value={opening.measurement}
+              onChangeText={onMeasurementChange}
+              editable={!disabled && !isNotApplicable}
+            />
+          ) : (
+            <View className="flex-row gap-3 justify-center mb-3">
+              <TextInput
+                className="bg-slate-50 w-[50%] border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-2"
+                placeholder="Top (e.g., 36.5)"
+                placeholderTextColor="#94a3b8"
+                keyboardType="decimal-pad"
+                value={top}
+                onChangeText={(t) => updateMeasurementString(t, bottom)}
+                editable={!disabled && !isNotApplicable}
+              />
+              <TextInput
+                className="bg-slate-50 w-[50%] border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-2"
+                placeholder="Bottom (e.g., 36.5)"
+                placeholderTextColor="#94a3b8"
+                keyboardType="decimal-pad"
+                value={bottom}
+                onChangeText={(b) => updateMeasurementString(top, b)}
+                editable={!disabled && !isNotApplicable}
+              />
+            </View>
+          )}
 
           <PhotoGrid
             photos={opening.photos}

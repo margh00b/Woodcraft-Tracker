@@ -45,14 +45,12 @@ type Props = {
   report: InstallationReport | null;
   photosQuery: PhotosQuery;
   onClose: () => void;
-  onPrint: () => void;
 };
 
 export default function InstallationReportsModal({
   report,
   photosQuery,
   onClose,
-  onPrint,
 }: Props) {
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
   const [zipDownloadError, setZipDownloadError] = useState<string | null>(null);
@@ -141,7 +139,7 @@ export default function InstallationReportsModal({
             <Stack gap={2}>
               <Text fw={700}>
                 Installation Report for Job #
-                {report?.job_number ?? report?.job_id}
+                {String(report?.job_number).replace(/[^0-9]+$/, "")}
               </Text>
               <Text>{report?.address}</Text>
               <Text size="xs" c="dimmed"></Text>

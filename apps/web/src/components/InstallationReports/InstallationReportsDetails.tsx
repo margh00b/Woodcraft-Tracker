@@ -60,16 +60,8 @@ function ValueDisplay({ value }: { value: unknown }) {
   }
 
   if (Array.isArray(value)) {
-    if (value.every((item) => !isRecord(item) && !Array.isArray(item))) {
-      return (
-        <Stack gap={4}>
-          {value.map((item, index) => (
-            <Text key={index} size="sm">
-              {displayValue(item)}
-            </Text>
-          ))}
-        </Stack>
-      );
+    if (value.every((item) => typeof item !== "object" || item === null)) {
+      return <Text size="sm">{displayValue(value)}</Text>;
     }
 
     return (
@@ -192,7 +184,7 @@ function ChecklistTable({ entries }: { entries: [string, unknown][] }) {
 }
 
 function MeasurementsTable({ value }: { value: unknown }) {
-  if (!isRecord(value) || !Object.keys(value).length) {
+  if (!isRecord(value) || isEmpty(value)) {
     return <ValueDisplay value={value} />;
   }
 
@@ -222,11 +214,11 @@ export default function InstallationReportsDetails({
 }: {
   details: ReportDetails;
 }) {
-  const entries = Object.entries(details ?? {}).filter(
+  const validEntries = Object.entries(details ?? {}).filter(
     ([, value]) => !isEmpty(value),
   );
 
-  if (!entries.length) {
+  if (!validEntries.length) {
     return (
       <Text size="sm" c="dimmed" py="md">
         No report details were submitted.
@@ -234,25 +226,19 @@ export default function InstallationReportsDetails({
     );
   }
 
-  const measurements = entries.find(([key]) => key === "measurements");
-  const notApplicable = entries.find(
-    ([key]) => key === "notApplicableOpenings",
-  );
-  const notes = entries.find(([key]) => key === "notes");
+  const detailsMap = Object.fromEntries(validEntries);
+  const { measurements, notApplicableOpenings, notes, ...rest } = detailsMap;
 
-  const reservedKeys = new Set([
-    "measurements",
-    "notApplicableOpenings",
-    "notes",
-  ]);
+  const checklistEntries: [string, unknown][] = [];
+  const otherEntries: [string, unknown][] = [];
 
-  const checklistEntries = entries.filter(
-    ([key, value]) => !reservedKeys.has(key) && typeof value === "boolean",
-  );
-
-  const otherEntries = entries.filter(
-    ([key, value]) => !reservedKeys.has(key) && typeof value !== "boolean",
-  );
+  Object.entries(rest).forEach(([key, value]) => {
+    if (typeof value === "boolean") {
+      checklistEntries.push([key, value]);
+    } else {
+      otherEntries.push([key, value]);
+    }
+  });
 
   return (
     <Stack gap="xl">
@@ -270,17 +256,17 @@ export default function InstallationReportsDetails({
           title="Opening Measurements"
           description="Measurements recorded for each opening"
         >
-          <MeasurementsTable value={measurements[1]} />
+          <MeasurementsTable value={measurements} />
         </ReportSection>
       )}
 
-      {notApplicable && (
+      {notApplicableOpenings && (
         <ReportSection
-          title="Not Applicable Openings"
-          description="Openings excluded from measurement or installation"
+          title="Not Applicable"
+          description="Openings / Areas Not Applicable to installation"
         >
           <Paper withBorder radius="sm" p="md">
-            <ValueDisplay value={notApplicable[1]} />
+            <ValueDisplay value={notApplicableOpenings} />
           </Paper>
         </ReportSection>
       )}
@@ -292,7 +278,7 @@ export default function InstallationReportsDetails({
               size="sm"
               style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
             >
-              {displayValue(notes[1])}
+              {displayValue(notes)}
             </Text>
           </Paper>
         </ReportSection>

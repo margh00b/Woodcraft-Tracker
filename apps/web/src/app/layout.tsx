@@ -156,7 +156,7 @@ const dashboardLinks: SidebarLink[] = [
     iconName: "ClipboardCheck",
     label: "Installation Reports",
     path: "/dashboard/installation-reports",
-    allowedRoles: ["admin", "installation", "service", "manager", "inspection", "scheduler", "reception"],
+    allowedRoles: ["admin"],
   },
   {
     iconName: "FileChartColumn",

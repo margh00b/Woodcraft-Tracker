@@ -9,6 +9,7 @@ import {
 } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import type { InstallationReport } from "@/hooks/useInstallationReports";
+import { formatSectionTitle } from "@/utils/installationReportUtils";
 
 type ReportPhoto = {
   id: number | string;
@@ -28,12 +29,12 @@ type JsonRecord = Record<string, unknown>;
 const styles = StyleSheet.create({
   page: {
     paddingTop: 30,
-    paddingBottom: 50, // Increased to prevent overlapping the absolute footer
+    paddingBottom: 50,
     paddingHorizontal: 34,
     fontFamily: "Helvetica",
     fontSize: 9,
     color: "#263445",
-    flexDirection: "column", // Explicit column flex[cite: 1]
+    flexDirection: "column",
   },
   header: {
     flexDirection: "column",
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     marginBottom: 4,
     color: "#1e293b",
-    lineHeight: 1.2, // Explicit safe line-height just for the title
+    lineHeight: 1.2,
   },
   subtitle: {
     fontSize: 9,
@@ -96,12 +97,21 @@ const styles = StyleSheet.create({
     borderBottomColor: "#d7dee7",
     color: "#344256",
   },
+  address: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    paddingBottom: 5,
+    marginBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#d7dee7",
+    color: "#344256",
+  },
   row: {
     flexDirection: "row",
     paddingVertical: 4,
     borderBottomWidth: 0.5,
     borderBottomColor: "#e8ecf1",
-    alignItems: "stretch", // Prevent column clipping[cite: 1]
+    alignItems: "stretch",
   },
   label: {
     width: "38%",
@@ -118,7 +128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     fontFamily: "Helvetica-Bold",
     color: "#344256",
-    alignItems: "stretch", // Added stretch for table stability[cite: 1]
+    alignItems: "stretch",
   },
   tableRow: {
     flexDirection: "row",
@@ -126,7 +136,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderBottomWidth: 0.5,
     borderBottomColor: "#e1e6ed",
-    alignItems: "stretch", // Added stretch for table stability[cite: 1]
+    alignItems: "stretch",
   },
   tableLabel: {
     flex: 1,
@@ -158,12 +168,12 @@ const styles = StyleSheet.create({
   },
   photo: {
     width: "100%",
-    height: 300, // Replaced "100%" with a static integer height to prevent total layout collapse
+    height: 300,
     objectFit: "contain",
   },
   photoLandscape: {
     width: 300,
-    height: "100%", // Replaced "100%" with a static integer height to prevent total layout collapse
+    height: "100%",
     objectFit: "contain",
   },
   photoCaption: {
@@ -190,15 +200,6 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function formatLabel(key: string) {
-  return key
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === "") {
     return "—";
@@ -214,7 +215,7 @@ function formatValue(value: unknown): string {
 
   if (isRecord(value)) {
     return Object.entries(value)
-      .map(([key, item]) => `${formatLabel(key)}: ${formatValue(item)}`)
+      .map(([key, item]) => `${formatSectionTitle(key)}: ${formatValue(item)}`)
       .join("\n");
   }
 
@@ -235,7 +236,6 @@ function hasContent(value: unknown): boolean {
   return true;
 }
 
-// Helper to chunk photos into rows of 3 to avoid flexWrap bugs
 function chunkArray<T>(array: T[], size: number): T[][] {
   const chunked = [];
   for (let i = 0; i < array.length; i += size) {
@@ -251,7 +251,7 @@ function DataRows({ data }: { data: JsonRecord }) {
         .filter(([, value]) => hasContent(value))
         .map(([key, value]) => (
           <View key={key} style={styles.row} wrap={false}>
-            <Text style={styles.label}>{formatLabel(key)}</Text>
+            <Text style={styles.label}>{formatSectionTitle(key)}</Text>
             <Text style={styles.value}>{formatValue(value)}</Text>
           </View>
         ))}
@@ -263,12 +263,12 @@ function MeasurementSection({ value }: { value: unknown }) {
   if (!isRecord(value)) {
     return (
       <View style={styles.note}>
-        <Text>{formatValue(value)}</Text>
+        <Text>{hasContent(value) ? formatValue(value) : "N/A"}</Text>
       </View>
     );
   }
 
-  const entries = Object.entries(value).filter(([, item]) => hasContent(item));
+  const entries = Object.entries(value);
 
   if (!entries.length) {
     return <Text style={styles.muted}>No measurements recorded.</Text>;
@@ -276,26 +276,38 @@ function MeasurementSection({ value }: { value: unknown }) {
 
   return (
     <View>
-      {entries.map(([opening, measurement]) => (
-        <View key={opening} style={{ marginBottom: 10 }}>
-          <Text
+      {entries.map(([opening, measurement]) => {
+        const isNestedRecord = isRecord(measurement);
+
+        return (
+          <View
+            key={opening}
             style={{
-              fontFamily: "Helvetica-Bold",
+              flexDirection: isNestedRecord ? "column" : "row",
               marginBottom: 4,
             }}
           >
-            {formatLabel(opening)}
-          </Text>
+            <Text
+              style={{
+                fontFamily: "Helvetica-Bold",
+                marginRight: 6,
+                marginBottom: isNestedRecord ? 4 : 0,
+              }}
+            >
+              {formatSectionTitle(opening)}:
+            </Text>
 
-          {isRecord(measurement) ? (
-            <DataRows data={measurement} />
-          ) : (
-            <View style={styles.row}>
-              <Text style={styles.value}>{formatValue(measurement)}</Text>
-            </View>
-          )}
-        </View>
-      ))}
+            {isNestedRecord ? (
+              <DataRows data={measurement} />
+            ) : (
+              <Text style={styles.value}>
+                {}
+                {hasContent(measurement) ? formatValue(measurement) : "N/A"}
+              </Text>
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -303,12 +315,14 @@ function MeasurementSection({ value }: { value: unknown }) {
 function Section({
   title,
   children,
+  break: shouldBreak,
 }: {
   title: string;
   children: React.ReactNode;
+  break?: boolean;
 }) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} break={shouldBreak}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {children}
     </View>
@@ -351,18 +365,15 @@ export function InstallationReportPdf({ report, photos }: PdfProps) {
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Woodcraft Kitchen Cabinets</Text>
-          <Text style={styles.title}>Installation Report</Text>
-          <Text style={styles.subtitle}>
-            Job # {report.job_number.split("-")[0]}
+          <Text style={styles.title}>
+            Installation Report - Job # {report.job_number.split("-")[0]}
+          </Text>
+          <Text style={styles.address}>
             {report.address ? `  |  ${report.address}` : ""}
           </Text>
         </View>
 
         <View style={styles.metaGrid}>
-          <View style={styles.metaCell}>
-            <Text style={styles.metaLabel}>Report ID</Text>
-            <Text style={styles.metaValue}>{String(report.id)}</Text>
-          </View>
           <View style={styles.metaCell}>
             <Text style={styles.metaLabel}>Submitted</Text>
             <Text style={styles.metaValue}>
@@ -385,7 +396,7 @@ export function InstallationReportPdf({ report, photos }: PdfProps) {
             </View>
             {Object.entries(checklist).map(([key, value]) => (
               <View key={key} style={styles.tableRow} wrap={false}>
-                <Text style={styles.tableLabel}>{formatLabel(key)}</Text>
+                <Text style={styles.tableLabel}>{formatSectionTitle(key)}</Text>
                 <Text style={styles.tableValue}>{formatValue(value)}</Text>
               </View>
             ))}
@@ -399,7 +410,7 @@ export function InstallationReportPdf({ report, photos }: PdfProps) {
         )}
 
         {hasContent(notApplicable) && (
-          <Section title="Not Applicable Openings">
+          <Section title="Not Applicable">
             <Text>{formatValue(notApplicable)}</Text>
           </Section>
         )}
@@ -419,7 +430,7 @@ export function InstallationReportPdf({ report, photos }: PdfProps) {
         )}
 
         {photoRows.length > 0 && (
-          <Section title="Photos">
+          <Section title="Photos" break={true}>
             {photoRows.map((row, rowIndex) => (
               <View key={rowIndex} style={styles.photoRow} wrap={false}>
                 {row.map((photo, index) => (

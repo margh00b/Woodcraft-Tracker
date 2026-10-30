@@ -201,7 +201,8 @@ export default function EditInstallReport({
         if (cancelled) return;
 
         setChecklist({
-          cabinets_site_cleaned: details.cabinets_site_cleaned ?? false,
+          site_cleaned: details.site_cleaned ?? false,
+          cabinets_cleaned: details.cabinets_cleaned ?? false,
           excess_material_removed: details.excess_material_removed ?? false,
           final_adjustment: details.final_adjustment ?? false,
           missing_materials_damages: details.missing_materials_damages ?? false,
