@@ -11,17 +11,18 @@ import JobSearchBar from "@/components/JobSearchBar/JobSearchBar";
 import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 import { useJob } from "@/context/JobContext";
 import { useAssignedJobs } from "@/hooks/useAssignedJobs";
+import { useActiveJobSelection } from "@/hooks/useActiveJobSelection";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const {
     searchResultJob,
-    setSelectedJob,
     matchingJobs,
     setAssignedJobs,
   } = useJob();
   const { jobs, isLoading, error, refetch } = useAssignedJobs();
+  const { selectActiveJob } = useActiveJobSelection();
   useEffect(() => {
     setAssignedJobs(jobs);
   }, [jobs, setAssignedJobs]);
@@ -31,8 +32,8 @@ export default function HomeScreen() {
     }, [refetch]),
   );
 
-  const openForms = (job: (typeof jobs)[number]) => {
-    setSelectedJob(job);
+  const openForms = async (job: (typeof jobs)[number]) => {
+    await selectActiveJob(job);
     router.push({
       pathname: "/forms",
       params: { jobId: String(job.id) },
@@ -87,7 +88,7 @@ export default function HomeScreen() {
               Selected search result
             </Text>
 
-            <ActiveJobCard job={searchResultJob} matchingJobs={matchingJobs} />
+            <ActiveJobCard job={searchResultJob} relatedJobs={matchingJobs} />
 
             <Pressable
               className="items-center rounded-lg bg-slate-900 px-4 py-3"

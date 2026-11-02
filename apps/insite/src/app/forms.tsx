@@ -13,6 +13,7 @@ import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 import { useFormDetails } from "@/hooks/useFormDetails";
 import { useJob } from "@/context/JobContext";
 import JobFiles from "@/components/Common/JobFiles/JobFiles";
+import { useJobHydration } from "@/hooks/useJobHydration";
 
 export default function FormsScreen() {
   const router = useRouter();
@@ -20,7 +21,8 @@ export default function FormsScreen() {
   const params = useLocalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
 
-  const { selectedJob, matchingJobs } = useJob();
+  const { selectedJob, activeJobVariants } = useJob();
+  const { isLoadingJob } = useJobHydration(jobId);
 
   const { forms: flhaForms, refetch: refetchFlhaForms } = useFormDetails(
     jobId,
@@ -59,6 +61,15 @@ export default function FormsScreen() {
         >
           <Text className="font-semibold text-white">Back to Dashboard</Text>
         </Pressable>
+      </View>
+    );
+  }
+
+  if (isLoadingJob || (jobId && selectedJob?.id !== jobId)) {
+    return (
+      <View className="flex-1 items-center justify-center bg-slate-50">
+        <ActivityIndicator size="large" color="#0f172a" />
+        <Text className="mt-3 text-sm text-slate-500">Loading active job...</Text>
       </View>
     );
   }
@@ -107,7 +118,7 @@ export default function FormsScreen() {
           Select a form below to complete or review job details
         </Text>
 
-        <ActiveJobCard job={selectedJob} matchingJobs={matchingJobs} />
+        <ActiveJobCard job={selectedJob} relatedJobs={activeJobVariants} />
         <JobFiles selectedJob={selectedJob} category="Procurement" />
 
         <View className="mb-6">

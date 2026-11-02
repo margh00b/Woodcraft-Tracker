@@ -9,7 +9,7 @@ export default function FlhaLayout() {
   const params = useGlobalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
   useJobHydration(isNaN(jobId as number) ? undefined : jobId);
-  const { selectedJob, matchingJobs } = useJob();
+  const { selectedJob, activeJobVariants } = useJob();
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -17,7 +17,7 @@ export default function FlhaLayout() {
         <View className="px-5 pt-3 pb-1 bg-slate-50">
           <ActiveJobCard
             job={selectedJob}
-            matchingJobs={matchingJobs}
+            relatedJobs={activeJobVariants}
             variant="compact"
           />
         </View>
