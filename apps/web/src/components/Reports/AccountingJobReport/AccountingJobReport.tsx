@@ -69,6 +69,7 @@ export default function AccountingJobReport() {
         ? dayjs(item.ship_schedule).format("DD-MMM-YY")
         : "TBD",
       Price: formatPrice(item.price),
+      "% Done": `${item.completion_percentage}%`,
     }));
 
     exportToExcel(excelData, "Accounting_Job_Report");
