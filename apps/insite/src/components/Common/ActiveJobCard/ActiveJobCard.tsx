@@ -1,35 +1,32 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { JobOption, useJob } from "@/context/JobContext";
+import { JobOption } from "@/context/JobContext";
 
 interface ActiveJobCardProps {
   job: JobOption;
+  matchingJobs: JobOption[];
   variant?: "default" | "compact";
   className?: string;
 }
 
 export default function ActiveJobCard({
   job,
+  matchingJobs,
   variant = "default",
   className = "",
 }: ActiveJobCardProps) {
   const isCompact = variant === "compact";
-  const { assignedJobs } = useJob();
 
   const baseJobNumber = job.job_number.split("-")[0];
 
-  const listToProcess = [
-    ...assignedJobs.filter(
-      (item) =>
-        item.job_number === baseJobNumber ||
-        item.job_number.startsWith(`${baseJobNumber}-`),
-    ),
-    job,
-  ];
-
   const suffixes = Array.from(
     new Set(
-      listToProcess
+      matchingJobs
+        .filter(
+          (item) =>
+            item.job_number === baseJobNumber ||
+            item.job_number.startsWith(`${baseJobNumber}-`),
+        )
         .map((item) =>
           item.job_number.startsWith(`${baseJobNumber}-`)
             ? item.job_number.slice(baseJobNumber.length + 1)

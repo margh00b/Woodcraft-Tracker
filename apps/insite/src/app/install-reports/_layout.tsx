@@ -9,13 +9,17 @@ export default function InstallReportLayout() {
   const params = useGlobalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
   useJobHydration(isNaN(jobId as number) ? undefined : jobId);
-  const { selectedJob } = useJob();
+  const { selectedJob, matchingJobs } = useJob();
 
   return (
     <View className="flex-1 bg-slate-50">
       {selectedJob && (
         <View className="px-5 pt-3 pb-1 bg-slate-50">
-          <ActiveJobCard job={selectedJob} variant="compact" />
+          <ActiveJobCard
+            job={selectedJob}
+            matchingJobs={matchingJobs}
+            variant="compact"
+          />
         </View>
       )}
       <View className="flex-1">

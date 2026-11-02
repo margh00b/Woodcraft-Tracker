@@ -12,6 +12,7 @@ import ActionPill from "@/components/Common/ActionPill/ActionPill";
 import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 import { useFormDetails } from "@/hooks/useFormDetails";
 import { useJob } from "@/context/JobContext";
+import JobFiles from "@/components/Common/JobFiles/JobFiles";
 
 export default function FormsScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function FormsScreen() {
   const params = useLocalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
 
-  const { selectedJob } = useJob();
+  const { selectedJob, matchingJobs } = useJob();
 
   const { forms: flhaForms, refetch: refetchFlhaForms } = useFormDetails(
     jobId,
@@ -99,14 +100,15 @@ export default function FormsScreen() {
           <Text className="text-sm font-semibold text-slate-700">Back</Text>
         </Pressable>
 
-        <Text className="mb-1 text-2xl font-bold text-slate-900">
-          Job Forms
+        <Text className="mb-1 text-2xl font-bold text-slate-900 text-center">
+          Forms & Details
         </Text>
-        <Text className="mb-5 text-sm text-slate-500">
-          Select a form to create or review for this job.
+        <Text className="mb-5 text-sm text-slate-500 text-center">
+          Select a form below to complete or review job details
         </Text>
 
-        <ActiveJobCard job={selectedJob} />
+        <ActiveJobCard job={selectedJob} matchingJobs={matchingJobs} />
+        <JobFiles selectedJob={selectedJob} category="Procurement" />
 
         <View className="mb-6">
           <Text className="mb-3 text-md font-bold uppercase tracking-wider text-slate-500">

@@ -1,9 +1,7 @@
 import React, { useCallback } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 import InstallReportList from "@/components/InstallReport/InstallReportList/InstallReportList";
-import { useJobHydration } from "@/hooks/useJobHydration";
 import { useFormDetails } from "@/hooks/useFormDetails";
 import { useJob } from "@/context/JobContext";
 

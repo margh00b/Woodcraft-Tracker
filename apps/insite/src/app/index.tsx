@@ -15,8 +15,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { selectedJob, setSelectedJob, assignedJobs, setAssignedJobs } =
-    useJob();
+  const {
+    selectedJob,
+    setSelectedJob,
+    matchingJobs,
+    assignedJobs,
+    setAssignedJobs,
+  } = useJob();
   const { jobs, isLoading, error, refetch } = useAssignedJobs();
   useEffect(() => {
     setAssignedJobs(jobs);
@@ -83,13 +88,13 @@ export default function HomeScreen() {
               Selected search result
             </Text>
 
-            <ActiveJobCard job={selectedJob} />
+            <ActiveJobCard job={selectedJob} matchingJobs={matchingJobs} />
 
             <Pressable
               className="items-center rounded-lg bg-slate-900 px-4 py-3"
               onPress={() => openForms(selectedJob)}
             >
-              <Text className="font-semibold text-white">Open Job Forms</Text>
+              <Text className="font-semibold text-white">Select Job</Text>
             </Pressable>
           </View>
         )}
@@ -154,7 +159,7 @@ export default function HomeScreen() {
                   </View>
 
                   <Text className="text-sm font-semibold text-blue-700">
-                    Open Forms →
+                    Select →
                   </Text>
                 </View>
 
