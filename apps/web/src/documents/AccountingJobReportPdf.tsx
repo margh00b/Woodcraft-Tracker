@@ -36,11 +36,12 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     alignItems: "center",
   },
-  colJob: { width: "10%", paddingLeft: 2, fontWeight: "bold", color: colors.gray.title },
-  colClient: { width: "20%", color: colors.gray.title },
-  colAddress: { width: "34%", color: colors.gray.title, paddingRight: 6 },
-  colShipDate: { width: "14%", color: colors.gray.title, textAlign: "center" },
-  colPrice: { width: "22%", color: colors.gray.title, textAlign: "right", paddingRight: 4, fontWeight: "bold" },
+  colJob: { width: "8%", paddingLeft: 2, fontWeight: "bold", color: colors.gray.title },
+  colClient: { width: "18%", color: colors.gray.title },
+  colAddress: { width: "28%", color: colors.gray.title, paddingRight: 6 },
+  colShipDate: { width: "12%", color: colors.gray.title, textAlign: "center" },
+  colPrice: { width: "17%", color: colors.gray.title, textAlign: "right", paddingRight: 4, fontWeight: "bold" },
+  colPercent: { width: "17%", textAlign: "center", fontWeight: "bold", color: colors.blue.primary },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -82,6 +83,7 @@ export const AccountingJobReportPdf = ({ data }: { data: AccountingJobItem[] }) 
         <Text style={styles.colAddress}>Shipping Address</Text>
         <Text style={styles.colShipDate}>Ship Date</Text>
         <Text style={styles.colPrice}>Price</Text>
+        <Text style={styles.colPercent}>% Done</Text>
       </View>
 
       {data.map((item) => (
@@ -95,6 +97,7 @@ export const AccountingJobReportPdf = ({ data }: { data: AccountingJobItem[] }) 
               : "TBD"}
           </Text>
           <Text style={styles.colPrice}>{formatPrice(item.price)}</Text>
+          <Text style={styles.colPercent}>{item.completion_percentage}%</Text>
         </View>
       ))}
 
