@@ -20,7 +20,7 @@ export default function FormsScreen() {
   const params = useLocalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
 
-  const { selectedJob, matchingJobs } = useJob();
+  const { selectedJob, activeJobVariants } = useJob();
 
   const { forms: flhaForms, refetch: refetchFlhaForms } = useFormDetails(
     jobId,
@@ -107,7 +107,7 @@ export default function FormsScreen() {
           Select a form below to complete or review job details
         </Text>
 
-        <ActiveJobCard job={selectedJob} matchingJobs={matchingJobs} />
+        <ActiveJobCard job={selectedJob} relatedJobs={activeJobVariants} />
         <JobFiles selectedJob={selectedJob} category="Procurement" />
 
         <View className="mb-6">
