@@ -79,54 +79,57 @@ export function usePlantStatusReport() {
         return dateA - dateB;
       });
 
-      return sortedData.map((job: any) => {
-        const prod = job.production_schedule;
-        const so = job.sales_orders;
-        const inst = job.installation;
+      return sortedData
+        .map((job: any) => {
+          const prod = job.production_schedule;
+          const so = job.sales_orders;
+          const inst = job.installation;
 
-        const steps = [
-          prod.cut_melamine_completed_actual,
-          prod.cut_finish_completed_actual,
-          prod.custom_finish_completed_actual,
-          prod.doors_completed_actual,
-          prod.drawer_completed_actual,
-          prod.paint_completed_actual,
-          prod.assembly_completed_actual,
-          inst?.wrap_completed,
-        ];
+          const steps = [
+            prod.cut_melamine_completed_actual,
+            prod.cut_finish_completed_actual,
+            prod.custom_finish_completed_actual,
+            prod.doors_completed_actual,
+            prod.drawer_completed_actual,
+            prod.paint_completed_actual,
+            prod.assembly_completed_actual,
+            inst?.wrap_completed,
+          ];
 
-        const completedSteps = steps.filter(
-          (step) => step !== null && step !== false,
-        ).length;
-        const percentage = Math.round((completedSteps / steps.length) * 100);
+          const completedSteps = steps.filter(
+            (step) => step !== null && step !== false,
+          ).length;
 
-        const address = [
-          so.shipping_street,
-          so.shipping_city,
-          so.shipping_province,
-          so.shipping_zip,
-        ]
-          .filter(Boolean)
-          .join(", ");
+          const percentage = Math.round((completedSteps / steps.length) * 100);
 
-        return {
-          id: job.id,
-          job_number: job.job_number,
-          date_sold: so.date_sold,
-          shipping_client_name: so.shipping_client_name || "Unknown",
-          shipping_address: address,
-          cut_melamine: prod.cut_melamine_completed_actual,
-          cut_finish: prod.cut_finish_completed_actual,
-          custom_finish: prod.custom_finish_completed_actual,
-          doors: prod.doors_completed_actual,
-          drawers: prod.drawer_completed_actual,
-          paint: prod.paint_completed_actual,
-          assembly: prod.assembly_completed_actual,
-          wrap: inst?.wrap_completed || null,
-          completion_percentage: percentage,
-          ship_schedule: prod?.ship_schedule,
-        };
-      }) as PlantStatusItem[];
+          const address = [
+            so.shipping_street,
+            so.shipping_city,
+            so.shipping_province,
+            so.shipping_zip,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
+          return {
+            id: job.id,
+            job_number: job.job_number,
+            date_sold: so.date_sold,
+            shipping_client_name: so.shipping_client_name || "Unknown",
+            shipping_address: address,
+            cut_melamine: prod.cut_melamine_completed_actual,
+            cut_finish: prod.cut_finish_completed_actual,
+            custom_finish: prod.custom_finish_completed_actual,
+            doors: prod.doors_completed_actual,
+            drawers: prod.drawer_completed_actual,
+            paint: prod.paint_completed_actual,
+            assembly: prod.assembly_completed_actual,
+            wrap: inst?.wrap_completed || null,
+            completion_percentage: percentage,
+            ship_schedule: prod?.ship_schedule,
+          };
+        })
+        .filter((job) => job.completion_percentage > 0) as PlantStatusItem[];
     },
     enabled: isAuthenticated,
   });
