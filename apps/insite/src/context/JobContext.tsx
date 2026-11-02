@@ -13,6 +13,8 @@ export interface JobOption {
 interface JobContextType {
   selectedJob: JobOption | null;
   setSelectedJob: (job: JobOption | null) => void;
+  activeJobVariants: JobOption[];
+  setActiveJobVariants: (jobs: JobOption[]) => void;
   searchResultJob: JobOption | null;
   setSearchResultJob: (job: JobOption | null) => void;
   searchQuery: string;
@@ -27,9 +29,10 @@ interface JobContextType {
 const JobContext = createContext<JobContextType | undefined>(undefined);
 
 export function JobProvider({ children }: { children: ReactNode }) {
-  // selectedJob is the job currently opened in forms.
+  // The active job and its full family are the source of truth after selection.
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null);
-  // Keep dashboard search state independent from the forms' active job.
+  const [activeJobVariants, setActiveJobVariants] = useState<JobOption[]>([]);
+  // Dashboard search state is independent and survives workflow navigation.
   const [searchResultJob, setSearchResultJob] = useState<JobOption | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [matchingJobs, setMatchingJobs] = useState<JobOption[]>([]);
@@ -46,6 +49,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
       value={{
         selectedJob,
         setSelectedJob,
+        activeJobVariants,
+        setActiveJobVariants,
         searchResultJob,
         setSearchResultJob,
         searchQuery,
