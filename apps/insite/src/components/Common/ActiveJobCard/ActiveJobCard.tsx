@@ -4,24 +4,23 @@ import { JobOption } from "@/context/JobContext";
 
 interface ActiveJobCardProps {
   job: JobOption;
-  matchingJobs: JobOption[];
+  relatedJobs: JobOption[];
   variant?: "default" | "compact";
   className?: string;
 }
 
 export default function ActiveJobCard({
   job,
-  matchingJobs,
+  relatedJobs,
   variant = "default",
   className = "",
 }: ActiveJobCardProps) {
   const isCompact = variant === "compact";
-
   const baseJobNumber = job.job_number.split("-")[0];
 
   const suffixes = Array.from(
     new Set(
-      matchingJobs
+      relatedJobs
         .filter(
           (item) =>
             item.job_number === baseJobNumber ||
@@ -46,14 +45,10 @@ export default function ActiveJobCard({
         <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
           Active Job
         </Text>
-
         <View className="flex-row flex-wrap items-center gap-1.5">
           <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
-            <Text className="text-xs font-bold text-white">
-              #{baseJobNumber}
-            </Text>
+            <Text className="text-xs font-bold text-white">#{baseJobNumber}</Text>
           </View>
-
           {suffixes.length > 0 && (
             <View className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
               <Text className="text-[11px] font-semibold text-slate-600">
@@ -63,15 +58,9 @@ export default function ActiveJobCard({
           )}
         </View>
       </View>
-
-      <Text
-        className={`${
-          isCompact ? "text-md" : "text-lg"
-        } font-bold text-slate-800`}
-      >
+      <Text className={`${isCompact ? "text-md" : "text-lg"} font-bold text-slate-800`}>
         {job.sales_orders?.shipping_client_name || "Client Name N/A"}
       </Text>
-
       <Text className="mt-0.5 text-sm text-slate-600">
         {job.sales_orders?.shipping_street || "Street Name N/A"},{" "}
         {job.sales_orders?.shipping_city || "City N/A"}
