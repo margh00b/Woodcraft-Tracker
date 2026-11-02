@@ -23,7 +23,6 @@ import {
   TbFileAnalytics,
   TbBuilding,
 } from "react-icons/tb";
-import { useRouter } from "next/navigation";
 import { colors, gradients } from "@/theme";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -100,7 +99,6 @@ const reports = [
 ];
 
 export default function ReportsDashboard() {
-  const router = useRouter();
   const { hasAnyRole } = usePermissions();
   const visibleReports = reports.filter(
     (report) =>
