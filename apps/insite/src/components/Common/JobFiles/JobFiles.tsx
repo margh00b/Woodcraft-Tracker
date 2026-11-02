@@ -90,11 +90,11 @@ export default function JobFiles({ selectedJob, category }: JobFilesProps) {
   };
 
   return (
-    <View className="relative">
+    <View className="relative mb-4 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setIsOpen(!isOpen)}
-        className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-5 shadow-sm"
+        className="flex-row items-center justify-between bg-white px-3.5 py-5"
       >
         <Text className="text-xs font-semibold text-slate-700">
           Files ({files.length})

@@ -82,7 +82,7 @@ export default function JobSearchBar() {
   };
 
   return (
-    <View className=" rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <View className=" rounded-xl border border-slate-200 bg-white p-4 shadow-sm mb-6">
       <View className="mb-3 flex-row items-center justify-between">
         <Text className="text-sm font-bold uppercase tracking-wider text-slate-600">
           Job Number
