@@ -12,8 +12,8 @@ import { useJobSearch } from "@/hooks/useJobSearch";
 export default function JobSearchBar() {
   const { searchJobs, isSearching, reset } = useJobSearch();
   const {
-    selectedJob,
-    setSelectedJob,
+    searchResultJob,
+    setSearchResultJob,
     searchQuery,
     setSearchQuery,
     matchingJobs,
@@ -28,11 +28,9 @@ export default function JobSearchBar() {
     const cleanInput = jobNumberInput.trim();
 
     if (cleanInput.length < 5) {
-      if (matchingJobs.length > 0 || selectedJob !== null) {
+      if (matchingJobs.length > 0 || searchResultJob !== null) {
         reset();
-        setMatchingJobs([]);
-        setSelectedJob(null);
-        setSearchQuery(cleanInput);
+        clearJobState();
       }
       setHasSearched(false);
       return;
@@ -49,12 +47,12 @@ export default function JobSearchBar() {
       try {
         const results = await searchJobs(cleanInput);
         setMatchingJobs(results);
-        setSelectedJob(results.length > 0 ? results[0] : null);
+        setSearchResultJob(results.length > 0 ? results[0] : null);
         setSearchQuery(cleanInput);
         setHasSearched(true);
       } catch {
         setMatchingJobs([]);
-        setSelectedJob(null);
+        setSearchResultJob(null);
         setSearchQuery(cleanInput);
         setHasSearched(true);
       }
@@ -65,8 +63,12 @@ export default function JobSearchBar() {
     jobNumberInput,
     searchJobs,
     reset,
+    clearJobState,
+    searchQuery,
+    matchingJobs.length,
+    searchResultJob,
     setMatchingJobs,
-    setSelectedJob,
+    setSearchResultJob,
     setSearchQuery,
   ]);
 
@@ -86,7 +88,7 @@ export default function JobSearchBar() {
           Job Number
         </Text>
 
-        {(selectedJob || jobNumberInput.length > 0) && (
+        {(searchResultJob || jobNumberInput.length > 0) && (
           <Pressable
             onPress={handleClearJob}
             hitSlop={8}
