@@ -24,7 +24,8 @@ import {
   TbBuilding,
 } from "react-icons/tb";
 import { useRouter } from "next/navigation";
-import { colors, gradients, linearGradients } from "@/theme";
+import { colors, gradients } from "@/theme";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const reports = [
   {
@@ -74,6 +75,14 @@ const reports = [
     path: "/dashboard/reports/plantstatusreport",
   },
   {
+    title: "Accounting Job Report",
+    description: "Active jobs and their recorded prices for accounting.",
+    icon: TbFileAnalytics,
+    gradient: gradients.success,
+    path: "/dashboard/reports/accountingjobreport",
+    allowedRoles: ["admin", "reception"],
+  },
+  {
     title: "Job Status",
     description:
       "Comprehensive status report for all active jobs, including inspections, cabinet finals, SOs etc...",
@@ -92,6 +101,11 @@ const reports = [
 
 export default function ReportsDashboard() {
   const router = useRouter();
+  const { hasAnyRole } = usePermissions();
+  const visibleReports = reports.filter(
+    (report) =>
+      !("allowedRoles" in report) || hasAnyRole(report.allowedRoles),
+  );
 
   return (
     <Box
@@ -123,7 +137,7 @@ export default function ReportsDashboard() {
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="lg">
-        {reports.map((report) => (
+        {visibleReports.map((report) => (
           <UnstyledButton
             key={report.title}
             onClick={() => window.open(report.path, "_blank")}
