@@ -70,6 +70,12 @@ export type Database = {
       foreignKeyName: "backorders_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "backorders_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -230,6 +236,12 @@ isOneToOne: false
       foreignKeyName: "homeowners_info_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: true
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "homeowners_info_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: true
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -350,6 +362,12 @@ isOneToOne: false
       foreignKeyName: "invoices_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "invoices_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -451,6 +469,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "job_attachments_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
       foreignKeyName: "job_attachments_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
@@ -674,6 +698,12 @@ isOneToOne: false
       foreignKeyName: "purchase_tracking_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: true
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "purchase_tracking_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: true
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -824,6 +854,12 @@ isOneToOne: false
       foreignKeyName: "service_orders_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "service_orders_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -907,6 +943,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "site_visits_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
       foreignKeyName: "site_visits_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
@@ -1010,6 +1052,12 @@ isOneToOne: false
       foreignKeyName: "warehouse_tracking_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: true
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "warehouse_tracking_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: true
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -1083,13 +1131,27 @@ isOneToOne: true
                 }
           }
           Views: {
-            "backorders_view": {
+            "accounting_job_report": {
+                  Row: {
+                    "assembly_completed_actual": string | null,"client_name": string | null,"custom_finish_completed_actual": string | null,"cut_finish_completed_actual": string | null,"cut_melamine_completed_actual": string | null,"date_sold": string | null,"doors_completed_actual": string | null,"drawer_completed_actual": string | null,"job_id": number,"job_number": string,"paint_completed_actual": string | null,"price": number | null,"ship_schedule": string | null,"shipping_city": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"wrap_completed": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"backorders_view": {
                   Row: {
                     "comments": string | null,"complete": boolean,"created_at": string,"date_entered": string | null,"due_date": string | null,"id": number,"job_id": number,"job_number": string | null,"shipping_city": string | null,"shipping_client_name": string | null,"shipping_province": string | null,"shipping_street": string | null,"shipping_zip": string | null,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [
                     {
+      foreignKeyName: "backorders_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
       foreignKeyName: "backorders_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
@@ -1258,6 +1320,12 @@ isOneToOne: false
                   ComputedFields: never
                   Relationships: [
                     {
+      foreignKeyName: "service_orders_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
       foreignKeyName: "service_orders_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false
@@ -1433,6 +1501,12 @@ isOneToOne: true
       foreignKeyName: "purchase_tracking_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: true
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
+      foreignKeyName: "purchase_tracking_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: true
       referencedRelation: "inspection_table_view"
       referencedColumns: ["job_id"]
     },{
@@ -1546,6 +1620,12 @@ isOneToOne: true
                   ComputedFields: never
                   Relationships: [
                     {
+      foreignKeyName: "backorders_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "accounting_job_report"
+      referencedColumns: ["job_id"]
+    },{
       foreignKeyName: "backorders_job_id_fkey"
       columns: ["job_id"]
 isOneToOne: false

@@ -36,12 +36,28 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     alignItems: "center",
   },
-  colJob: { width: "8%", paddingLeft: 2, fontWeight: "bold", color: colors.gray.title },
+  colJob: {
+    width: "8%",
+    paddingLeft: 2,
+    fontWeight: "bold",
+    color: colors.gray.title,
+  },
   colClient: { width: "18%", color: colors.gray.title },
   colAddress: { width: "28%", color: colors.gray.title, paddingRight: 6 },
   colShipDate: { width: "12%", color: colors.gray.title, textAlign: "center" },
-  colPrice: { width: "17%", color: colors.gray.title, textAlign: "right", paddingRight: 4, fontWeight: "bold" },
-  colPercent: { width: "17%", textAlign: "center", fontWeight: "bold", color: colors.blue.primary },
+  colPrice: {
+    width: "17%",
+    color: colors.gray.title,
+    textAlign: "right",
+    paddingRight: 4,
+    fontWeight: "bold",
+  },
+  colPercent: {
+    width: "17%",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: colors.blue.primary,
+  },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -61,13 +77,17 @@ const formatPrice = (price: number | null) =>
         currency: "CAD",
       });
 
-export const AccountingJobReportPdf = ({ data }: { data: AccountingJobItem[] }) => (
+export const AccountingJobReportPdf = ({
+  data,
+}: {
+  data: AccountingJobItem[];
+}) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Accounting Job Report</Text>
-          <Text>All active jobs currently not shipped</Text>
+          <Text>All active jobs in Plant currently Not Shipped</Text>
         </View>
         <View>
           <Text style={styles.meta}>
