@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Slot, useRouter, useSegments } from "expo-router";
+
 import { useSupabase } from "@/hooks/useSupabase";
+import { useJob } from "@/context/JobContext";
 import TopBar from "@/components/TopBar/TopBar";
 import toCapitalize from "@/utils/capitalize";
 
@@ -12,6 +14,8 @@ export default function AppShell() {
   const segments = useSegments();
 
   const { supabase, session, user, isAuthenticated, isLoading } = useSupabase();
+
+  const { refreshAssignedJobs } = useJob();
 
   useEffect(() => {
     if (isLoading) return;
@@ -59,8 +63,10 @@ export default function AppShell() {
           name={toCapitalize(username)}
           role={toCapitalize(role)}
           signout={handleSignOut}
+          onRefresh={refreshAssignedJobs}
         />
       )}
+
       <Slot />
     </View>
   );

@@ -1,74 +1,54 @@
-import { useCallback, useEffect, useState } from "react";
 import { useSupabase } from "@/hooks/useSupabase";
 import type { JobOption } from "@/context/JobContext";
 import { JOB_DETAILS_SELECT } from "@/constants/queries";
 
-export function useAssignedJobs() {
-  const { supabase, user, isLoading: isAuthLoading } = useSupabase();
+type Supabase = ReturnType<typeof useSupabase>["supabase"];
+type AuthUser = NonNullable<ReturnType<typeof useSupabase>["user"]>;
 
-  const [jobs, setJobs] = useState<JobOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export async function useAssignedJobs(
+  supabase: Supabase,
+  user: AuthUser | null,
+): Promise<JobOption[]> {
+  if (!user) {
+    throw new Error("You must be signed in to view assigned jobs.");
+  }
 
-  const fetchAssignedJobs = useCallback(async () => {
-    if (isAuthLoading) return;
+  const { data: installer, error: installerError } = await supabase
+    .from("installers")
+    .select("installer_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
-    if (!user) {
-      setJobs([]);
-      setError("You must be signed in to view assigned jobs.");
-      setIsLoading(false);
-      return;
-    }
+  if (installerError) throw installerError;
 
-    setIsLoading(true);
-    setError(null);
+  if (!installer) {
+    throw new Error("No installer profile is linked to your account.");
+  }
 
-    try {
-      const { data: installer, error: installerError } = await supabase
-        .from("installers")
-        .select("installer_id")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
+  const { data: assignedVariants, error: assignedError } = await supabase
+    .from("jobs")
+    .select("job_base_number, installation!inner(installer_id)")
+    .eq("installation.installer_id", installer.installer_id)
+    .eq("is_active", true);
 
-      if (installerError) throw installerError;
+  if (assignedError) throw assignedError;
 
-      if (!installer) {
-        setJobs([]);
-        setError("No installer profile is linked to your account.");
-        return;
-      }
+  if (!assignedVariants?.length) {
+    return [];
+  }
 
-      const { data, error: jobsError } = await supabase
-        .from("jobs")
-        .select(`${JOB_DETAILS_SELECT}, installation!inner(installer_id)`)
-        .eq("installation.installer_id", installer.installer_id)
-        .eq("is_active", true)
-        .order("job_number", { ascending: true });
+  const baseNumbers = [
+    ...new Set(assignedVariants.map((job) => job.job_base_number)),
+  ];
 
-      if (jobsError) throw jobsError;
+  const { data, error: jobsError } = await supabase
+    .from("jobs")
+    .select(JOB_DETAILS_SELECT)
+    .eq("is_active", true)
+    .in("job_base_number", baseNumbers)
+    .order("job_number", { ascending: true });
 
-      setJobs((data ?? []) as unknown as JobOption[]);
-    } catch (err: unknown) {
-      console.error("Failed to load assigned jobs:", err);
-      setJobs([]);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load your assigned jobs.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [supabase, user, isAuthLoading]);
+  if (jobsError) throw jobsError;
 
-  useEffect(() => {
-    void fetchAssignedJobs();
-  }, [fetchAssignedJobs]);
-
-  return {
-    jobs,
-    isLoading: isLoading || isAuthLoading,
-    error,
-    refetch: fetchAssignedJobs,
-  };
+  return (data ?? []) as unknown as JobOption[];
 }
