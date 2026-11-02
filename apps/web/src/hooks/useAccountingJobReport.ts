@@ -9,6 +9,7 @@ export type AccountingJobItem = {
   date_sold: string;
   ship_schedule: string | null;
   price: number | null;
+  completion_percentage: number;
 };
 
 export function useAccountingJobReport() {
@@ -34,9 +35,17 @@ export function useAccountingJobReport() {
           production_schedule!inner (
             ship_schedule,
             in_plant_actual,
-            in_plant_cabinets_actual
+            in_plant_cabinets_actual,
+            cut_melamine_completed_actual,
+            cut_finish_completed_actual,
+            custom_finish_completed_actual,
+            doors_completed_actual,
+            drawer_completed_actual,
+            paint_completed_actual,
+            assembly_completed_actual
           ),
           installation!inner (
+            wrap_completed,
             has_shipped
           )
         `)
@@ -57,6 +66,25 @@ export function useAccountingJobReport() {
           const production = Array.isArray(job.production_schedule)
             ? job.production_schedule[0]
             : job.production_schedule;
+          const installation = Array.isArray(job.installation)
+            ? job.installation[0]
+            : job.installation;
+
+          const steps = [
+            production?.cut_melamine_completed_actual,
+            production?.cut_finish_completed_actual,
+            production?.custom_finish_completed_actual,
+            production?.doors_completed_actual,
+            production?.drawer_completed_actual,
+            production?.paint_completed_actual,
+            production?.assembly_completed_actual,
+            installation?.wrap_completed,
+          ];
+
+          const completedSteps = steps.filter(
+            (step) => step !== null && step !== false,
+          ).length;
+          const percentage = Math.round((completedSteps / steps.length) * 100);
 
           const address = [
             so?.shipping_street,
@@ -75,6 +103,7 @@ export function useAccountingJobReport() {
             shipping_address: address,
             ship_schedule: production?.ship_schedule || null,
             price: so?.total ?? null,
+            completion_percentage: percentage,
           };
         })
         .sort((a, b) => {
