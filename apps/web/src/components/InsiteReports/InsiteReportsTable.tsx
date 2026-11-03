@@ -37,6 +37,22 @@ import type {
 } from "@/hooks/useInsiteReports";
 import { formatDate } from "@/utils/installationReportUtils";
 
+type InsiteReportsTableProps = {
+  reportLabel: string;
+  jobId: number | null;
+  reports: InsiteReport[];
+  total: number;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  isFetching: boolean;
+  filters: InsiteReportFilters;
+  onFiltersChange: (filters: InsiteReportFilters) => void;
+  pagination: PaginationState;
+  onPaginationChange: (pagination: PaginationState) => void;
+  onSelectReport: (report: InsiteReport) => void;
+};
+
 export default function InsiteReportsTable({
   reportLabel,
   jobId,
@@ -51,34 +67,31 @@ export default function InsiteReportsTable({
   pagination,
   onPaginationChange,
   onSelectReport,
-}: {
-  reportLabel: string;
-  jobId: number | null;
-  reports: InsiteReport[];
-  total: number;
-  isLoading: boolean;
-  isError: boolean;
-  error: unknown;
-  isFetching: boolean;
-  filters: InsiteReportFilters;
-  onFiltersChange: (filters: InsiteReportFilters) => void;
-  pagination: PaginationState;
-  onPaginationChange: (pagination: PaginationState) => void;
-  onSelectReport: (report: InsiteReport) => void;
-}) {
+}: InsiteReportsTableProps) {
   const pageCount = Math.max(1, Math.ceil(total / pagination.pageSize));
   const hasFilters = Object.values(filters).some(Boolean);
-  const update = (key: keyof InsiteReportFilters, value: string) => {
+
+  const updateFilter = (key: keyof InsiteReportFilters, value: string) => {
     onFiltersChange({ ...filters, [key]: value });
     onPaginationChange({ ...pagination, pageIndex: 0 });
   };
-  const clear = () => {
+
+  const clearFilters = () => {
     onFiltersChange({
       jobNumber: "",
       address: "",
       installer: "",
       createdFrom: "",
       createdTo: "",
+    });
+    onPaginationChange({ ...pagination, pageIndex: 0 });
+  };
+
+  const handleDateRangeChange = (from: string | null, to: string | null) => {
+    onFiltersChange({
+      ...filters,
+      createdFrom: from ?? "",
+      createdTo: to ?? "",
     });
     onPaginationChange({ ...pagination, pageIndex: 0 });
   };
@@ -103,12 +116,14 @@ export default function InsiteReportsTable({
                 ? `${reportLabel} for Job #${reports[0]?.job_number?.replace(/[^0-9]+$/, "") ?? jobId}`
                 : `Submitted ${reportLabel.toLowerCase()}s`}
             </Title>
+
             <Text size="sm" c="dimmed">
               {jobId !== null
                 ? `${reportLabel} submissions for this job.`
-                : `Filter by job, address, submitter, or submission date.`}
+                : "Filter by job, address, submitter, or submission date."}
             </Text>
           </Stack>
+
           <Badge variant="light" color="violet" size="lg" radius="sm">
             {total}{" "}
             {total === 1
@@ -116,6 +131,7 @@ export default function InsiteReportsTable({
               : `${reportLabel.toLowerCase()}s`}
           </Badge>
         </Group>
+
         {jobId === null && (
           <Stack gap="sm">
             <Box
@@ -131,25 +147,28 @@ export default function InsiteReportsTable({
                 leftSection={<TbSearch size={16} />}
                 value={filters.jobNumber}
                 onChange={(event) =>
-                  update("jobNumber", event.currentTarget.value)
+                  updateFilter("jobNumber", event.currentTarget.value)
                 }
               />
+
               <TextInput
                 label="Address"
                 placeholder="Street or city"
                 value={filters.address}
                 onChange={(event) =>
-                  update("address", event.currentTarget.value)
+                  updateFilter("address", event.currentTarget.value)
                 }
               />
+
               <TextInput
                 label="Submitted by"
                 placeholder="Name"
                 value={filters.installer}
                 onChange={(event) =>
-                  update("installer", event.currentTarget.value)
+                  updateFilter("installer", event.currentTarget.value)
                 }
               />
+
               <DatePickerInput
                 size="xs"
                 type="range"
@@ -165,29 +184,26 @@ export default function InsiteReportsTable({
                     ? new Date(`${filters.createdTo}T12:00:00`)
                     : null,
                 ]}
-                onChange={([from, to]) => {
-                  onFiltersChange({
-                    ...filters,
-                    createdFrom: from ?? "",
-                    createdTo: to ?? "",
-                  });
-                  onPaginationChange({ ...pagination, pageIndex: 0 });
-                }}
+                onChange={([from, to]) =>
+                  handleDateRangeChange(from, to)
+                }
                 valueFormat="YYYY-MM-DD"
               />
             </Box>
+
             <Group justify="space-between">
               <Text size="xs" c="dimmed">
                 {hasFilters
                   ? "Showing matching submissions"
                   : "Showing the most recent submissions"}
               </Text>
+
               <Button
                 variant="subtle"
                 color="gray"
                 size="xs"
                 leftSection={<TbFilterOff size={15} />}
-                onClick={clear}
+                onClick={clearFilters}
                 disabled={!hasFilters}
               >
                 Clear filters
@@ -196,7 +212,9 @@ export default function InsiteReportsTable({
           </Stack>
         )}
       </Box>
+
       <Divider />
+
       {isLoading ? (
         <Center style={{ flex: 1, minHeight: 220 }}>
           <Stack align="center" gap="sm">
@@ -224,18 +242,25 @@ export default function InsiteReportsTable({
             <ThemeIcon size={54} radius="xl" variant="light" color="gray">
               <TbSearch size={24} />
             </ThemeIcon>
+
             <Text fw={600}>
               {hasFilters
                 ? "No matching submissions"
                 : `No ${reportLabel.toLowerCase()}s found`}
             </Text>
+
             <Text size="sm" c="dimmed" ta="center" maw={380}>
               {hasFilters
                 ? "Try changing or clearing your filters."
                 : `Submitted Insite ${reportLabel.toLowerCase()}s will appear here.`}
             </Text>
+
             {hasFilters && (
-              <Button variant="light" color="violet" onClick={clear}>
+              <Button
+                variant="light"
+                color="violet"
+                onClick={clearFilters}
+              >
                 Clear filters
               </Button>
             )}
@@ -250,7 +275,9 @@ export default function InsiteReportsTable({
             layout="fixed"
             miw={850}
             styles={{
-              thead: { background: "var(--mantine-color-gray-0)" },
+              thead: {
+                background: "var(--mantine-color-gray-0)",
+              },
               th: {
                 padding: `${rem(12)} ${rem(12)}`,
                 textAlign: "center",
@@ -274,14 +301,21 @@ export default function InsiteReportsTable({
                 <Table.Th w={110}>Action</Table.Th>
               </Table.Tr>
             </Table.Thead>
+
             <Table.Tbody>
               {reports.map((report) => (
                 <Table.Tr key={report.id}>
                   <Table.Td>
-                    <Badge variant="light" color="violet" radius="sm" size="lg">
+                    <Badge
+                      variant="light"
+                      color="violet"
+                      radius="sm"
+                      size="lg"
+                    >
                       {report.job_number?.split("-")[0] ?? report.job_id}
                     </Badge>
                   </Table.Td>
+
                   <Table.Td>
                     <Text
                       size="sm"
@@ -291,14 +325,17 @@ export default function InsiteReportsTable({
                       {report.address || "—"}
                     </Text>
                   </Table.Td>
+
                   <Table.Td>
                     <Text size="sm">{formatDate(report.created_at)}</Text>
                   </Table.Td>
+
                   <Table.Td>
                     <Text size="sm" fw={500} truncate>
                       {report.submitted_by || "—"}
                     </Text>
                   </Table.Td>
+
                   <Table.Td>
                     <Badge
                       variant="light"
@@ -313,6 +350,7 @@ export default function InsiteReportsTable({
                       {report.attachment_count}
                     </Badge>
                   </Table.Td>
+
                   <Table.Td>
                     <Tooltip
                       label={`View ${reportLabel.toLowerCase()} details`}
@@ -335,15 +373,30 @@ export default function InsiteReportsTable({
           </Table>
         </ScrollArea>
       )}
+
       <Divider />
-      <Flex justify="space-between" align="center" wrap="wrap" gap="sm" p="md">
+
+      <Flex
+        justify="space-between"
+        align="center"
+        wrap="wrap"
+        gap="sm"
+        p="md"
+      >
         <Text size="sm" c="dimmed">
           {total === 0
             ? `No ${reportLabel.toLowerCase()}s`
-            : `Showing ${pagination.pageIndex * pagination.pageSize + 1}–${Math.min((pagination.pageIndex + 1) * pagination.pageSize, total)} of ${total}`}
+            : `Showing ${pagination.pageIndex * pagination.pageSize + 1}–${Math.min(
+                (pagination.pageIndex + 1) * pagination.pageSize,
+                total,
+              )} of ${total}`}
         </Text>
+
         <Group gap="xs">
-          {isFetching && !isLoading && <Loader size="xs" color="violet" />}
+          {isFetching && !isLoading && (
+            <Loader size="xs" color="violet" />
+          )}
+
           <Button
             variant="default"
             size="xs"
@@ -358,9 +411,11 @@ export default function InsiteReportsTable({
           >
             Previous
           </Button>
+
           <Text size="sm" c="dimmed">
             Page {pagination.pageIndex + 1} of {pageCount}
           </Text>
+
           <Button
             variant="default"
             size="xs"
