@@ -22,24 +22,40 @@ function InstallationReportsContent() {
   const searchParams = useSearchParams();
   const jobIdParam = searchParams.get("jobId");
   const reportId = searchParams.get("reportId");
-  const jobId = jobIdParam && /^\\d+$/.test(jobIdParam) ? Number(jobIdParam) : null;
+  const jobId =
+    jobIdParam && /^\\d+$/.test(jobIdParam) ? Number(jobIdParam) : null;
 
-  const [filters, setFilters] = useState<InsiteReportFilters>({ ...emptyInsiteReportFilters });
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 });
-  const [selectedReport, setSelectedReport] = useState<InstallationReport | null>(null);
+  const [filters, setFilters] = useState<InsiteReportFilters>({
+    ...emptyInsiteReportFilters,
+  });
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  });
+  const [selectedReport, setSelectedReport] =
+    useState<InstallationReport | null>(null);
 
   useEffect(() => {
-    setPagination((current) => current.pageIndex === 0 ? current : { ...current, pageIndex: 0 });
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    );
   }, [jobId]);
 
-  const reportsQuery = useInsiteReports({ type: "install_reports", jobId, pagination, filters });
+  const reportsQuery = useInsiteReports({
+    type: "install_reports",
+    jobId,
+    pagination,
+    filters,
+  });
   const photosQuery = useInstallationReportPhotos(selectedReport?.id ?? null);
   const reports = reportsQuery.data?.reports ?? [];
   const hasAutoOpened = useRef(false);
 
   useEffect(() => {
     if (reportId && reports.length > 0 && !hasAutoOpened.current) {
-      const reportFromUrl = reports.find((report) => String(report.id) === reportId);
+      const reportFromUrl = reports.find(
+        (report) => String(report.id) === reportId,
+      );
       if (reportFromUrl) {
         setSelectedReport(reportFromUrl as InstallationReport);
         hasAutoOpened.current = true;
@@ -48,7 +64,16 @@ function InstallationReportsContent() {
   }, [reportId, reports]);
 
   return (
-    <Box style={{ display: "flex", flexDirection: "column", gap: rem(18), padding: rem(24), height: "calc(100vh - 45px)", minHeight: 0 }}>
+    <Box
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: rem(18),
+        padding: rem(24),
+        height: "calc(100vh - 45px)",
+        minHeight: 0,
+      }}
+    >
       <InstallationReportsHeader jobId={jobId} />
       <InsiteReportsTable
         reportLabel="Installation Report"
@@ -63,7 +88,9 @@ function InstallationReportsContent() {
         onFiltersChange={setFilters}
         pagination={pagination}
         onPaginationChange={setPagination}
-        onSelectReport={(report: InsiteReport) => setSelectedReport(report as InstallationReport)}
+        onSelectReport={(report: InsiteReport) =>
+          setSelectedReport(report as InstallationReport)
+        }
       />
       <InstallationReportsModal
         report={selectedReport}
@@ -76,7 +103,13 @@ function InstallationReportsContent() {
 
 export default function InstallationReportsPage() {
   return (
-    <Suspense fallback={<Center h={300}><Loader color="violet" /></Center>}>
+    <Suspense
+      fallback={
+        <Center h={300}>
+          <Loader color="violet" />
+        </Center>
+      }
+    >
       <InstallationReportsContent />
     </Suspense>
   );

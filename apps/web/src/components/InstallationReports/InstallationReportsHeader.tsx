@@ -3,7 +3,11 @@
 import { TbClipboardCheck } from "react-icons/tb";
 import InsiteReportsHeader from "@/components/InsiteReports/InsiteReportsHeader";
 
-export default function InstallationReportsHeader({ jobId }: { jobId: number | null }) {
+export default function InstallationReportsHeader({
+  jobId,
+}: {
+  jobId: number | null;
+}) {
   return (
     <InsiteReportsHeader
       title="Installation Reports"
