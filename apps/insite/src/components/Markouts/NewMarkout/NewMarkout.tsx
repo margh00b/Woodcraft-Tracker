@@ -8,25 +8,16 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import * as Crypto from "expo-crypto";
-import { File } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useJob } from "@/context/JobContext";
 import { KeyboardAwareContainer } from "@/components/Common/KeyboardAwareContainer/KeyboardAwareContainer";
-import { PhotoPickerModal } from "@/components/Common/PhotoPicker/PhotoPicker";;
+import { PhotoPickerModal } from "@/components/Common/PhotoPicker/PhotoPicker";
+import { PhotoGrid } from "../PhotoGrid";
 import { MarkoutNotes } from "../MarkoutNotes";
-import {
-  clearPendingSubmission,
-  createPendingSubmission,
-  setPendingSubmissionStatus,
-  cleanupKnownUncommittedSubmission,
-  uploadTasksConcurrently,
-} from "@/utils/submissionRecovery";
+import { usePhotoUploadPipeline } from "@/hooks/usePhotoUploadPipeline";
 import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
-import type { PhotoInfo, UploadTask, AttachmentPayload } from "@/types/markout";
-import { getSafeExtension, getErrorMessage } from "@/utils/installReports/photos";
-import { PhotoGrid } from "@/components/InstallReport";
+import type { PhotoInfo } from "@/types/markout";
+import { getErrorMessage } from "@/utils/installReports/photos";
 
 export default function NewMarkout() {
   const router = useRouter();
@@ -52,13 +43,16 @@ export default function NewMarkout() {
   const [photos, setPhotos] = useState<PhotoInfo[]>([]);
   const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({
-    current: 0,
-    total: 0,
-  });
+
+  const {
+    uploadPhotos,
+    commitSuccess,
+    rollbackSubmission,
+    isUploading,
+    uploadProgress,
+  } = usePhotoUploadPipeline();
 
   const scrollViewRef = useRef<ScrollView>(null);
-  const submissionIdRef = useRef<string | null>(null);
 
   const handleAddPhotos = useCallback((_target: string, newPhotos: PhotoInfo[]) => {
     setPhotos((previous) => [...previous, ...newPhotos]);
@@ -69,7 +63,7 @@ export default function NewMarkout() {
   }, []);
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isUploading) return;
 
     if (!selectedJob) {
       Alert.alert("Error", "Please select a valid job before submitting.");
@@ -81,91 +75,18 @@ export default function NewMarkout() {
       return;
     }
 
-    const submissionId = submissionIdRef.current ?? Crypto.randomUUID();
-    submissionIdRef.current = submissionId;
-    const safeJobId = String(selectedJob.id);
-
-    const tasks: UploadTask[] = photos.map((photo, index) => {
-      const extension = getSafeExtension(photo.mimeType);
-      const fileName = `markout_${submissionId}_${index}.${extension}`;
-      return {
-        ...photo,
-        tag: "Markout",
-        index,
-        fileName,
-        storagePath: `${safeJobId}/Markout/${submissionId}/${fileName}`,
-      };
-    });
-
-    let rpcStarted = false;
     setIsSubmitting(true);
-    setUploadProgress({
-      current: 0,
-      total: tasks.length,
-    });
+    let activeSubmissionId: string | null = null;
 
     try {
-      await createPendingSubmission(
-        submissionId,
-        tasks.map((task) => task.storagePath),
+      const { submissionId, attachments } = await uploadPhotos(
+        selectedJob.id,
+        "Markout",
+        photos.map((photo) => ({ ...photo, tag: "Markout" })),
+        { defaultTag: "Markout", category: "Markout" },
       );
 
-      const attachments = await uploadTasksConcurrently(
-        tasks,
-        3,
-        async (task) => {
-          const context = ImageManipulator.manipulate(task.uri);
-          context.resize({ width: 1280 });
-          const image = await context.renderAsync();
-          const manipResult = await image.saveAsync({
-            compress: 0.7,
-            format: SaveFormat.JPEG,
-          });
-
-          const localFile = new File(manipResult.uri);
-          const fileSize = localFile.size;
-
-          if (!Number.isFinite(fileSize) || fileSize <= 0) {
-            throw new Error(`Photo #${task.index + 1} is empty or unavailable.`);
-          }
-
-          if (fileSize > 5 * 1024 * 1024) {
-            throw new Error(`Photo #${task.index + 1} exceeds size limit.`);
-          }
-
-          const bytes = await localFile.bytes();
-
-          const { error: uploadError } = await supabase.storage
-            .from("job_files")
-            .upload(task.storagePath, bytes, {
-              contentType: "image/jpeg",
-              upsert: false,
-            });
-
-          if (uploadError) {
-            throw new Error(`Failed to upload photo: ${uploadError.message}`);
-          }
-
-          setUploadProgress((previous) => ({
-            ...previous,
-            current: previous.current + 1,
-          }));
-
-          const attachment: AttachmentPayload = {
-            file_name: task.fileName,
-            file_path: task.storagePath,
-            file_type: "image/jpeg",
-            file_size: fileSize,
-            category: "Markout",
-            file_tag: "Markout",
-          };
-
-          return attachment;
-        },
-      );
-
-      await setPendingSubmissionStatus(submissionId, "committing");
-      rpcStarted = true;
+      activeSubmissionId = submissionId;
 
       const { data: markoutId, error: rpcError } = await supabase
         .schema("insite")
@@ -180,17 +101,14 @@ export default function NewMarkout() {
         });
 
       if (rpcError) {
-        await setPendingSubmissionStatus(submissionId, "unknown");
         throw new Error(`Server failed to submit markout: ${rpcError.message}`);
       }
 
       if (markoutId == null) {
-        await setPendingSubmissionStatus(submissionId, "unknown");
         throw new Error("Markout was not saved by the server. Please verify.");
       }
 
-      await clearPendingSubmission(submissionId);
-      submissionIdRef.current = null;
+      await commitSuccess(submissionId);
       invalidateFormDetailsCache(selectedJob.id, "markouts");
 
       Alert.alert("Success", "Markout has been successfully submitted.", [
@@ -200,14 +118,16 @@ export default function NewMarkout() {
         },
       ]);
     } catch (error) {
-      if (!rpcStarted) {
-        await cleanupKnownUncommittedSubmission(supabase, submissionId);
+      if (activeSubmissionId) {
+        await rollbackSubmission(activeSubmissionId);
       }
       Alert.alert("Submission Failed", getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isBusy = isSubmitting || isUploading;
 
   return (
     <KeyboardAwareContainer
@@ -219,7 +139,7 @@ export default function NewMarkout() {
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
           onPress={() => router.back()}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
           <Text className="text-slate-700 font-medium text-md">← Back</Text>
         </Pressable>
@@ -245,24 +165,24 @@ export default function NewMarkout() {
             photos={photos}
             onAdd={() => setPhotoPickerTarget("markout")}
             onRemove={handleRemovePhoto}
-            disabled={isSubmitting}
+            disabled={isBusy}
           />
         </View>
 
         <MarkoutNotes
           value={notes}
           onChange={setNotes}
-          disabled={isSubmitting}
+          disabled={isBusy}
         />
 
         <Pressable
           className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
-            isSubmitting ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
+            isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
           }`}
           onPress={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
-          {isSubmitting ? (
+          {isBusy ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="#ffffff" size="small" />
               <Text className="text-white font-bold text-base ml-2">

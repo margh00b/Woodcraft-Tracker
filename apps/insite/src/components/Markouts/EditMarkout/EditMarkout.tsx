@@ -8,19 +8,16 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import * as Crypto from "expo-crypto";
-import { File } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useJobHydration } from "@/hooks/useJobHydration";
 import { KeyboardAwareContainer } from "@/components/Common/KeyboardAwareContainer/KeyboardAwareContainer";
 import { PhotoPickerModal } from "@/components/Common/PhotoPicker/PhotoPicker";
+import { PhotoGrid } from "../PhotoGrid";
 import { MarkoutNotes } from "../MarkoutNotes";
-import { uploadTasksConcurrently } from "@/utils/submissionRecovery";
+import { usePhotoUploadPipeline } from "@/hooks/usePhotoUploadPipeline";
 import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
-import type { PhotoInfo, ExistingPhoto, UploadTask, AttachmentPayload } from "@/types/markout";
-import { getSafeExtension, getErrorMessage } from "@/utils/installReports/photos";
-import { PhotoGrid } from "@/components/InstallReport";
+import type { PhotoInfo, ExistingPhoto } from "@/types/markout";
+import { getErrorMessage } from "@/utils/installReports/photos";
 
 interface EditMarkoutProps {
   reportId: string;
@@ -53,10 +50,14 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
   const [deletedStoragePaths, setDeletedStoragePaths] = useState<string[]>([]);
   const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({
-    current: 0,
-    total: 0,
-  });
+
+  const {
+    uploadPhotos,
+    commitSuccess,
+    rollbackSubmission,
+    isUploading,
+    uploadProgress,
+  } = usePhotoUploadPipeline();
 
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -155,7 +156,7 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
   );
 
   const handleUpdate = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isUploading) return;
 
     if (!selectedJob || !parsedReportId) {
       Alert.alert("Error", "Missing job or markout context.");
@@ -168,86 +169,31 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     }
 
     const newPhotos = photos.filter((p) => p.isNew);
-    const editSessionId = Crypto.randomUUID();
-    const safeJobId = String(selectedJob.id);
-
-    const newTasks: UploadTask[] = newPhotos.map((task, index) => {
-      const extension = getSafeExtension(task.mimeType);
-      const fileName = `markout_edit_${editSessionId}_${index}.${extension}`;
-      return {
-        uri: task.uri,
-        mimeType: task.mimeType,
-        tag: "Markout",
-        index,
-        fileName,
-        storagePath: `${safeJobId}/Markout/${parsedReportId}/${fileName}`,
-      };
-    });
-
     setIsSubmitting(true);
-    setUploadProgress({ current: 0, total: newTasks.length });
+    let activeSubmissionId: string | null = null;
 
     try {
-      const newAttachments: AttachmentPayload[] = await uploadTasksConcurrently(
-        newTasks,
-        3,
-        async (task) => {
-          const context = ImageManipulator.manipulate(task.uri);
-          context.resize({ width: 1280 });
-          const image = await context.renderAsync();
-          const manipResult = await image.saveAsync({
-            compress: 0.7,
-            format: SaveFormat.JPEG,
-          });
+      let formattedNewAttachments: any[] = [];
 
-          const localFile = new File(manipResult.uri);
-          const fileSize = localFile.size;
+      if (newPhotos.length > 0) {
+        const { submissionId, attachments } = await uploadPhotos(
+          selectedJob.id,
+          "Markout",
+          newPhotos.map((p) => ({ ...p, tag: "Markout" })),
+          { defaultTag: "Markout", category: "Markout" },
+        );
 
-          if (!Number.isFinite(fileSize) || fileSize <= 0) {
-            throw new Error(`Photo #${task.index + 1} is empty or unavailable.`);
-          }
+        activeSubmissionId = submissionId;
 
-          if (fileSize > 5 * 1024 * 1024) {
-            throw new Error(`Photo #${task.index + 1} exceeds size limit.`);
-          }
-
-          const bytes = await localFile.bytes();
-
-          const { error: uploadError } = await supabase.storage
-            .from("job_files")
-            .upload(task.storagePath, bytes, {
-              contentType: "image/jpeg",
-              upsert: false,
-            });
-
-          if (uploadError) {
-            throw new Error(`Failed to upload photo: ${uploadError.message}`);
-          }
-
-          setUploadProgress((previous) => ({
-            ...previous,
-            current: previous.current + 1,
-          }));
-
-          return {
-            file_name: task.fileName,
-            file_path: task.storagePath,
-            file_type: "image/jpeg",
-            file_size: fileSize,
-            category: "Markout",
-            file_tag: "Markout",
-          };
-        },
-      );
+        formattedNewAttachments = attachments.map((att) => ({
+          ...att,
+          uploaded_by: username,
+        }));
+      }
 
       if (deletedStoragePaths.length > 0) {
         await supabase.storage.from("job_files").remove(deletedStoragePaths);
       }
-
-      const formattedNewAttachments = newAttachments.map((att) => ({
-        ...att,
-        uploaded_by: username,
-      }));
 
       const { error: updateError } = await supabase
         .schema("insite")
@@ -262,6 +208,10 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
 
       if (updateError) throw updateError;
 
+      if (activeSubmissionId) {
+        await commitSuccess(activeSubmissionId);
+      }
+
       invalidateFormDetailsCache(selectedJob.id, "markouts");
 
       Alert.alert(
@@ -270,11 +220,16 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
         [{ text: "OK", onPress: () => router.back() }],
       );
     } catch (error) {
+      if (activeSubmissionId) {
+        await rollbackSubmission(activeSubmissionId);
+      }
       Alert.alert("Update Failed", getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isBusy = isSubmitting || isUploading;
 
   if (isLoadingReport) {
     return (
@@ -295,7 +250,7 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
           onPress={() => router.back()}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
           <Text className="text-slate-700 font-medium text-md">← Back</Text>
         </Pressable>
@@ -323,24 +278,24 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
             photos={photos}
             onAdd={() => setPhotoPickerTarget("markout")}
             onRemove={handleRemovePhoto}
-            disabled={isSubmitting}
+            disabled={isBusy}
           />
         </View>
 
         <MarkoutNotes
           value={notes}
           onChange={setNotes}
-          disabled={isSubmitting}
+          disabled={isBusy}
         />
 
         <Pressable
           className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
-            isSubmitting ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
+            isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
           }`}
           onPress={handleUpdate}
-          disabled={isSubmitting}
+          disabled={isBusy}
         >
-          {isSubmitting ? (
+          {isBusy ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="#ffffff" size="small" />
               <Text className="text-white font-bold text-base ml-2">
