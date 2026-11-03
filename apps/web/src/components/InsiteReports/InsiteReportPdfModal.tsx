@@ -16,17 +16,19 @@ const PDFViewer = dynamic(
   },
 );
 
+type InsiteReportPdfModalProps = {
+  opened: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactElement;
+};
+
 export default function InsiteReportPdfModal({
   opened,
   onClose,
   title,
   children,
-}: {
-  opened: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactElement;
-}) {
+}: InsiteReportPdfModalProps) {
   return (
     <Modal
       opened={opened}
@@ -39,11 +41,23 @@ export default function InsiteReportPdfModal({
           padding: "12px 20px",
           borderBottom: "1px solid var(--mantine-color-gray-3)",
         },
-        body: { height: "calc(100dvh - 60px)", padding: 0 },
-        content: { display: "flex", flexDirection: "column" },
+        body: {
+          height: "calc(100dvh - 60px)",
+          padding: 0,
+        },
+        content: {
+          display: "flex",
+          flexDirection: "column",
+        },
       }}
     >
-      <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+      <PDFViewer
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "none",
+        }}
+      >
         {children}
       </PDFViewer>
     </Modal>

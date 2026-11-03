@@ -5,6 +5,7 @@ import {
   Anchor,
   Badge,
   Box,
+  Button,
   Center,
   Divider,
   Group,
@@ -27,13 +28,12 @@ import {
   TbPrinter,
 } from "react-icons/tb";
 import JSZip from "jszip";
-import { Button } from "@mantine/core";
 import { useState } from "react";
-import InsiteReportPdfModal from "./InsiteReportPdfModal";
 import type { ReactElement, ReactNode } from "react";
 import type { InsiteReport } from "@/hooks/useInsiteReports";
 import { formatDate } from "@/utils/installationReportUtils";
 import InsiteReportDetails from "./InsiteReportDetails";
+import InsiteReportPdfModal from "./InsiteReportPdfModal";
 
 export type InsiteReportAttachment = {
   id: number;
@@ -42,6 +42,21 @@ export type InsiteReportAttachment = {
   file_tag: string | null;
   signedUrl: string;
 };
+
+type InsiteReportModalProps = {
+  report: InsiteReport | null;
+  reportLabel: string;
+  icon?: ReactNode;
+  attachments: InsiteReportAttachment[];
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  onClose: () => void;
+  children?: ReactNode;
+  pdfDocument?: ReactElement | null;
+  detailsVariant?: "default" | "installation";
+};
+
 export default function InsiteReportModal({
   report,
   reportLabel,
@@ -53,24 +68,15 @@ export default function InsiteReportModal({
   onClose,
   children,
   pdfDocument,
-}: {
-  report: InsiteReport | null;
-  reportLabel: string;
-  icon?: ReactNode;
-  attachments: InsiteReportAttachment[];
-  isLoading: boolean;
-  isError: boolean;
-  error: unknown;
-  onClose: () => void;
-  children?: ReactNode;
-  pdfDocument?: ReactElement | null;
-}) {
+  detailsVariant = "default",
+}: InsiteReportModalProps) {
   const [pdfOpened, setPdfOpened] = useState(false);
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
   const [zipDownloadError, setZipDownloadError] = useState<string | null>(null);
 
   const downloadAllAttachments = async () => {
     if (!attachments.length || isDownloadingZip) return;
+
     setIsDownloadingZip(true);
     setZipDownloadError(null);
 
@@ -81,21 +87,28 @@ export default function InsiteReportModal({
       await Promise.all(
         attachments.map(async (attachment) => {
           const response = await fetch(attachment.signedUrl);
-          if (!response.ok)
+
+          if (!response.ok) {
             throw new Error(`Failed to download ${attachment.file_name}`);
+          }
+
           const blob = await response.blob();
           const originalName = (
             attachment.file_name || `attachment-${attachment.id}`
-          ).replace(/[<>:"/\\|?*]/g, "_");
+          ).replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_");
+
           const dotIndex = originalName.lastIndexOf(".");
           const baseName =
             dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
           const extension = dotIndex > 0 ? originalName.slice(dotIndex) : "";
+
           let fileName = originalName;
           let suffix = 2;
+
           while (usedNames.has(fileName.toLowerCase())) {
             fileName = `${baseName} (${suffix++})${extension}`;
           }
+
           usedNames.add(fileName.toLowerCase());
           zip.file(fileName, blob);
         }),
@@ -104,11 +117,14 @@ export default function InsiteReportModal({
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
+
       link.href = url;
       link.download = `${reportLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${report?.job_number ?? report?.job_id}-attachments.zip`;
+
       document.body.appendChild(link);
       link.click();
       link.remove();
+
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (downloadError) {
       setZipDownloadError(
@@ -120,6 +136,7 @@ export default function InsiteReportModal({
       setIsDownloadingZip(false);
     }
   };
+
   return (
     <>
       <Modal
@@ -135,6 +152,7 @@ export default function InsiteReportModal({
             >
               {icon ?? <TbClipboardList size={21} />}
             </ThemeIcon>
+
             <Stack gap={2}>
               <Text fw={700}>
                 {reportLabel} for Job #
@@ -155,7 +173,7 @@ export default function InsiteReportModal({
         {report && (
           <Stack gap="lg">
             <Paper withBorder radius="md" p="md">
-              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, sm: 4 }} spacing="md">
                 <Stack gap={4}>
                   <Text size="xs" c="dimmed" fw={600}>
                     SUBMISSION DATE
@@ -164,12 +182,22 @@ export default function InsiteReportModal({
                     {formatDate(report.created_at)}
                   </Text>
                 </Stack>
+
                 <Stack gap={4}>
                   <Text size="xs" c="dimmed" fw={600}>
                     SUBMITTED BY
                   </Text>
                   <Text size="sm" fw={600}>
                     {report.submitted_by || "—"}
+                  </Text>
+                </Stack>
+
+                <Stack gap={4}>
+                  <Text size="xs" c="dimmed" fw={600}>
+                    REPORT ID
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    #{report.id}
                   </Text>
                 </Stack>
 
@@ -180,13 +208,15 @@ export default function InsiteReportModal({
                   gradient={{ from: "violet.6", to: "indigo.7", deg: 135 }}
                   leftSection={<TbPrinter size={16} />}
                   onClick={() => setPdfOpened(true)}
-                  disabled={!pdfDocument}
+                  disabled={!pdfDocument || isLoading}
                 >
                   Print report
                 </Button>
               </SimpleGrid>
             </Paper>
+
             {children}
+
             <Box>
               <Group gap="xs" mb="sm">
                 <ThemeIcon size={30} radius="md" variant="light" color="violet">
@@ -194,18 +224,19 @@ export default function InsiteReportModal({
                 </ThemeIcon>
                 <Title order={4}>Report details</Title>
               </Group>
-              <InsiteReportDetails details={report.details ?? {}} />
+
+              <InsiteReportDetails
+                details={report.details ?? {}}
+                variant={detailsVariant}
+              />
             </Box>
+
             <Divider />
+
             <Box>
               <Group justify="space-between" align="center" mb="sm" wrap="wrap">
                 <Group gap="xs">
-                  <ThemeIcon
-                    size={30}
-                    radius="md"
-                    variant="light"
-                    color="indigo"
-                  >
+                  <ThemeIcon size={30} radius="md" variant="light" color="indigo">
                     <TbPhoto size={17} />
                   </ThemeIcon>
                   <Title order={4}>Attachments</Title>
@@ -213,6 +244,7 @@ export default function InsiteReportModal({
                     {attachments.length} files
                   </Badge>
                 </Group>
+
                 <Button
                   size="sm"
                   variant="default"
@@ -224,6 +256,7 @@ export default function InsiteReportModal({
                   Download all
                 </Button>
               </Group>
+
               {zipDownloadError && (
                 <Alert
                   color="red"
@@ -235,6 +268,7 @@ export default function InsiteReportModal({
                   {zipDownloadError}
                 </Alert>
               )}
+
               {isLoading && (
                 <Center py="xl">
                   <Stack align="center" gap="xs">
@@ -245,6 +279,7 @@ export default function InsiteReportModal({
                   </Stack>
                 </Center>
               )}
+
               {isError && (
                 <Alert color="red" title="Unable to load attachments">
                   {error instanceof Error
@@ -252,6 +287,7 @@ export default function InsiteReportModal({
                     : "Could not load report attachments."}
                 </Alert>
               )}
+
               {!isLoading && !isError && attachments.length === 0 && (
                 <Paper
                   withBorder
@@ -266,19 +302,25 @@ export default function InsiteReportModal({
                   </Center>
                 </Paper>
               )}
-              {!isLoading && !isError && !!attachments.length && (
+
+              {!isLoading && !isError && attachments.length > 0 && (
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                  {attachments.map((file) => (
-                    <Paper key={file.id} withBorder p="xs" radius="md">
+                  {attachments.map((attachment) => (
+                    <Paper
+                      key={attachment.id}
+                      withBorder
+                      p="xs"
+                      radius="md"
+                    >
                       <Anchor
-                        href={file.signedUrl}
+                        href={attachment.signedUrl}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        {file.file_type?.startsWith("image/") ? (
+                        {attachment.file_type?.startsWith("image/") ? (
                           <Image
-                            src={file.signedUrl}
-                            alt={file.file_name}
+                            src={attachment.signedUrl}
+                            alt={attachment.file_name}
                             h={190}
                             fit="contain"
                             radius="sm"
@@ -292,8 +334,9 @@ export default function InsiteReportModal({
                           </Center>
                         )}
                       </Anchor>
+
                       <Text size="sm" fw={600} mt="sm" lineClamp={2}>
-                        {file.file_tag || file.file_name}
+                        {attachment.file_tag || attachment.file_name}
                       </Text>
                     </Paper>
                   ))}
@@ -303,6 +346,7 @@ export default function InsiteReportModal({
           </Stack>
         )}
       </Modal>
+
       {pdfDocument && (
         <InsiteReportPdfModal
           opened={pdfOpened}

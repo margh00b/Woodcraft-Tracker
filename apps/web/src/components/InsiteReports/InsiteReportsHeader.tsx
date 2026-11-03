@@ -1,7 +1,22 @@
 "use client";
 
-import { Button, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import type { ReactNode } from "react";
+
+type InsiteReportsHeaderProps = {
+  title: string;
+  description: string;
+  icon: ReactNode;
+  jobId: number | null;
+  allReportsHref: string;
+};
 
 export default function InsiteReportsHeader({
   title,
@@ -9,13 +24,7 @@ export default function InsiteReportsHeader({
   icon,
   jobId,
   allReportsHref,
-}: {
-  title: string;
-  description: string;
-  icon: ReactNode;
-  jobId: number | null;
-  allReportsHref: string;
-}) {
+}: InsiteReportsHeaderProps) {
   return (
     <Group justify="space-between" align="center" wrap="wrap">
       <Group gap="md" wrap="nowrap">
@@ -27,6 +36,7 @@ export default function InsiteReportsHeader({
         >
           {icon}
         </ThemeIcon>
+
         <Stack gap={3}>
           <Title order={2}>{title}</Title>
           <Text size="sm" c="dimmed">
@@ -34,6 +44,7 @@ export default function InsiteReportsHeader({
           </Text>
         </Stack>
       </Group>
+
       {jobId !== null && (
         <Button
           variant="default"
