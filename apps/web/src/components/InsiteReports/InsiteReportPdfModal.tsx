@@ -2,7 +2,7 @@
 
 import { Center, Loader, Modal } from "@mantine/core";
 import dynamic from "next/dynamic";
-import type { ReactNode } from "react";
+import type { ReactElement } from "react";
 
 const PDFViewer = dynamic(() => import("@react-pdf/renderer").then((mod) => mod.PDFViewer), {
   ssr: false,
@@ -13,7 +13,7 @@ export default function InsiteReportPdfModal({ opened, onClose, title, children 
   opened: boolean;
   onClose: () => void;
   title: string;
-  children: ReactNode;
+  children: ReactElement;
 }) {
   return (
     <Modal opened={opened} onClose={onClose} title={title} fullScreen padding={0}
