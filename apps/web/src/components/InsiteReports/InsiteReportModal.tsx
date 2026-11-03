@@ -43,7 +43,7 @@ export default function InsiteReportModal({
         const response = await fetch(attachment.signedUrl);
         if (!response.ok) throw new Error(`Failed to download ${attachment.file_name}`);
         const blob = await response.blob();
-        const originalName = (attachment.file_name || `attachment-${attachment.id}`).replace(/[<>:"/\\\\|?*\\u0000-\\u001f]/g, "_");
+        const originalName = (attachment.file_name || `attachment-${attachment.id}`).replace(/[<>:"/\\|?*]/g, "_");
         const dotIndex = originalName.lastIndexOf(".");
         const baseName = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
         const extension = dotIndex > 0 ? originalName.slice(dotIndex) : "";
