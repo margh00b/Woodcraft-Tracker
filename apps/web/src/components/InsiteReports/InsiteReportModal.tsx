@@ -5,7 +5,7 @@ import { TbClipboardList, TbFileText, TbPhoto, TbPrinter } from "react-icons/tb"
 import { Button } from "@mantine/core";
 import { useState } from "react";
 import InsiteReportPdfModal from "./InsiteReportPdfModal";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import type { InsiteReport } from "@/hooks/useInsiteReports";
 import { formatDate } from "@/utils/installationReportUtils";
 import InsiteReportDetails from "./InsiteReportDetails";
@@ -23,7 +23,7 @@ export default function InsiteReportModal({
   error: unknown;
   onClose: () => void;
   children?: ReactNode;
-  pdfDocument?: ReactNode;
+  pdfDocument?: ReactElement | null;
 }) {
   const [pdfOpened, setPdfOpened] = useState(false);
   return (
