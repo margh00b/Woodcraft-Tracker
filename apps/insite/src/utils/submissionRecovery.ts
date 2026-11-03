@@ -105,11 +105,6 @@ export async function cleanupKnownUncommittedSubmission(
   return true;
 }
 
-/**
- * Run on screen/app startup. Only considers entries older than the grace period.
- * If a report exists, its Storage objects are retained and the local manifest is cleared.
- * If the lookup fails, or the entry is still recent, no files are deleted.
- */
 export async function recoverOrphanedUploads(
   supabase: SupabaseClient,
 ): Promise<void> {
@@ -125,22 +120,42 @@ export async function recoverOrphanedUploads(
       continue;
     }
 
-    const { data: report, error: lookupError } = await supabase
+    const { data: installReport, error: installError } = await supabase
       .schema("insite")
       .from("install_reports")
       .select("id")
       .eq("idempotency_key", entry.idempotencyKey)
       .maybeSingle();
 
-    if (lookupError) {
+    if (installError) {
       console.warn(
         "Could not verify pending install report; retaining its files:",
-        lookupError.message,
+        installError.message,
       );
       continue;
     }
 
-    if (report) {
+    if (installReport) {
+      await clearPendingSubmission(key);
+      continue;
+    }
+
+    const { data: markoutReport, error: markoutError } = await supabase
+      .schema("insite")
+      .from("markouts")
+      .select("id")
+      .eq("idempotency_key", entry.idempotencyKey)
+      .maybeSingle();
+
+    if (markoutError) {
+      console.warn(
+        "Could not verify pending markout; retaining its files:",
+        markoutError.message,
+      );
+      continue;
+    }
+
+    if (markoutReport) {
       await clearPendingSubmission(key);
       continue;
     }

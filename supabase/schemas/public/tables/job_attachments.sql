@@ -11,7 +11,9 @@ CREATE TABLE "public"."job_attachments" (
   "updated_at"        timestamp with time zone NOT NULL DEFAULT now(),
   "file_tag"          text                     DEFAULT 'General'::text,
   "install_report_id" bigint,
+  "markout_id"        bigint,
   CONSTRAINT "job_attachments_install_report_id_fkey" FOREIGN KEY (install_report_id) REFERENCES insite.install_reports(id) ON DELETE CASCADE,
+  CONSTRAINT "job_attachments_markout_id_fkey" FOREIGN KEY (markout_id) REFERENCES insite.markouts(id) ON DELETE CASCADE,
   CONSTRAINT "job_attachments_pkey" PRIMARY KEY (id),
   CONSTRAINT "job_attachments_job_id_fkey" FOREIGN KEY (job_id) REFERENCES public.jobs(id) ON DELETE CASCADE
 );

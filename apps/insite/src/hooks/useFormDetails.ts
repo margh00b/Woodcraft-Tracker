@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 
-export type FormType = "flha" | "install_reports";
+export type FormType = "flha" | "install_reports" | "markouts";
 
 export interface FormSubmissionMeta {
   id: number;

@@ -36,14 +36,21 @@ export default function FormsScreen() {
     useFormDetails(jobId, "install_reports", {
       autoFetch: !!jobId,
     });
-
+  const { forms: markouts, refetch: refetchMarkouts } = useFormDetails(
+    jobId,
+    "markouts",
+    {
+      autoFetch: !!jobId,
+    },
+  );
   useFocusEffect(
     useCallback(() => {
       if (jobId) {
         void refetchFlhaForms(false);
         void refetchInstallationReports(false);
+        void refetchMarkouts(false);
       }
-    }, [jobId, refetchFlhaForms, refetchInstallationReports]),
+    }, [jobId, refetchFlhaForms, refetchInstallationReports, refetchMarkouts]),
   );
 
   if (!jobId) {
@@ -69,7 +76,9 @@ export default function FormsScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-slate-50">
         <ActivityIndicator size="large" color="#0f172a" />
-        <Text className="mt-3 text-sm text-slate-500">Loading active job...</Text>
+        <Text className="mt-3 text-sm text-slate-500">
+          Loading active job...
+        </Text>
       </View>
     );
   }
@@ -125,7 +134,18 @@ export default function FormsScreen() {
           <Text className="mb-3 text-md font-bold uppercase tracking-wider text-slate-500">
             Forms
           </Text>
-
+          <ActionPill
+            title="Markout"
+            badge={markouts.length}
+            description={`${markouts.length} report${markouts.length === 1 ? "" : "s"} submitted`}
+            icon="✏️"
+            onPress={() =>
+              router.push({
+                pathname: "/markouts",
+                params: { jobId: String(jobId) },
+              })
+            }
+          />
           <ActionPill
             title="Field Level Hazard Assessment"
             badge={flhaForms.length}

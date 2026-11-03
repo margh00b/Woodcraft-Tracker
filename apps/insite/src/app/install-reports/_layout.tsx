@@ -1,14 +1,10 @@
 import React from "react";
 import { View } from "react-native";
-import { Stack, useGlobalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
 import { useJob } from "@/context/JobContext";
-import { useJobHydration } from "@/hooks/useJobHydration";
 import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 
 export default function InstallReportLayout() {
-  const params = useGlobalSearchParams<{ jobId?: string }>();
-  const jobId = params.jobId ? Number(params.jobId) : undefined;
-  useJobHydration(isNaN(jobId as number) ? undefined : jobId);
   const { selectedJob, activeJobVariants } = useJob();
 
   return (
