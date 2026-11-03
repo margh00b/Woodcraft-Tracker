@@ -36,7 +36,7 @@ export function MarkoutReportPdf({report,photos}:{report:InsiteReport;photos:Pho
     <View style={[styles.cell,{borderRightWidth:0}]}><Text style={styles.label}>Submitted By</Text><Text style={styles.value}>{report.submitted_by || "—"}</Text></View>
    </View>
    <View style={styles.section}><Text style={styles.sectionTitle}>Markout Notes</Text><View style={styles.note}><Text>{typeof notes === "string" && notes.trim() ? notes : "No notes recorded."}</Text></View></View>
-   {rows.length>0 && <View style={styles.section} break><Text style={styles.sectionTitle}>Markout Photos</Text>{rows.map((row,i)=><View key={i} style={styles.photoRow} wrap={false}>{row.map((photo,j)=><View key={photo.id} style={[styles.photoItem,{marginRight:j<2?"2.3%":0}]}><Image src={photo.signedUrl} style={styles.photo}/><Text style={styles.caption}>{photo.file_tag || photo.file_name}</Text></View>)}</View>)}</View>}
+   {rows.length>0 && <View style={styles.section}><Text style={styles.sectionTitle}>Markout Photos</Text>{rows.map((row,i)=><View key={i} style={styles.photoRow} wrap={false}>{row.map((photo,j)=><View key={photo.id} style={[styles.photoItem,{marginRight:j<2?"2.3%":0}]}><Image src={photo.signedUrl} style={styles.photo}/><Text style={styles.caption}>{photo.file_tag || photo.file_name}</Text></View>)}</View>)}</View>}
    <Text fixed style={styles.footer} render={({pageNumber,totalPages})=>`WCKC  •  Markout Report #${report.id}    Page ${pageNumber} of ${totalPages}`}/>
   </Page>
  </Document>;
