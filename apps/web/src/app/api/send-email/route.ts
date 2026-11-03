@@ -1,30 +1,60 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-app-secret");
-  if (secret !== process.env.SUPER_SECRET) {
-    return NextResponse.json(
-      { error: "Forbidden bcz super secret my friend!" },
-      { status: 403 },
-    );
-  }
-
   try {
-    const { reportId, installerName, jobId, jobNumber } = await request.json();
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Unauthorized: Missing or invalid authorization header" },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const supabase = createAdminClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid or expired token" },
+        { status: 401 },
+      );
+    }
+
+    const installerName =
+      user.user_metadata?.username ||
+      user.email?.split("@")[0] ||
+      "Unknown User";
+
+    const { reportId, jobId, jobNumber } = await request.json();
+
+    if (!reportId || !jobId) {
+      return NextResponse.json(
+        { error: "Missing required fields: reportId or jobId" },
+        { status: 400 },
+      );
+    }
+
     const cleanJobNumber = jobNumber
       ? String(jobNumber).replace(/[^0-9]+$/, "")
       : jobId;
+
     console.log(
-      `[EMAIL API] Received request for Report ID: ${reportId} on Job: ${jobId} from ${installerName}`,
+      `[EMAIL API] Received request for Report ID: ${reportId} on Job: ${jobId} securely from ${installerName}`,
     );
 
     const appUrl =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
-        : "https://your-production-web-app.com";
+        : "https://core.woodcraftkc.com";
 
     const dashboardLink = `${appUrl}/dashboard/installation-reports?jobId=${jobId}&fromResend=${true}&reportId=${reportId}`;
 

@@ -395,18 +395,25 @@ export default function NewInstallReport() {
         const requestHeaders = new Headers();
         requestHeaders.append("Content-Type", "application/json");
 
-        const appSecret =
-          process.env.EXPO_PUBLIC_SUPER_SECRET || "missing_secret";
-        requestHeaders.append("x-app-secret", appSecret);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error("No valid session found for email trigger.");
+        }
+        requestHeaders.append(
+          "Authorization",
+          `Bearer ${session.access_token}`,
+        );
 
         fetch(`${apiUrl}/api/send-email`, {
           method: "POST",
           headers: requestHeaders,
           body: JSON.stringify({
             reportId: String(reportId),
-            installerName: String(username),
             jobId: String(selectedJob.id),
-            jobNumber: String(selectedJob.job_number)
+            jobNumber: String(selectedJob.job_number),
           }),
         })
           .then((res) => res.json())
