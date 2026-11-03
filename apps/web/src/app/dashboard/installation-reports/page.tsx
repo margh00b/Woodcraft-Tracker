@@ -6,84 +6,55 @@ import type { PaginationState } from "@tanstack/react-table";
 import { Box, Center, Loader, rem } from "@mantine/core";
 import {
   InstallationReport,
-  InstallationReportFilters,
-  emptyInstallationReportFilters,
   useInstallationReportPhotos,
-  useInstallationReports,
 } from "@/hooks/useInstallationReports";
+import {
+  emptyInsiteReportFilters,
+  InsiteReport,
+  InsiteReportFilters,
+  useInsiteReports,
+} from "@/hooks/useInsiteReports";
 import InstallationReportsHeader from "@/components/InstallationReports/InstallationReportsHeader";
-import InstallationReportsTable from "@/components/InstallationReports/InstallationReportsTable";
+import InsiteReportsTable from "@/components/InsiteReports/InsiteReportsTable";
 import InstallationReportsModal from "@/components/InstallationReports/InstallationReportsModal";
 
 function InstallationReportsContent() {
   const searchParams = useSearchParams();
   const jobIdParam = searchParams.get("jobId");
   const reportId = searchParams.get("reportId");
+  const jobId = jobIdParam && /^\\d+$/.test(jobIdParam) ? Number(jobIdParam) : null;
 
-  const jobId =
-    jobIdParam && /^\d+$/.test(jobIdParam) ? Number(jobIdParam) : null;
-
-  const [filters, setFilters] = useState<InstallationReportFilters>({
-    ...emptyInstallationReportFilters,
-  });
-
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 20,
-  });
-
-  const [selectedReport, setSelectedReport] =
-    useState<InstallationReport | null>(null);
+  const [filters, setFilters] = useState<InsiteReportFilters>({ ...emptyInsiteReportFilters });
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 });
+  const [selectedReport, setSelectedReport] = useState<InstallationReport | null>(null);
 
   useEffect(() => {
-    setPagination((current) =>
-      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
-    );
+    setPagination((current) => current.pageIndex === 0 ? current : { ...current, pageIndex: 0 });
   }, [jobId]);
 
-  const reportsQuery = useInstallationReports({
-    jobId,
-    pagination,
-    filters,
-  });
-
+  const reportsQuery = useInsiteReports({ type: "install_reports", jobId, pagination, filters });
   const photosQuery = useInstallationReportPhotos(selectedReport?.id ?? null);
-
   const reports = reportsQuery.data?.reports ?? [];
-  const total = reportsQuery.data?.count ?? 0;
   const hasAutoOpened = useRef(false);
 
   useEffect(() => {
     if (reportId && reports.length > 0 && !hasAutoOpened.current) {
-      const reportFromUrl = reports.find(
-        (r) => String(r.id) === String(reportId),
-      );
-
+      const reportFromUrl = reports.find((report) => String(report.id) === reportId);
       if (reportFromUrl) {
-        setSelectedReport(reportFromUrl);
+        setSelectedReport(reportFromUrl as InstallationReport);
         hasAutoOpened.current = true;
       }
     }
   }, [reportId, reports]);
 
   return (
-    <Box
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: rem(18),
-        padding: rem(24),
-        height: "calc(100vh - 45px)",
-        minHeight: 0,
-      }}
-    >
+    <Box style={{ display: "flex", flexDirection: "column", gap: rem(18), padding: rem(24), height: "calc(100vh - 45px)", minHeight: 0 }}>
       <InstallationReportsHeader jobId={jobId} />
-
-      <InstallationReportsTable
+      <InsiteReportsTable
+        reportLabel="Installation Report"
         jobId={jobId}
-        jobNumber={reports[0]?.job_number ?? null}
         reports={reports}
-        total={total}
+        total={reportsQuery.data?.count ?? 0}
         isLoading={reportsQuery.isLoading}
         isError={reportsQuery.isError}
         error={reportsQuery.error}
@@ -92,9 +63,8 @@ function InstallationReportsContent() {
         onFiltersChange={setFilters}
         pagination={pagination}
         onPaginationChange={setPagination}
-        onSelectReport={setSelectedReport}
+        onSelectReport={(report: InsiteReport) => setSelectedReport(report as InstallationReport)}
       />
-
       <InstallationReportsModal
         report={selectedReport}
         photosQuery={photosQuery}
@@ -106,13 +76,7 @@ function InstallationReportsContent() {
 
 export default function InstallationReportsPage() {
   return (
-    <Suspense
-      fallback={
-        <Center h={300}>
-          <Loader color="violet" />
-        </Center>
-      }
-    >
+    <Suspense fallback={<Center h={300}><Loader color="violet" /></Center>}>
       <InstallationReportsContent />
     </Suspense>
   );

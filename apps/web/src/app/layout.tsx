@@ -86,6 +86,11 @@ const dashboardLinks: SidebarLink[] = [
         label: "Install Reports",
         path: "/dashboard/installation-reports",
       },
+      {
+        iconName: "MapPin",
+        label: "Markout Reports",
+        path: "/dashboard/markout-reports",
+      },
     ],
   },
   {
