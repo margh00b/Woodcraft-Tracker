@@ -11,6 +11,7 @@ import { useInsiteReports, emptyInsiteReportFilters, type InsiteReport, type Ins
 import InsiteReportsTable from "@/components/InsiteReports/InsiteReportsTable";
 import InsiteReportsHeader from "@/components/InsiteReports/InsiteReportsHeader";
 import InsiteReportModal from "@/components/InsiteReports/InsiteReportModal";
+import { MarkoutReportPdf } from "@/documents/MarkoutReportPdf";
 
 function MarkoutReportsContent() {
   const params = useSearchParams();
@@ -73,6 +74,7 @@ function MarkoutReportsContent() {
         isError={photosQuery.isError}
         error={photosQuery.error}
         onClose={() => setSelected(null)}
+        pdfDocument={selected ? <MarkoutReportPdf report={selected} photos={photosQuery.data ?? []} /> : null}
       />
     </Box>
   );

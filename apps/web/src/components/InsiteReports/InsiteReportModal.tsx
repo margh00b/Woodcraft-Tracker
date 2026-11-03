@@ -1,7 +1,10 @@
 "use client";
 
 import { Alert, Anchor, Badge, Box, Center, Divider, Group, Image, Loader, Modal, Paper, ScrollArea, SimpleGrid, Stack, Text, ThemeIcon, Title } from "@mantine/core";
-import { TbClipboardList, TbFileText, TbPhoto } from "react-icons/tb";
+import { TbClipboardList, TbFileText, TbPhoto, TbPrinter } from "react-icons/tb";
+import { Button } from "@mantine/core";
+import { useState } from "react";
+import InsiteReportPdfModal from "./InsiteReportPdfModal";
 import type { ReactNode } from "react";
 import type { InsiteReport } from "@/hooks/useInsiteReports";
 import { formatDate } from "@/utils/installationReportUtils";
@@ -9,7 +12,7 @@ import InsiteReportDetails from "./InsiteReportDetails";
 
 export type InsiteReportAttachment = { id: number; file_name: string; file_type: string | null; file_tag: string | null; signedUrl: string };
 export default function InsiteReportModal({
-  report, reportLabel, icon, attachments, isLoading, isError, error, onClose, children,
+  report, reportLabel, icon, attachments, isLoading, isError, error, onClose, children, pdfDocument,
 }: {
   report: InsiteReport | null;
   reportLabel: string;
@@ -20,11 +23,14 @@ export default function InsiteReportModal({
   error: unknown;
   onClose: () => void;
   children?: ReactNode;
+  pdfDocument?: ReactNode;
 }) {
+  const [pdfOpened, setPdfOpened] = useState(false);
   return (
+    <>
     <Modal opened={!!report} onClose={onClose} title={<Group gap="sm" wrap="nowrap"><ThemeIcon size={38} radius="md" variant="gradient" gradient={{ from: "violet.6", to: "indigo.7", deg: 135 }}>{icon ?? <TbClipboardList size={21} />}</ThemeIcon><Stack gap={2}><Text fw={700}>{reportLabel} for Job #{report?.job_number?.replace(/[^0-9]+$/, "") ?? report?.job_id}</Text><Text size="sm" c="dimmed">{report?.address ?? "Address unavailable"}</Text></Stack></Group>} size="xl" centered scrollAreaComponent={ScrollArea.Autosize} radius="lg" overlayProps={{ backgroundOpacity: 0.45, blur: 2 }}>
       {report && <Stack gap="lg">
-        <Paper withBorder radius="md" p="md"><SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md"><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>SUBMISSION DATE</Text><Text size="sm" fw={600}>{formatDate(report.created_at)}</Text></Stack><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>SUBMITTED BY</Text><Text size="sm" fw={600}>{report.submitted_by || "—"}</Text></Stack><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>REPORT ID</Text><Text size="sm" fw={600}>#{report.id}</Text></Stack></SimpleGrid></Paper>
+        <Paper withBorder radius="md" p="md"><SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md"><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>SUBMISSION DATE</Text><Text size="sm" fw={600}>{formatDate(report.created_at)}</Text></Stack><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>SUBMITTED BY</Text><Text size="sm" fw={600}>{report.submitted_by || "—"}</Text></Stack><Stack gap={4}><Text size="xs" c="dimmed" fw={600}>REPORT ID</Text><Text size="sm" fw={600}>#{report.id}</Text></Stack><Button size="sm" radius="md" variant="gradient" gradient={{ from: "violet.6", to: "indigo.7", deg: 135 }} leftSection={<TbPrinter size={16} />} onClick={() => setPdfOpened(true)} disabled={!pdfDocument}>Print report</Button></SimpleGrid></Paper>
         {children}
         <Box><Group gap="xs" mb="sm"><ThemeIcon size={30} radius="md" variant="light" color="violet"><TbFileText size={17} /></ThemeIcon><Title order={4}>Report details</Title></Group><InsiteReportDetails details={report.details ?? {}} /></Box>
         <Divider />
@@ -36,5 +42,7 @@ export default function InsiteReportModal({
         </Box>
       </Stack>}
     </Modal>
+    {pdfDocument && <InsiteReportPdfModal opened={pdfOpened} onClose={() => setPdfOpened(false)} title={`${reportLabel} PDF`}>{pdfDocument}</InsiteReportPdfModal>}
+    </>
   );
 }
