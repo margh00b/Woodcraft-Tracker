@@ -19,6 +19,7 @@ import { usePhotoUploadPipeline } from "@/hooks/usePhotoUploadPipeline";
 import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
 import type { PhotoInfo } from "@/types/markout";
 import { getErrorMessage } from "@/utils/installReports/photos";
+import { getWebAPIUrl } from "@/utils/api";
 
 export default function NewMarkout() {
   const router = useRouter();
@@ -139,12 +140,52 @@ export default function NewMarkout() {
       await commitSuccess(submissionId);
       invalidateFormDetailsCache(selectedJob.id, "markouts");
 
-      Alert.alert("Success", "Markout has been successfully submitted.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+      let emailWarning: string | null = null;
+
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session?.access_token) {
+          throw new Error("Unable to retrieve your login session.");
+        }
+
+        const response = await fetch(`${getWebAPIUrl()}/api/emails/markouts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            markoutId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Email could not be sent.");
+        }
+      } catch (error) {
+        emailWarning =
+          error instanceof Error ? error.message : "Email could not be sent.";
+        console.error("Markout email notification failed:", error);
+      }
+
+      Alert.alert(
+        "Success",
+        emailWarning
+          ? `Markout was submitted successfully, but the test email could not be sent.\n\n${emailWarning}`
+          : "Markout was submitted successfully. A test email has been sent to Resend.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ],
+      );
     } catch (error) {
       if (activeSubmissionId) {
         await rollbackSubmission(activeSubmissionId);

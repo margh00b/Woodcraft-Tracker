@@ -407,7 +407,7 @@ export default function NewInstallReport() {
           `Bearer ${session.access_token}`,
         );
 
-        fetch(`${apiUrl}/api/send-email`, {
+        fetch(`${apiUrl}/api/emails/installReport`, {
           method: "POST",
           headers: requestHeaders,
           body: JSON.stringify({

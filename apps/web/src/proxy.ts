@@ -34,7 +34,8 @@ export async function proxy(request: NextRequest) {
 
   const isProtectedPage = request.nextUrl.pathname.startsWith("/dashboard");
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
-  const isInternalApiRoute = request.nextUrl.pathname === "/api/send-email";
+  const isInternalApiRoute =
+    request.nextUrl.pathname.startsWith("/api/emails/");
   const isLoginPage = request.nextUrl.pathname === "/login";
 
   if (
@@ -60,7 +61,11 @@ export async function proxy(request: NextRequest) {
   if (isLoginPage && user && !error) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
-
+  if (request.nextUrl.pathname.startsWith("/external/markout/")) {
+    response.headers.set("Cache-Control", "private, no-store, max-age=0");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
   return response;
 }
 

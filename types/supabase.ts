@@ -33,6 +33,26 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"markout_share_tokens": {
+                  Row: {
+                    "created_at": string,"expires_at": string,"id": number,"markout_id": number,"recipient_email": string,"revoked_at": string | null,"token_hash": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"expires_at": string,"id"?: never,"markout_id": number,"recipient_email": string,"revoked_at"?: string | null,"token_hash": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"expires_at"?: string,"id"?: never,"markout_id"?: number,"recipient_email"?: string,"revoked_at"?: string | null,"token_hash"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "markout_share_tokens_markout_id_fkey"
+      columns: ["markout_id"]
+isOneToOne: true
+      referencedRelation: "markouts"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"markouts": {
                   Row: {
                     "created_at": string,"details": NonNullable<Json>,"id": number,"idempotency_key": string | null,"job_id": number,"submitted_by": string | null,"updated_at": string
