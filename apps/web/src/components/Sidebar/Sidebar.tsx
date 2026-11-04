@@ -57,17 +57,22 @@ import { Button } from "@mantine/core";
 import { TbLogout, TbUserCircle } from "react-icons/tb";
 import { useSupabase } from "@/hooks/useSupabase";
 
-export type UserRole =
-  | "admin"
-  | "designer"
-  | "scheduler"
-  | "installation"
-  | "service"
-  | "plant"
-  | "reception"
-  | "manager"
-  | "inspection";
+export const ALL_ROLES = [
+  "admin",
+  "designer",
+  "scheduler",
+  "installation",
+  "service",
+  "plant",
+  "reception",
+  "manager",
+  "inspection",
+  "safety",
+  "markouts",
+  "installers",
+] as const;
 
+export type UserRole = (typeof ALL_ROLES)[number];
 export type SidebarLink = {
   iconName: string;
   label: string;

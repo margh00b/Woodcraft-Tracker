@@ -17,37 +17,44 @@ import { Notifications } from "@mantine/notifications";
 import localFont from "next/font/local";
 import QueryProvider from "@/components/providers/QueryProvider";
 import SupabaseProvider from "@/providers/SupabaseProvider";
-import Sidebar, { SidebarLink } from "@/components/Sidebar/Sidebar";
+import Sidebar, { ALL_ROLES, SidebarLink } from "@/components/Sidebar/Sidebar";
 import { usePathname } from "next/navigation";
 import NavigationGuardProvider from "@/providers/NavigationGuardProvider";
 
 const Quicksand = localFont({
   src: "../../public/Fonts/Quicksand/Quicksand-Regular.ttf",
 });
-
 const dashboardLinks: SidebarLink[] = [
   {
     iconName: "ReceiptText",
     label: "App Reports",
-    allowedRoles: ["admin", "installation", "service", "designer"],
+    allowedRoles: ["admin", "installation", "service", "designer", "safety"],
     links: [
       {
         iconName: "ClipboardCheck",
         label: "Install Reports",
         path: "/dashboard/install-reports",
+        allowedRoles: ["admin", "installation", "service", "designer"],
       },
       {
         iconName: "MapPin",
         label: "Markout Reports",
         path: "/dashboard/markout-reports",
+        allowedRoles: ["admin", "installation", "service", "designer"],
       },
-      { iconName: "AlertTriangle", label: "FLHA Reports", path: "/dashboard/flha-reports" },
+      {
+        iconName: "AlertTriangle",
+        label: "FLHA Reports",
+        path: "/dashboard/flha-reports",
+        allowedRoles: ["admin", "safety"],
+      },
     ],
   },
   {
     iconName: "LayoutDashboard",
     label: "Overview",
     path: "/dashboard",
+    allowedRoles: ALL_ROLES.filter((role) => !["safety"].includes(role)),
   },
   {
     iconName: "Inbox",
@@ -73,7 +80,6 @@ const dashboardLinks: SidebarLink[] = [
     path: "/dashboard/purchasing",
     allowedRoles: ["admin", "scheduler", "installation", "plant"],
   },
-
   {
     iconName: "Truck",
     label: "Installation",
@@ -83,33 +89,26 @@ const dashboardLinks: SidebarLink[] = [
         iconName: "CalendarDays",
         label: "Schedule",
         path: "/dashboard/installation",
+        allowedRoles: ["admin", "installation", "service", "reception"],
       },
       {
         iconName: "MapPin",
         label: "Site Visits",
         path: "/dashboard/installation/site-visits",
+        allowedRoles: ["admin", "installation", "service", "reception"],
       },
       {
         iconName: "FilePenLine",
         label: "Site Changes",
         path: "/dashboard/installation/site-changes",
+        allowedRoles: ["admin", "installation", "service", "reception"],
       },
       {
         iconName: "Warehouse",
         label: "Warehouse",
         path: "/dashboard/installation/warehouse",
+        allowedRoles: ["admin", "installation", "service", "reception"],
       },
-      {
-        iconName: "ClipboardCheck",
-        label: "Install Reports",
-        path: "/dashboard/installation-reports",
-      },
-      {
-        iconName: "MapPin",
-        label: "Markout Reports",
-        path: "/dashboard/markout-reports",
-      },
-      { iconName: "AlertTriangle", label: "FLHA Reports", path: "/dashboard/flha-reports" },
     ],
   },
   {
@@ -139,20 +138,22 @@ const dashboardLinks: SidebarLink[] = [
         iconName: "Package",
         label: "Production",
         path: "/dashboard/plant/production",
+        allowedRoles: ["admin", "plant", "service", "installation"],
       },
       {
         iconName: "Truck",
         label: "Shipping",
         path: "/dashboard/plant/ship",
+        allowedRoles: ["admin", "plant", "service", "installation"],
       },
       {
         iconName: "Wrench",
         label: "Service Orders",
         path: "/dashboard/plant/service-orders",
+        allowedRoles: ["admin", "plant", "service", "installation"],
       },
     ],
   },
-
   {
     iconName: "ReceiptText",
     label: "Invoices",
@@ -162,16 +163,19 @@ const dashboardLinks: SidebarLink[] = [
         iconName: "ReceiptText",
         label: "All Invoices",
         path: "/dashboard/invoices/allinvoices",
+        allowedRoles: ["admin", "reception"],
       },
       {
         iconName: "FileWarning",
         label: "Not Invoiced",
         path: "/dashboard/invoices/notinvoiced",
+        allowedRoles: ["admin", "reception"],
       },
       {
         iconName: "Wrench",
         label: "Service Orders",
         path: "/dashboard/invoices/chargeableservice",
+        allowedRoles: ["admin", "reception"],
       },
     ],
   },
@@ -185,8 +189,8 @@ const dashboardLinks: SidebarLink[] = [
     iconName: "FileChartColumn",
     label: "Reports",
     path: "/dashboard/reports",
+    allowedRoles: ALL_ROLES.filter((role) => !["safety"].includes(role)),
   },
-
   {
     iconName: "Users",
     label: "Clients",

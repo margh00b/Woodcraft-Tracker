@@ -51,6 +51,9 @@ const ROLES = [
   "scheduler",
   "reception",
   "service",
+  "safety",
+  "markouts",
+  "installer",
 ];
 
 const SUB_ROLES = ["assembly", "paint", "manager", "shipments", "wood"];
@@ -477,7 +480,7 @@ export default function AdminUsersPage() {
                     value={role}
                     onChange={setRole}
                     required
-                    limit={10}
+                    limit={50}
                     maxDropdownHeight={200}
                     size="md"
                     radius="md"
@@ -830,7 +833,7 @@ export default function AdminUsersPage() {
                                   value={editRole}
                                   onChange={setEditRole}
                                   required
-                                  limit={10}
+                                  limit={50}
                                   maxDropdownHeight={200}
                                   size="md"
                                   radius="md"

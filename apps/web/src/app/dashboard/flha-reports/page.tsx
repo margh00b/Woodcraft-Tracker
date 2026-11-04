@@ -30,7 +30,9 @@ function FlhaReportsContent() {
     pageIndex: 0,
     pageSize: 20,
   });
-  const [selectedReport, setSelectedReport] = useState<InsiteReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<InsiteReport | null>(
+    null,
+  );
   const hasAutoOpened = useRef(false);
 
   const reportsQuery = useInsiteReports({
@@ -70,8 +72,8 @@ function FlhaReportsContent() {
       }}
     >
       <InsiteReportsHeader
-        title="FLHA Reports"
-        description="Review field level hazard assessments submitted through Insite."
+        title="Field Level Hazard Assessment Reports"
+        description="Review FLHA Reports submitted through Insite."
         icon={<TbAlertTriangle size={27} />}
         jobId={jobId}
         allReportsHref="/dashboard/flha-reports"

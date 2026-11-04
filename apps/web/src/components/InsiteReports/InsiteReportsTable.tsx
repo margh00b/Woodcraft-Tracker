@@ -116,7 +116,7 @@ export default function InsiteReportsTable({
             <Title order={4}>
               {jobId !== null
                 ? `${reportLabel} for Job #${reports[0]?.job_number?.replace(/[^0-9]+$/, "") ?? jobId}`
-                : `Submitted ${reportLabel.toLowerCase()}s`}
+                : `Submitted ${reportLabel}s`}
             </Title>
 
             <Text size="sm" c="dimmed">
@@ -186,9 +186,7 @@ export default function InsiteReportsTable({
                     ? new Date(`${filters.createdTo}T12:00:00`)
                     : null,
                 ]}
-                onChange={([from, to]) =>
-                  handleDateRangeChange(from, to)
-                }
+                onChange={([from, to]) => handleDateRangeChange(from, to)}
                 valueFormat="YYYY-MM-DD"
               />
             </Box>
@@ -258,11 +256,7 @@ export default function InsiteReportsTable({
             </Text>
 
             {hasFilters && (
-              <Button
-                variant="light"
-                color="violet"
-                onClick={clearFilters}
-              >
+              <Button variant="light" color="violet" onClick={clearFilters}>
                 Clear filters
               </Button>
             )}
@@ -308,12 +302,7 @@ export default function InsiteReportsTable({
               {reports.map((report) => (
                 <Table.Tr key={report.id}>
                   <Table.Td>
-                    <Badge
-                      variant="light"
-                      color="violet"
-                      radius="sm"
-                      size="lg"
-                    >
+                    <Badge variant="light" color="violet" radius="sm" size="lg">
                       {report.job_number?.split("-")[0] ?? report.job_id}
                     </Badge>
                   </Table.Td>
@@ -380,13 +369,7 @@ export default function InsiteReportsTable({
 
       <Divider />
 
-      <Flex
-        justify="space-between"
-        align="center"
-        wrap="wrap"
-        gap="sm"
-        p="md"
-      >
+      <Flex justify="space-between" align="center" wrap="wrap" gap="sm" p="md">
         <Text size="sm" c="dimmed">
           {total === 0
             ? `No ${reportLabel.toLowerCase()}s`
@@ -397,9 +380,7 @@ export default function InsiteReportsTable({
         </Text>
 
         <Group gap="xs">
-          {isFetching && !isLoading && (
-            <Loader size="xs" color="violet" />
-          )}
+          {isFetching && !isLoading && <Loader size="xs" color="violet" />}
 
           <Button
             variant="default"
