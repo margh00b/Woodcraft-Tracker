@@ -51,6 +51,7 @@ type InsiteReportsTableProps = {
   pagination: PaginationState;
   onPaginationChange: (pagination: PaginationState) => void;
   onSelectReport: (report: InsiteReport) => void;
+  showAttachments?: boolean;
 };
 
 export default function InsiteReportsTable({
@@ -67,6 +68,7 @@ export default function InsiteReportsTable({
   pagination,
   onPaginationChange,
   onSelectReport,
+  showAttachments = true,
 }: InsiteReportsTableProps) {
   const pageCount = Math.max(1, Math.ceil(total / pagination.pageSize));
   const hasFilters = Object.values(filters).some(Boolean);
@@ -297,7 +299,7 @@ export default function InsiteReportsTable({
                 <Table.Th>Address</Table.Th>
                 <Table.Th w={220}>Submitted</Table.Th>
                 <Table.Th w={220}>Submitted by</Table.Th>
-                <Table.Th w={120}>Attachments</Table.Th>
+                {showAttachments && <Table.Th w={120}>Attachments</Table.Th>}
                 <Table.Th w={110}>Action</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -336,20 +338,22 @@ export default function InsiteReportsTable({
                     </Text>
                   </Table.Td>
 
-                  <Table.Td>
-                    <Badge
-                      variant="light"
-                      color={report.attachment_count ? "blue" : "gray"}
-                      radius="sm"
-                      leftSection={
-                        report.attachment_count ? (
-                          <TbPhoto size={12} />
-                        ) : undefined
-                      }
-                    >
-                      {report.attachment_count}
-                    </Badge>
-                  </Table.Td>
+                  {showAttachments && (
+                    <Table.Td>
+                      <Badge
+                        variant="light"
+                        color={report.attachment_count ? "blue" : "gray"}
+                        radius="sm"
+                        leftSection={
+                          report.attachment_count ? (
+                            <TbPhoto size={12} />
+                          ) : undefined
+                        }
+                      >
+                        {report.attachment_count}
+                      </Badge>
+                    </Table.Td>
+                  )}
 
                   <Table.Td>
                     <Tooltip

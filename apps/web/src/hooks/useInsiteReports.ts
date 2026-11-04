@@ -125,9 +125,12 @@ export function useInsiteReports({
 
       let query = (supabase.schema("insite") as any)
         .from(type)
-        .select("id, job_id, details, submitted_by, created_at, updated_at", {
-          count: "exact",
-        })
+        .select(
+          type === "flha"
+            ? "id, job_id, hazards, acknowledgement, submitted_by, created_at, updated_at"
+            : "id, job_id, details, submitted_by, created_at, updated_at",
+          { count: "exact" },
+        )
         .order("created_at", { ascending: false })
         .order("id", { ascending: false });
 
@@ -250,8 +253,19 @@ export function useInsiteReports({
         reports: rows.map((report: any) => {
           const jobNumber = jobNumberById.get(report.job_id) ?? null;
 
+          const reportDetails =
+            type === "flha"
+              ? {
+                  ...(report.hazards && typeof report.hazards === "object"
+                    ? report.hazards
+                    : {}),
+                  acknowledgement: report.acknowledgement,
+                }
+              : report.details;
+
           return {
             ...report,
+            details: reportDetails ?? {},
             job_number:
               jobNumber == null ? null : String(jobNumber),
             address:

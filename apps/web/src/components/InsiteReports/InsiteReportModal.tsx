@@ -54,7 +54,8 @@ type InsiteReportModalProps = {
   onClose: () => void;
   children?: ReactNode;
   pdfDocument?: ReactElement | null;
-  detailsVariant?: "default" | "installation";
+  detailsVariant?: "default" | "installation" | "flha";
+  showAttachments?: boolean;
 };
 
 export default function InsiteReportModal({
@@ -69,6 +70,7 @@ export default function InsiteReportModal({
   children,
   pdfDocument,
   detailsVariant = "default",
+  showAttachments = true,
 }: InsiteReportModalProps) {
   const [pdfOpened, setPdfOpened] = useState(false);
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
@@ -231,9 +233,10 @@ export default function InsiteReportModal({
               />
             </Box>
 
-            <Divider />
-
-            <Box>
+            {showAttachments && (
+              <>
+                <Divider />
+                <Box>
               <Group justify="space-between" align="center" mb="sm" wrap="wrap">
                 <Group gap="xs">
                   <ThemeIcon size={30} radius="md" variant="light" color="indigo">
@@ -342,7 +345,9 @@ export default function InsiteReportModal({
                   ))}
                 </SimpleGrid>
               )}
-            </Box>
+                </Box>
+              </>
+            )}
           </Stack>
         )}
       </Modal>
