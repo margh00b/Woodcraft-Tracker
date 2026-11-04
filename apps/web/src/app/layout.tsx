@@ -27,6 +27,23 @@ const Quicksand = localFont({
 
 const dashboardLinks: SidebarLink[] = [
   {
+    iconName: "ReceiptText",
+    label: "App Reports",
+    allowedRoles: ["admin", "installation", "service", "designer"],
+    links: [
+      {
+        iconName: "ClipboardCheck",
+        label: "Install Reports",
+        path: "/dashboard/install-reports",
+      },
+      {
+        iconName: "MapPin",
+        label: "Markout Reports",
+        path: "/dashboard/markout-reports",
+      },
+    ],
+  },
+  {
     iconName: "LayoutDashboard",
     label: "Overview",
     path: "/dashboard",
