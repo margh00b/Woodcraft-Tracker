@@ -25,30 +25,63 @@ export async function useAssignedJobs(
     throw new Error("No installer profile is linked to your account.");
   }
 
-  const { data: assignedVariants, error: assignedError } = await supabase
+  const { data: assignedJobs, error: assignedError } = await supabase
     .from("jobs")
-    .select("job_base_number, installation!inner(installer_id)")
+    .select(
+      "job_base_number, installation!fk_installation_id!inner(installer_id)",
+    )
     .eq("installation.installer_id", installer.installer_id)
     .eq("is_active", true);
 
   if (assignedError) throw assignedError;
 
-  if (!assignedVariants?.length) {
-    return [];
-  }
-
   const baseNumbers = [
-    ...new Set(assignedVariants.map((job) => job.job_base_number)),
+    ...new Set(assignedJobs?.map((job) => job.job_base_number) ?? []),
   ];
 
-  const { data, error: jobsError } = await supabase
+  if (!baseNumbers.length) return [];
+
+  const { data: allVariants, error: variantsError } = await supabase
     .from("jobs")
     .select(JOB_DETAILS_SELECT)
-    .eq("is_active", true)
     .in("job_base_number", baseNumbers)
-    .order("job_number", { ascending: true });
+    .eq("is_active", true);
 
-  if (jobsError) throw jobsError;
+  if (variantsError) throw variantsError;
 
-  return (data ?? []) as unknown as JobOption[];
+  if (!allVariants?.length) return [];
+
+  const latestDates = new Map<string, number>();
+
+  for (const job of allVariants) {
+    const salesOrder = Array.isArray(job.sales_orders)
+      ? job.sales_orders[0]
+      : job.sales_orders;
+
+    if (!salesOrder?.created_at) continue;
+
+    const createdAt = new Date(salesOrder.created_at).getTime();
+    const currentLatest = latestDates.get(job.job_base_number);
+
+    if (currentLatest === undefined || createdAt > currentLatest) {
+      latestDates.set(job.job_base_number, createdAt);
+    }
+  }
+
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+  const cutoff = oneYearAgo.getTime();
+
+  const qualifyingBaseNumbers = new Set(
+    [...latestDates.entries()]
+      .filter(([, latestDate]) => latestDate >= cutoff)
+      .map(([baseNumber]) => baseNumber),
+  );
+
+  return allVariants
+    .filter((job) => qualifyingBaseNumbers.has(job.job_base_number))
+    .sort((a, b) =>
+      a.job_number.localeCompare(b.job_number),
+    ) as unknown as JobOption[];
 }
