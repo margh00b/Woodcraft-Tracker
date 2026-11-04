@@ -3,13 +3,14 @@ CREATE OR REPLACE FUNCTION insite.submit_markout (
   p_details         jsonb,
   p_submitted_by    text,
   p_idempotency_key uuid,
-  p_attachments     jsonb
+  p_attachments     jsonb,
+  p_sitesuper_email text DEFAULT NULL
 )
-  RETURNS bigint
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path TO ''
-  AS $function$
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
 DECLARE
   v_markout_id bigint;
   v_attachment jsonb;
@@ -84,6 +85,12 @@ BEGIN
         USING ERRCODE = '40001';
     END IF;
   ELSE
+    UPDATE public.sales_orders so
+    SET sitesuper_email = NULLIF(TRIM(p_sitesuper_email), '')
+    FROM public.jobs j
+    WHERE j.id = p_job_id
+      AND so.id = j.sales_order_id;
+
     IF p_attachments IS NOT NULL THEN
       FOR v_attachment IN
         SELECT value
@@ -119,6 +126,6 @@ BEGIN
 END;
 $function$;
 
-GRANT EXECUTE ON FUNCTION "insite"."submit_markout"(bigint, jsonb, text, uuid, jsonb) TO "authenticated";
+GRANT EXECUTE ON FUNCTION insite.submit_markout(bigint, jsonb, text, uuid, jsonb, text) TO authenticated;
 
-REVOKE ALL ON FUNCTION "insite"."submit_markout"(bigint, jsonb, text, uuid, jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION insite.submit_markout(bigint, jsonb, text, uuid, jsonb, text) FROM PUBLIC;

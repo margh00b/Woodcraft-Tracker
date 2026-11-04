@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -35,13 +36,21 @@ export default function NewMarkout() {
       ? parsedJobId
       : undefined;
 
-  const { selectedJob: contextSelectedJob } = useJob();
+  const { selectedJob: contextSelectedJob, setSelectedJob } = useJob();
   const selectedJob =
     contextSelectedJob?.id === validJobId ? contextSelectedJob : null;
 
   const [notes, setNotes] = useState("");
+  const [sitesuperEmail, setSitesuperEmail] = useState(
+    selectedJob?.sales_orders?.sitesuper_email || "",
+  );
+  useEffect(() => {
+    setSitesuperEmail(selectedJob?.sales_orders?.sitesuper_email || "");
+  }, [selectedJob?.id, selectedJob?.sales_orders?.sitesuper_email]);
   const [photos, setPhotos] = useState<PhotoInfo[]>([]);
-  const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(null);
+  const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -54,12 +63,17 @@ export default function NewMarkout() {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const handleAddPhotos = useCallback((_target: string, newPhotos: PhotoInfo[]) => {
-    setPhotos((previous) => [...previous, ...newPhotos]);
-  }, []);
+  const handleAddPhotos = useCallback(
+    (_target: string, newPhotos: PhotoInfo[]) => {
+      setPhotos((previous) => [...previous, ...newPhotos]);
+    },
+    [],
+  );
 
   const handleRemovePhoto = useCallback((photoIndex: number) => {
-    setPhotos((previous) => previous.filter((_, index) => index !== photoIndex));
+    setPhotos((previous) =>
+      previous.filter((_, index) => index !== photoIndex),
+    );
   }, []);
 
   const handleSubmit = async () => {
@@ -71,7 +85,10 @@ export default function NewMarkout() {
     }
 
     if (photos.length === 0) {
-      Alert.alert("Photos Required", "Please upload at least one photo for this markout.");
+      Alert.alert(
+        "Photos Required",
+        "Please upload at least one photo for this markout.",
+      );
       return;
     }
 
@@ -95,6 +112,7 @@ export default function NewMarkout() {
           p_details: {
             notes: notes.trim() || null,
           },
+          p_sitesuper_email: sitesuperEmail?.trim() || null,
           p_submitted_by: username,
           p_idempotency_key: submissionId,
           p_attachments: attachments,
@@ -107,6 +125,16 @@ export default function NewMarkout() {
       if (markoutId == null) {
         throw new Error("Markout was not saved by the server. Please verify.");
       }
+
+      setSelectedJob({
+        ...selectedJob,
+        sales_orders: selectedJob.sales_orders
+          ? {
+              ...selectedJob.sales_orders,
+              sitesuper_email: sitesuperEmail.trim() || null,
+            }
+          : selectedJob.sales_orders,
+      });
 
       await commitSuccess(submissionId);
       invalidateFormDetailsCache(selectedJob.id, "markouts");
@@ -128,13 +156,8 @@ export default function NewMarkout() {
   };
 
   const isBusy = isSubmitting || isUploading;
-
   return (
-    <KeyboardAwareContainer
-      ref={scrollViewRef}
-      contentContainerStyle={{ paddingBottom: 64 }}
-      style={{ flex: 1, backgroundColor: "#f8fafc" }}
-    >
+    <View className="flex-1 bg-slate-50">
       <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
@@ -146,20 +169,26 @@ export default function NewMarkout() {
         <Text className="text-lg font-bold text-slate-900">New Markout</Text>
         <View className="w-12" />
       </View>
-
-      <View className="p-5">
+      <KeyboardAwareContainer ref={scrollViewRef}>
         <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-          <View className="flex-row justify-between items-center mb-1">
+          <View className="flex-row justify-between items-center mb-5">
             <Text className="text-md font-semibold text-slate-500 uppercase">
               Markout Photos
             </Text>
+
             <Text className="text-xs font-semibold text-slate-500">
               {photos.length} photo{photos.length === 1 ? "" : "s"}
             </Text>
+            <Pressable
+              onPress={() => setPhotos([])}
+              hitSlop={8}
+              className="px-2 active:bg-rose-50"
+            >
+              <Text className="text-sm font-semibold text-rose-600">
+                Remove All
+              </Text>
+            </Pressable>
           </View>
-          <Text className="text-sm text-slate-500 mb-4">
-            Upload photos showing all markouts for this site.
-          </Text>
 
           <PhotoGrid
             photos={photos}
@@ -169,12 +198,27 @@ export default function NewMarkout() {
           />
         </View>
 
-        <MarkoutNotes
-          value={notes}
-          onChange={setNotes}
-          disabled={isBusy}
-        />
+        <MarkoutNotes value={notes} onChange={setNotes} disabled={isBusy} />
+        <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
+          <Text className="text-md font-semibold text-slate-500 uppercase mb-2">
+            Site Supervisor Email
+          </Text>
+          <Text className="text-xs text-slate-500 mb-2">
+            (If left blank, it will not be emailed to the site supervisor)
+          </Text>
 
+          <TextInput
+            className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm"
+            placeholder="Site supervisor email..."
+            placeholderTextColor="#94a3b8"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!isBusy}
+            value={sitesuperEmail}
+            onChangeText={setSitesuperEmail}
+          />
+        </View>
         <Pressable
           className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
             isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
@@ -190,17 +234,18 @@ export default function NewMarkout() {
               </Text>
             </View>
           ) : (
-            <Text className="text-white font-bold text-base">Submit Markout</Text>
+            <Text className="text-white font-bold text-base">
+              Submit Markout
+            </Text>
           )}
         </Pressable>
-      </View>
-
+      </KeyboardAwareContainer>
       <PhotoPickerModal
         target={photoPickerTarget}
         onClose={() => setPhotoPickerTarget(null)}
         onAddPhotos={handleAddPhotos}
         openings={[{ id: "markout", label: "Markout" }]}
       />
-    </KeyboardAwareContainer>
+    </View>
   );
 }

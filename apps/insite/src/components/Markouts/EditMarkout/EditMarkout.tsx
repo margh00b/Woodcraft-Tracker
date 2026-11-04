@@ -6,6 +6,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -18,6 +19,7 @@ import { usePhotoUploadPipeline } from "@/hooks/usePhotoUploadPipeline";
 import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
 import type { PhotoInfo, ExistingPhoto } from "@/types/markout";
 import { getErrorMessage } from "@/utils/installReports/photos";
+import { useJob } from "@/context/JobContext";
 
 interface EditMarkoutProps {
   reportId: string;
@@ -33,22 +35,25 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     user?.email?.split("@")[0] ||
     "Unknown User";
 
-  const parsedJobId = params.jobId ? Number(params.jobId) : undefined;
   const parsedReportId = reportId ? Number(reportId) : undefined;
 
-  const validJobId =
-    parsedJobId !== undefined && Number.isFinite(parsedJobId) && parsedJobId > 0
-      ? parsedJobId
-      : undefined;
-
-  const { selectedJob } = useJobHydration(validJobId);
+  const { selectedJob, setSelectedJob } = useJob();
 
   const [isLoadingReport, setIsLoadingReport] = useState(true);
   const [notes, setNotes] = useState("");
+  const [sitesuperEmail, setSitesuperEmail] = useState("");
+
+  useEffect(() => {
+    setSitesuperEmail(selectedJob?.sales_orders?.sitesuper_email || "");
+  }, [selectedJob?.id, selectedJob?.sales_orders?.sitesuper_email]);
   const [photos, setPhotos] = useState<ExistingPhoto[]>([]);
-  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>(
+    [],
+  );
   const [deletedStoragePaths, setDeletedStoragePaths] = useState<string[]>([]);
-  const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(null);
+  const [photoPickerTarget, setPhotoPickerTarget] = useState<string | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -133,13 +138,16 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     };
   }, [parsedReportId, supabase]);
 
-  const handleAddPhotos = useCallback((_target: string, newPhotos: PhotoInfo[]) => {
-    const wrapped: ExistingPhoto[] = newPhotos.map((photo) => ({
-      ...photo,
-      isNew: true,
-    }));
-    setPhotos((previous) => [...previous, ...wrapped]);
-  }, []);
+  const handleAddPhotos = useCallback(
+    (_target: string, newPhotos: PhotoInfo[]) => {
+      const wrapped: ExistingPhoto[] = newPhotos.map((photo) => ({
+        ...photo,
+        isNew: true,
+      }));
+      setPhotos((previous) => [...previous, ...wrapped]);
+    },
+    [],
+  );
 
   const handleRemovePhoto = useCallback(
     (photoIndex: number) => {
@@ -147,10 +155,15 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
       if (photo && !photo.isNew && photo.id !== undefined) {
         setDeletedAttachmentIds((previous) => [...previous, photo.id!]);
         if (photo.storagePath) {
-          setDeletedStoragePaths((previous) => [...previous, photo.storagePath!]);
+          setDeletedStoragePaths((previous) => [
+            ...previous,
+            photo.storagePath!,
+          ]);
         }
       }
-      setPhotos((previous) => previous.filter((_, index) => index !== photoIndex));
+      setPhotos((previous) =>
+        previous.filter((_, index) => index !== photoIndex),
+      );
     },
     [photos],
   );
@@ -202,12 +215,21 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
           p_details: {
             notes: notes.trim() || null,
           },
+          p_sitesuper_email: sitesuperEmail?.trim() || null,
           p_deleted_attachment_ids: deletedAttachmentIds,
           p_new_attachments: formattedNewAttachments,
         });
 
       if (updateError) throw updateError;
-
+      setSelectedJob({
+        ...selectedJob,
+        sales_orders: selectedJob.sales_orders
+          ? {
+              ...selectedJob.sales_orders,
+              sitesuper_email: sitesuperEmail.trim() || null,
+            }
+          : selectedJob.sales_orders,
+      });
       if (activeSubmissionId) {
         await commitSuccess(activeSubmissionId);
       }
@@ -241,11 +263,7 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
   }
 
   return (
-    <KeyboardAwareContainer
-      ref={scrollViewRef}
-      contentContainerStyle={{ paddingBottom: 64 }}
-      style={{ flex: 1, backgroundColor: "#f8fafc" }}
-    >
+    <View className="flex-1 bg-slate-50">
       <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
         <Pressable
           className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
@@ -259,61 +277,80 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
         </Text>
         <View className="w-12" />
       </View>
-
-      <View className="p-5">
-        <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-          <View className="flex-row justify-between items-center mb-1">
-            <Text className="text-md font-semibold text-slate-500 uppercase">
-              Markout Photos
-            </Text>
-            <Text className="text-xs font-semibold text-slate-500">
-              {photos.length} photo{photos.length === 1 ? "" : "s"}
-            </Text>
-          </View>
-          <Text className="text-sm text-slate-500 mb-4">
-            Upload or edit photos showing all markouts.
-          </Text>
-
-          <PhotoGrid
-            photos={photos}
-            onAdd={() => setPhotoPickerTarget("markout")}
-            onRemove={handleRemovePhoto}
-            disabled={isBusy}
-          />
-        </View>
-
-        <MarkoutNotes
-          value={notes}
-          onChange={setNotes}
-          disabled={isBusy}
-        />
-
-        <Pressable
-          className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
-            isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
-          }`}
-          onPress={handleUpdate}
-          disabled={isBusy}
-        >
-          {isBusy ? (
-            <View className="flex-row items-center">
-              <ActivityIndicator color="#ffffff" size="small" />
-              <Text className="text-white font-bold text-base ml-2">
-                Updating ({uploadProgress.current}/{uploadProgress.total})...
+      <KeyboardAwareContainer ref={scrollViewRef}>
+        <View>
+          <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
+            <View className="flex-row justify-between items-center mb-1">
+              <Text className="text-md font-semibold text-slate-500 uppercase">
+                Markout Photos
+              </Text>
+              <Text className="text-xs font-semibold text-slate-500">
+                {photos.length} photo{photos.length === 1 ? "" : "s"}
               </Text>
             </View>
-          ) : (
-            <Text className="text-white font-bold text-base">Save Changes</Text>
-          )}
-        </Pressable>
-      </View>
+            <Text className="text-sm text-slate-500 mb-4">
+              Upload or edit photos showing all markouts.
+            </Text>
 
+            <PhotoGrid
+              photos={photos}
+              onAdd={() => setPhotoPickerTarget("markout")}
+              onRemove={handleRemovePhoto}
+              disabled={isBusy}
+            />
+          </View>
+
+          <MarkoutNotes value={notes} onChange={setNotes} disabled={isBusy} />
+          <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
+            <Text className="text-md font-semibold text-slate-500 uppercase mb-2">
+              Site Supervisor Email
+            </Text>
+
+            <Text className="text-xs text-slate-500 mb-2">
+              (If left blank, it will not be emailed to the site supervisor)
+            </Text>
+
+            <TextInput
+              className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm"
+              placeholder="Site supervisor email..."
+              placeholderTextColor="#94a3b8"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isBusy}
+              value={sitesuperEmail}
+              onChangeText={setSitesuperEmail}
+              returnKeyType="done"
+            />
+          </View>
+          <Pressable
+            className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
+              isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
+            }`}
+            onPress={handleUpdate}
+            disabled={isBusy}
+          >
+            {isBusy ? (
+              <View className="flex-row items-center">
+                <ActivityIndicator color="#ffffff" size="small" />
+                <Text className="text-white font-bold text-base ml-2">
+                  Updating ({uploadProgress.current}/{uploadProgress.total})...
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-white font-bold text-base">
+                Save Changes
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </KeyboardAwareContainer>
       <PhotoPickerModal
         target={photoPickerTarget}
         onClose={() => setPhotoPickerTarget(null)}
         onAddPhotos={handleAddPhotos}
         openings={[{ id: "markout", label: "Markout" }]}
       />
-    </KeyboardAwareContainer>
+    </View>
   );
 }

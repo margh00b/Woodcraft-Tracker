@@ -6,6 +6,7 @@ export const JOB_DETAILS_SELECT = `
   sales_orders (
     shipping_client_name,
     shipping_street,
-    shipping_city
+    shipping_city,
+    sitesuper_email
   )
 `;

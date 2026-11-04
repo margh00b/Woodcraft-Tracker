@@ -18,6 +18,7 @@ export interface JobOption {
     shipping_client_name?: string;
     shipping_street?: string;
     shipping_city?: string;
+    sitesuper_email?: string | null;
   } | null;
 }
 

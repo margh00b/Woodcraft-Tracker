@@ -14,6 +14,8 @@ import {
   Pressable,
   Keyboard,
   ScrollViewProps,
+  findNodeHandle,
+  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -60,6 +62,24 @@ export const KeyboardAwareContainer = forwardRef<
         showSub.remove();
         hideSub.remove();
       };
+    }, []);
+    useEffect(() => {
+      const subscription = Keyboard.addListener(
+        Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+        () => {
+          const focusedInput = TextInput.State.currentlyFocusedInput();
+
+          if (!focusedInput) return;
+
+          internalRef.current?.scrollResponderScrollNativeHandleToKeyboard(
+            focusedInput as any,
+            350,
+            true,
+          );
+        },
+      );
+
+      return () => subscription.remove();
     }, []);
 
     return (

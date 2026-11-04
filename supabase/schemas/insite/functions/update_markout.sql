@@ -2,13 +2,14 @@ CREATE OR REPLACE FUNCTION insite.update_markout (
   p_markout_id             bigint,
   p_details                jsonb,
   p_deleted_attachment_ids bigint[],
-  p_new_attachments        jsonb
+  p_new_attachments        jsonb,
+  p_sitesuper_email        text DEFAULT NULL
 )
-  RETURNS void
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path TO ''
-  AS $function$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
 DECLARE
   v_job_id bigint;
   v_attachment jsonb;
@@ -25,6 +26,12 @@ BEGIN
   SET details = p_details,
       updated_at = now()
   WHERE id = p_markout_id;
+
+  UPDATE public.sales_orders so
+  SET sitesuper_email = NULLIF(TRIM(p_sitesuper_email), '')
+  FROM public.jobs j
+  WHERE j.id = v_job_id
+    AND so.id = j.sales_order_id;
 
   IF p_deleted_attachment_ids IS NOT NULL AND array_length(p_deleted_attachment_ids, 1) > 0 THEN
     DELETE FROM public.job_attachments
@@ -62,6 +69,6 @@ BEGIN
 END;
 $function$;
 
-GRANT EXECUTE ON FUNCTION "insite"."update_markout"(bigint, jsonb, bigint[], jsonb) TO "authenticated";
+GRANT EXECUTE ON FUNCTION insite.update_markout(bigint, jsonb, bigint[], jsonb, text) TO authenticated;
 
-REVOKE ALL ON FUNCTION "insite"."update_markout"(bigint, jsonb, bigint[], jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION insite.update_markout(bigint, jsonb, bigint[], jsonb, text) FROM PUBLIC;

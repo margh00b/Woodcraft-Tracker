@@ -57,13 +57,13 @@ export type Database = {
 { Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_submitted_by": string }; Returns: number
                            },
 "submit_markout":
-{ Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_submitted_by": string }; Returns: number
+{ Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_sitesuper_email"?: string,"p_submitted_by": string }; Returns: number
                            },
 "update_install_report":
 { Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_new_attachments": Json,"p_report_id": number }; Returns: undefined
                            },
 "update_markout":
-{ Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_markout_id": number,"p_new_attachments": Json }; Returns: undefined
+{ Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_markout_id": number,"p_new_attachments": Json,"p_sitesuper_email"?: string }; Returns: undefined
                            }
           }
           Enums: {

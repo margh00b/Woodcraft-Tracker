@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, Stack, useRouter, useSegments } from "expo-router";
 
 import { useSupabase } from "@/hooks/useSupabase";
 import { useJob } from "@/context/JobContext";
@@ -67,7 +67,13 @@ export default function AppShell() {
         />
       )}
 
-      <Slot />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
+          contentStyle: { backgroundColor: "#f8fafc" },
+        }}
+      />
     </View>
   );
 }
