@@ -177,8 +177,8 @@ export default function NewMarkout() {
       Alert.alert(
         "Success",
         emailWarning
-          ? `Markout was submitted successfully, but the test email could not be sent.\n\n${emailWarning}`
-          : "Markout was submitted successfully. A test email has been sent to Resend.",
+          ? `Markout was submitted successfully, but the email could not be sent.\n\n${emailWarning}`
+          : "Markout Submitted! Email has been sent to Site Super and Designer",
         [
           {
             text: "OK",

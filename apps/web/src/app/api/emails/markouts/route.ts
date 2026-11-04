@@ -73,7 +73,9 @@ export async function POST(request: Request) {
 
     const { data: salesOrder, error: salesOrderError } = await supabase
       .from("sales_orders")
-      .select("shipping_street, shipping_city, shipping_province, shipping_zip")
+      .select(
+        "designer, shipping_street, shipping_city, shipping_province, shipping_zip",
+      )
       .eq("id", job.sales_order_id)
       .maybeSingle();
 
@@ -81,11 +83,78 @@ export async function POST(request: Request) {
       console.error("Sales order lookup failed:", salesOrderError);
 
       return NextResponse.json(
-        { error: "Associated sales order address not found" },
+        { error: "Associated sales order not found" },
         { status: 404 },
       );
     }
 
+    const designerUsername = salesOrder.designer?.trim().toLowerCase();
+
+    if (!designerUsername) {
+      return NextResponse.json(
+        { error: "The associated sales order has no designer assigned." },
+        { status: 400 },
+      );
+    }
+
+    type AuthUserWithMetadata = {
+      user_metadata: Record<string, unknown>;
+    };
+
+    let designerEmail: string | null = null;
+    let page = 1;
+
+    while (!designerEmail) {
+      const { data: users, error: usersError } =
+        await supabase.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
+
+      if (usersError) {
+        console.error("Designer lookup failed:", usersError);
+
+        return NextResponse.json(
+          { error: "Unable to retrieve the designer's email." },
+          { status: 500 },
+        );
+      }
+
+      const authUsers = users.users as unknown as AuthUserWithMetadata[];
+
+      const designer = authUsers.find((user) => {
+        const username = user.user_metadata.username;
+
+        return (
+          typeof username === "string" &&
+          username.trim().toLowerCase() === designerUsername
+        );
+      });
+
+      if (designer) {
+        const outlookEmail = designer.user_metadata.outlook_email;
+
+        designerEmail =
+          typeof outlookEmail === "string"
+            ? outlookEmail.trim().toLowerCase()
+            : null;
+
+        break;
+      }
+
+      if (authUsers.length < 1000) break;
+
+      page++;
+    }
+
+    if (!designerEmail) {
+      return NextResponse.json(
+        {
+          error: `No Outlook email found for designer "${designerUsername}".`,
+        },
+        { status: 400 },
+      );
+    }
     const address = [
       salesOrder.shipping_street,
       salesOrder.shipping_city,
@@ -105,9 +174,9 @@ export async function POST(request: Request) {
         : "https://core.woodcraftkc.com";
 
     const shareUrl = `${appUrl}/external/markout/${token}`;
-
     const { data, error: emailError } = await resend.emails.send({
       from: "Acme <onboarding@resend.dev>",
+      replyTo: "install@woodcraftkc.com",
       to: ["delivered@resend.dev"],
       subject: `Markout Report - ${address}`,
 
@@ -285,11 +354,6 @@ export async function POST(request: Request) {
       </tr>
 
     </table>
-
-    <p style="margin: 22px 0 0; color: #a1a1aa; font-size: 10px; line-height: 1.5; text-align: center; letter-spacing: 1px;">
-      PRIVATE PROJECT COMMUNICATION
-    </p>
-
   </div>
 </body>
 </html>
