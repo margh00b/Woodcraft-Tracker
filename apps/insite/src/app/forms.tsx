@@ -110,23 +110,23 @@ export default function FormsScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable
-          onPress={() => router.back()}
-          className="mb-4 self-start flex-row items-center rounded-lg border border-slate-200 bg-white px-3 py-2"
-          accessibilityRole="button"
-          accessibilityLabel="Go back to dashboard"
-        >
-          <Text className="mr-2 text-base font-semibold text-slate-700">←</Text>
-          <Text className="text-sm font-semibold text-slate-700">Back</Text>
-        </Pressable>
-
-        <Text className="mb-1 text-2xl font-bold text-slate-900 text-center">
-          Forms & Details
-        </Text>
-        <Text className="mb-5 text-sm text-slate-500 text-center">
-          Select a form below to complete or review job details
-        </Text>
-
+        <View className="flex-row justify-between items-center mb-2">
+          <Pressable
+            onPress={() => router.back()}
+            className="self-start flex-row items-center rounded-lg border border-slate-200 bg-white px-3 py-2"
+            accessibilityRole="button"
+            accessibilityLabel="Go back to dashboard"
+          >
+            <Text className="mr-2 text-base font-semibold text-slate-700">
+              ←
+            </Text>
+            <Text className="text-sm font-semibold text-slate-700">Back</Text>
+          </Pressable>
+          <Text className="text-2xl font-bold text-slate-900 text-center">
+            Forms & Details
+          </Text>
+          <View className="w-12" />
+        </View>
         <ActiveJobCard job={selectedJob} relatedJobs={activeJobVariants} />
         <JobFiles selectedJob={selectedJob} category="Procurement" />
 
