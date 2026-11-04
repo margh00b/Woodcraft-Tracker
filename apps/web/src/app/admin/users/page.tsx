@@ -59,6 +59,7 @@ type ManagedUser = {
   id: string;
   email: string | undefined;
   username: string;
+  outlook_email: string;
   role: string;
   sub_role: string | null;
   created_at?: string;
@@ -127,6 +128,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [username, setUsername] = useState("");
+  const [outlookEmail, setOutlookEmail] = useState("");
+
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [subRole, setSubRole] = useState("");
@@ -135,6 +138,8 @@ export default function AdminUsersPage() {
   const [editRole, setEditRole] = useState("");
   const [editSubRole, setEditSubRole] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editOutlookEmail, setEditOutlookEmail] = useState("");
 
   const loadUsers = useCallback(async (requestedPage: number) => {
     setLoading(true);
@@ -169,6 +174,7 @@ export default function AdminUsersPage() {
         method: "POST",
         body: JSON.stringify({
           username,
+          outlook_email: outlookEmail.trim(),
           password,
           role,
           sub_role: subRole || null,
@@ -182,6 +188,7 @@ export default function AdminUsersPage() {
       });
 
       setUsername("");
+      setOutlookEmail("");
       setPassword("");
       setRole("");
       setSubRole("");
@@ -200,6 +207,8 @@ export default function AdminUsersPage() {
 
   function startEditing(user: ManagedUser) {
     setEditingId(user.id);
+    setEditUsername(user.username);
+    setEditOutlookEmail(user.outlook_email ?? "");
     setEditRole(user.role);
     setEditSubRole(user.sub_role ?? "");
     setNewPassword("");
@@ -220,6 +229,8 @@ export default function AdminUsersPage() {
     try {
       const body: Record<string, string | null> = {
         id: user.id,
+        username: editUsername.trim(),
+        outlook_email: editOutlookEmail.trim(),
         role: editRole,
         sub_role: editSubRole || null,
       };
@@ -436,7 +447,29 @@ export default function AdminUsersPage() {
                     radius="md"
                     styles={inputStyles}
                   />
-
+                  <TextInput
+                    label="Outlook Email"
+                    placeholder="e.g. designer@woodcraftkc.com"
+                    leftSection={<FaUser size={14} />}
+                    value={outlookEmail}
+                    onChange={(event) =>
+                      setOutlookEmail(event.currentTarget.value)
+                    }
+                    type="email"
+                    error={
+                      outlookEmail.trim() &&
+                      !/^[a-z0-9._%+-]+@woodcraftkc\.com$/i.test(
+                        outlookEmail.trim(),
+                      )
+                        ? "Email must end with @woodcraftkc.com"
+                        : undefined
+                    }
+                    autoComplete="off"
+                    maxLength={254}
+                    size="md"
+                    radius="md"
+                    styles={inputStyles}
+                  />
                   <Autocomplete
                     label="Role"
                     placeholder="Select or enter a role"
@@ -657,7 +690,14 @@ export default function AdminUsersPage() {
                                   c="#302052"
                                   style={{ overflowWrap: "anywhere" }}
                                 >
-                                  {user.username || user.email || user.id}
+                                  {user.username}
+                                </Text>
+                                <Text
+                                  fw={750}
+                                  c="#302052"
+                                  style={{ overflowWrap: "anywhere" }}
+                                >
+                                  {user.outlook_email}
                                 </Text>
 
                                 <Group gap="xs" mt="sm" wrap="wrap">
@@ -738,6 +778,49 @@ export default function AdminUsersPage() {
                                 cols={{ base: 1, sm: 2 }}
                                 spacing="md"
                               >
+                                <TextInput
+                                  label="Username"
+                                  description="Also updates the employee's login email."
+                                  placeholder="e.g. zahoor"
+                                  leftSection={<FaUser size={13} />}
+                                  value={editUsername}
+                                  onChange={(event) =>
+                                    setEditUsername(event.currentTarget.value)
+                                  }
+                                  required
+                                  maxLength={40}
+                                  autoComplete="off"
+                                  size="md"
+                                  radius="md"
+                                  styles={inputStyles}
+                                />
+
+                                <TextInput
+                                  label="Outlook Email"
+                                  description="Employee's work email address."
+                                  placeholder="e.g. zahoor@woodcraftkc.com"
+                                  leftSection={<FaUser size={13} />}
+                                  value={editOutlookEmail}
+                                  onChange={(event) =>
+                                    setEditOutlookEmail(
+                                      event.currentTarget.value,
+                                    )
+                                  }
+                                  type="email"
+                                  error={
+                                    editOutlookEmail.trim() &&
+                                    !/^[a-z0-9._%+-]+@woodcraftkc\.com$/i.test(
+                                      editOutlookEmail.trim(),
+                                    )
+                                      ? "Email must end with @woodcraftkc.com"
+                                      : undefined
+                                  }
+                                  maxLength={254}
+                                  autoComplete="off"
+                                  size="md"
+                                  radius="md"
+                                  styles={inputStyles}
+                                />
                                 <Autocomplete
                                   label="Role"
                                   description="Select a preset or enter a custom role."

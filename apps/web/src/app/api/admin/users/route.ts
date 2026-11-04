@@ -4,20 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const DEFAULT_ROLES = [
-  "admin",
-  "designer",
-  "plant",
-  "manager",
-  "inspection",
-  "installation",
-  "scheduler",
-  "reception",
-  "service",
-];
-
-const DEFAULT_SUB_ROLES = ["assembly", "paint", "manager", "shipments", "wood"];
-
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -85,6 +71,7 @@ export async function GET(request: NextRequest) {
     id: user.id,
     email: user.email,
     username: user.user_metadata?.username ?? "",
+    outlook_email: user.user_metadata?.outlook_email ?? "",
     role: user.app_metadata?.role ?? "",
     sub_role: user.app_metadata?.sub_role ?? null,
     created_at: user.created_at,
@@ -121,7 +108,21 @@ export async function POST(request: NextRequest) {
       400,
     );
   }
+  const outlookEmail =
+    typeof body.outlook_email === "string"
+      ? body.outlook_email.trim().toLowerCase()
+      : "";
 
+  if (
+    outlookEmail &&
+    (outlookEmail.length > 254 ||
+      !/^[a-z0-9._%+-]+@woodcraftkc\.com$/.test(outlookEmail))
+  ) {
+    return jsonError(
+      "Outlook email must be a valid @woodcraftkc.com address.",
+      400,
+    );
+  }
   if (!isPasswordValid(body.password)) {
     return jsonError("Password must be between 12 and 128 characters.", 400);
   }
@@ -139,6 +140,7 @@ export async function POST(request: NextRequest) {
   }
 
   const email = `${username}@auth.woodcraftkc.com`;
+
   const admin = createAdminClient();
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -151,6 +153,7 @@ export async function POST(request: NextRequest) {
     },
     user_metadata: {
       username,
+      outlook_email: outlookEmail,
       timezone: "America/Edmonton",
     },
   });
@@ -165,6 +168,7 @@ export async function POST(request: NextRequest) {
         id: data.user.id,
         email: data.user.email,
         username: data.user.user_metadata?.username ?? username,
+        outlook_email: data.user.user_metadata?.outlook_email ?? "",
         role: data.user.app_metadata?.role ?? role,
         sub_role: data.user.app_metadata?.sub_role ?? null,
         created_at: data.user.created_at,
@@ -200,7 +204,58 @@ export async function PATCH(request: NextRequest) {
     return jsonError("User not found.", 404);
   }
 
+  const updates: {
+    email?: string;
+    email_confirm?: boolean;
+    user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+    password?: string;
+  } = {};
+
   const metadata = { ...existing.user.app_metadata };
+  const userMetadata = { ...existing.user.user_metadata };
+
+  if (Object.hasOwn(body, "username")) {
+    const username =
+      typeof body.username === "string"
+        ? body.username.trim().toLowerCase()
+        : "";
+
+    if (!/^[a-z0-9][a-z0-9._-]{1,39}$/.test(username)) {
+      return jsonError(
+        "Username must be 2–40 characters and use letters, numbers, dots, underscores, or hyphens.",
+        400,
+      );
+    }
+
+    userMetadata.username = username;
+    updates.email = `${username}@auth.woodcraftkc.com`;
+    updates.email_confirm = true;
+  }
+
+  if (Object.hasOwn(body, "outlook_email")) {
+    const outlookEmail =
+      typeof body.outlook_email === "string"
+        ? body.outlook_email.trim().toLowerCase()
+        : "";
+
+    if (
+      outlookEmail &&
+      (outlookEmail.length > 254 ||
+        !/^[a-z0-9._%+-]+@woodcraftkc\.com$/.test(outlookEmail))
+    ) {
+      return jsonError(
+        "Outlook email must be a valid @woodcraftkc.com address.",
+        400,
+      );
+    }
+
+    userMetadata.outlook_email = outlookEmail;
+  }
+
+  if (Object.hasOwn(body, "username") || Object.hasOwn(body, "outlook_email")) {
+    updates.user_metadata = userMetadata;
+  }
 
   if (Object.hasOwn(body, "role")) {
     const role = normalizeValue(body.role);
@@ -222,18 +277,13 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const updates: {
-    app_metadata?: Record<string, unknown>;
-    password?: string;
-  } = {};
-
   if (Object.hasOwn(body, "role") || Object.hasOwn(body, "sub_role")) {
     updates.app_metadata = metadata;
   }
 
   if (Object.hasOwn(body, "password")) {
     if (!isPasswordValid(body.password)) {
-      return jsonError("Password must be between 12 and 128 characters.", 400);
+      return jsonError("Password must be between 6 and 128 characters.", 400);
     }
 
     updates.password = body.password;
@@ -254,6 +304,7 @@ export async function PATCH(request: NextRequest) {
       id: data.user.id,
       email: data.user.email,
       username: data.user.user_metadata?.username ?? "",
+      outlook_email: data.user.user_metadata?.outlook_email ?? "",
       role: data.user.app_metadata?.role ?? "",
       sub_role: data.user.app_metadata?.sub_role ?? null,
     },
