@@ -235,86 +235,43 @@ export default function SalesTable() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["sales_stats_aggregated", filtersForStats],
     queryFn: async () => {
-      let query = supabase.from("sales_table_view").select("stage");
-
-      filtersForStats.forEach((filter) => {
-        const { id, value } = filter;
-        if (!value) return;
-
-        switch (id) {
-          case "job_number":
-            query = query.ilike("job_number", `%${value}%`);
-            break;
-          case "clientlastName":
-            query = query.ilike("shipping_client_name", `%${value}%`);
-            break;
-          case "projectName":
-            query = query.ilike("project_name", `%${value}%`);
-            break;
-          case "designerName":
-            query = query.ilike("designer", `%${value}%`);
-            break;
-          case "my_jobs":
-            query = query.eq("designer", value);
-            break;
-          case "site_address":
-            query = query.or(
-              `shipping_street.ilike.%${value}%,shipping_city.ilike.%${value}%,shipping_province.ilike.%${value}%,shipping_zip.ilike.%${value}%`,
-            );
-            break;
-          case "ship_schedule":
-            const [startShip, endShip] = value as unknown as [
-              Date | null,
-              Date | null,
-            ];
-            if (startShip)
-              query = query.gte(
-                "ship_schedule",
-                dayjs(startShip).startOf("day").toISOString(),
-              );
-            if (endShip)
-              query = query.lte(
-                "ship_schedule",
-                dayjs(endShip).endOf("day").toISOString(),
-              );
-            break;
-          case "created_at":
-            const [startCreate, endCreate] = value as [
-              Date | null,
-              Date | null,
-            ];
-            if (startCreate)
-              query = query.gte(
-                "created_at",
-                dayjs(startCreate).startOf("day").toISOString(),
-              );
-            if (endCreate)
-              query = query.lte(
-                "created_at",
-                dayjs(endCreate).endOf("day").toISOString(),
-              );
-            break;
+      const rpcFilters = filtersForStats.map(({ id, value }) => {
+        if (!value) {
+          return { id, value: null };
         }
+
+        if (
+          (id === "ship_schedule" || id === "created_at") &&
+          Array.isArray(value)
+        ) {
+          const [start, end] = value as [Date | null, Date | null];
+
+          return {
+            id,
+            value: [
+              start ? dayjs(start).startOf("day").toISOString() : null,
+              end ? dayjs(end).endOf("day").toISOString() : null,
+            ],
+          };
+        }
+
+        return { id, value };
       });
 
-      const { data, error } = await query;
+      const { data, error } = await supabase.rpc("get_sales_stats", {
+        p_filters: rpcFilters,
+      });
 
       if (error) {
-        console.error("Error fetching stats:", error);
-        return { ALL: 0, QUOTE: 0, SOLD: 0 };
+        console.error("Error fetching sales stats:", error);
+        throw error;
       }
 
-      const counts = { ALL: 0, QUOTE: 0, SOLD: 0 };
-
-      if (data) {
-        counts.ALL = data.length;
-        for (const row of data) {
-          if (row.stage === "QUOTE") counts.QUOTE++;
-          else if (row.stage === "SOLD") counts.SOLD++;
-        }
-      }
-
-      return counts;
+      return {
+        ALL: Number(data?.[0]?.ALL ?? 0),
+        QUOTE: Number(data?.[0]?.QUOTE ?? 0),
+        SOLD: Number(data?.[0]?.SOLD ?? 0),
+      };
     },
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,

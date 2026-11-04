@@ -1749,6 +1749,11 @@ isOneToOne: false
               "project_name": string
             }[]
                            },
+"get_sales_stats":
+{ Args: { "p_filters"?: Json }; Returns: {
+              "ALL": number,"QUOTE": number,"SOLD": number
+            }[]
+                           },
 "revert_job_to_quote":
 { Args: { "p_sales_order_id": number }; Returns: undefined
                            }
