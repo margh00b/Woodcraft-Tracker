@@ -41,6 +41,7 @@ const dashboardLinks: SidebarLink[] = [
         label: "Markout Reports",
         path: "/dashboard/markout-reports",
       },
+      { iconName: "AlertTriangle", label: "FLHA Reports", path: "/dashboard/flha-reports" },
     ],
   },
   {
@@ -108,6 +109,7 @@ const dashboardLinks: SidebarLink[] = [
         label: "Markout Reports",
         path: "/dashboard/markout-reports",
       },
+      { iconName: "AlertTriangle", label: "FLHA Reports", path: "/dashboard/flha-reports" },
     ],
   },
   {

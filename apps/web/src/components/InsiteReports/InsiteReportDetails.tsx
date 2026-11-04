@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Divider,
+  Group,
   Paper,
   Stack,
   Table,
@@ -11,13 +12,14 @@ import {
   Title,
 } from "@mantine/core";
 import { TbCheck, TbX } from "react-icons/tb";
+import { FLHA_HAZARD_CATEGORIES, FLHA_RATING_LABELS } from "@/utils/flhaReportUtils";
 import {
   displayValue,
   formatSectionTitle,
 } from "@/utils/installationReportUtils";
 
 type RecordValue = Record<string, unknown>;
-type DetailsVariant = "default" | "installation";
+type DetailsVariant = "default" | "installation" | "flha";
 
 function isRecord(value: unknown): value is RecordValue {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -292,6 +294,82 @@ function InstallationDetails({ details }: { details: RecordValue }) {
   );
 }
 
+
+function FlhaDetails({ details }: { details: RecordValue }) {
+  const notes = details.notes;
+  const acknowledgement = details.acknowledgement === true;
+
+  return (
+    <Stack gap="lg">
+      <ReportSection
+        title="Hazard Assessment"
+        description="Ratings recorded for each site hazard category"
+      >
+        <Paper withBorder radius="sm" style={{ overflow: "hidden" }}>
+          <Table
+            horizontalSpacing="md"
+            verticalSpacing="sm"
+            withRowBorders
+            styles={{ td: { borderColor: "var(--mantine-color-default-border)" } }}
+          >
+            <Table.Tbody>
+              {FLHA_HAZARD_CATEGORIES.map((category) => {
+                const rating = details[category.key];
+                const label =
+                  typeof rating === "string"
+                    ? FLHA_RATING_LABELS[rating] ?? formatSectionTitle(rating)
+                    : "Not recorded";
+                const color =
+                  rating === "high" ? "red" :
+                  rating === "medium" ? "orange" :
+                  rating === "low" ? "blue" :
+                  rating === "acceptable" ? "green" : "gray";
+
+                return (
+                  <Table.Tr key={category.key}>
+                    <Table.Td>
+                      <Text size="sm">{category.label}</Text>
+                    </Table.Td>
+                    <Table.Td w={150} style={{ textAlign: "right" }}>
+                      <Badge color={color} variant="light">{label}</Badge>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Paper>
+      </ReportSection>
+
+      <ReportSection title="Site Notes">
+        <Paper withBorder radius="sm" p="md">
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {typeof notes === "string" && notes.trim() ? notes : "No additional notes recorded."}
+          </Text>
+        </Paper>
+      </ReportSection>
+
+      <ReportSection
+        title="Safety Acknowledgement"
+        description="Submitted confirmation from the person completing the assessment"
+      >
+        <Paper withBorder radius="sm" p="md">
+          <Group gap="sm" align="center">
+            <Badge color={acknowledgement ? "green" : "red"} variant="light">
+              {acknowledgement ? "Acknowledged" : "Not acknowledged"}
+            </Badge>
+            <Text size="sm">
+              {acknowledgement
+                ? "The submitter confirmed participation in the assessment, understanding of the hazards and controls, and agreement to stop and reassess if conditions change."
+                : "No acknowledgement was recorded."}
+            </Text>
+          </Group>
+        </Paper>
+      </ReportSection>
+    </Stack>
+  );
+}
+
 export default function InsiteReportDetails({
   details,
   variant = "default",
@@ -301,6 +379,10 @@ export default function InsiteReportDetails({
 }) {
   if (variant === "installation") {
     return <InstallationDetails details={details ?? {}} />;
+  }
+
+  if (variant === "flha") {
+    return <FlhaDetails details={details ?? {}} />;
   }
 
   const entries = Object.entries(details ?? {}).filter(
