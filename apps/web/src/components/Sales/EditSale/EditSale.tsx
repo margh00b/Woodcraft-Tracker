@@ -152,6 +152,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       is_cod: false,
       payment_received: false,
       site_prep: false,
+      sitesuper_email: "",
       flooring_type: "",
       flooring_clearance: "",
       cabinet: {
@@ -393,6 +394,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         is_cod: salesOrderData.is_cod ?? false,
         payment_received: salesOrderData.payment_received ?? false,
         site_prep: salesOrderData.site_prep ?? false,
+        sitesuper_email: salesOrderData.sitesuper_email || "",
         flooring_type: salesOrderData.flooring_type || "",
         flooring_clearance: salesOrderData.flooring_clearance || "",
         cabinet: {
@@ -551,6 +553,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
             is_cod: values.is_cod,
             payment_received: values.payment_received,
             site_prep: values.site_prep,
+            sitesuper_email: values.sitesuper_email,
             flooring_type: values.flooring_type,
             flooring_clearance: values.flooring_clearance,
             ...values.shipping,
@@ -934,7 +937,14 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
               bg={"gray.1"}
               p="10px"
             >
-              <Fieldset legend="Billing Details" variant="filled" bg={"white"}>
+              <Fieldset
+                legend="Billing Details"
+                variant="filled"
+                bg={"white"}
+                styles={{
+                  legend: { fontWeight: "bold" },
+                }}
+              >
                 <Stack gap="sm">
                   <Stack gap={0}>
                     <Text size="xs" c="dimmed">
@@ -996,7 +1006,14 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 </Stack>
               </Fieldset>
 
-              <Fieldset legend="Shipping Details" variant="filled" bg={"white"}>
+              <Fieldset
+                legend="Shipping Details"
+                variant="filled"
+                bg={"white"}
+                styles={{
+                  legend: { fontWeight: "bold" },
+                }}
+              >
                 <Stack gap="sm">
                   <Group justify="space-between">
                     <Button
@@ -1103,6 +1120,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   legend="Basic Information"
                   variant="filled"
                   bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
                 >
                   <Stack mt="sm" gap="md">
                     {form.values.order_type === "Reno" && (
@@ -1166,6 +1186,9 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   legend="Cabinet Specifications"
                   variant="filled"
                   bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
                 >
                   <SimpleGrid cols={3}>
                     <Select
@@ -1451,16 +1474,41 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
               </Stack>
 
               <Stack>
-                <Fieldset legend="Details" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Details"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   <Textarea
                     label="Comments"
                     minRows={10}
-                    styles={{ input: { minHeight: "200px" } }}
+                    styles={{ input: { minHeight: "112px" } }}
                     {...form.getInputProps("comments")}
+                  />
+
+                  <TextInput
+                    label="Site Super Email (For Automatic Emails)"
+                    placeholder="sitesuper@builder.com..."
+                    {...form.getInputProps(`sitesuper_email`)}
+                    styles={{
+                      root: {
+                        marginTop: 10,
+                      },
+                    }}
                   />
                 </Fieldset>
 
-                <Fieldset legend="Requirements" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Requirements"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   <Group>
                     <Checkbox
                       label="Column/Floating Shelf/Woodtop"
@@ -1499,7 +1547,14 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                   </Group>
                 </Fieldset>
 
-                <Fieldset legend="Financials" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Financials"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   {form.values.order_type != "Multi Fam" && (
                     <Group gap={50}>
                       <Radio.Group

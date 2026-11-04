@@ -49,7 +49,8 @@ BEGIN
         is_canopy_required, is_woodtop_required, is_custom_cab_required,
         is_cod,
         payment_received,
-        site_prep
+        site_prep,
+        sitesuper_email
     )
     VALUES (
         (p_payload->> 'date_sold')::timestamp with time zone,
@@ -78,7 +79,8 @@ BEGIN
         (p_payload->>'is_custom_cab_required')::boolean,
         (p_payload->>'is_cod')::boolean,
         (p_payload->>'payment_received')::boolean,
-        (p_payload->>'site_prep')::boolean
+        (p_payload->>'site_prep')::boolean,
+        p_payload->>'sitesuper_email'
     )
     RETURNING id INTO v_sales_order_id;
 

@@ -61,7 +61,7 @@ export const MasterOrderSchema = z
     is_custom_cab_required: z.boolean().default(false).optional(),
     is_cod: z.boolean().nullable().optional(),
     payment_received: z.boolean().nullable().optional(),
-
+    sitesuper_email: z.string().optional(),
     site_prep: z.boolean().nullable().optional(),
   })
   .superRefine((data, ctx) => {

@@ -190,6 +190,7 @@ export default function NewSale() {
       is_cod: undefined as unknown as boolean,
       payment_received: undefined as unknown as boolean,
       site_prep: undefined as unknown as boolean,
+      sitesuper_email: "",
       flooring_type: "",
       flooring_clearance: "",
       cabinet: {
@@ -486,6 +487,7 @@ export default function NewSale() {
         is_cod,
         payment_received,
         site_prep,
+        sitesuper_email,
       } = values;
       if (stage === "SOLD" && !manual_job_base) {
         throw new Error("Job Base Number is required for Sold jobs.");
@@ -546,6 +548,7 @@ export default function NewSale() {
         is_cod: is_cod,
         payment_received: payment_received,
         site_prep: site_prep,
+        sitesuper_email: sitesuper_email,
       };
 
       const { data: transactionResult, error: rpcError } = await supabase.rpc(
@@ -806,7 +809,10 @@ export default function NewSale() {
                     placeholder="Type"
                     data={OrderTypeOptions}
                     {...form.getInputProps(`order_type`)}
-                    style={{ width: 180 }}
+                    styles={{
+                      root: { width: 180 },
+                      label: { fontWeight: "bold" },
+                    }}
                   />
                   <Switch
                     offLabel="Quote"
@@ -938,6 +944,9 @@ export default function NewSale() {
                     nothingFoundMessage={null}
                     rightSection={clientsLoading ? <Loader size={16} /> : null}
                     style={{ flex: 1 }}
+                    styles={{
+                      label: { fontWeight: "bold" },
+                    }}
                     renderOption={({ option }) => {
                       if (option.value === "ADD_NEW_CLIENT_OPTION") {
                         return (
@@ -1261,6 +1270,9 @@ export default function NewSale() {
                   legend="Basic Information"
                   variant="filled"
                   bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
                 >
                   <Stack mt="sm" gap="md">
                     <Collapse in={form.values.order_type === "Reno"}>
@@ -1318,6 +1330,9 @@ export default function NewSale() {
                   legend="Cabinet Specifications"
                   variant="filled"
                   bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
                 >
                   <SimpleGrid cols={3}>
                     <Select
@@ -1592,15 +1607,41 @@ export default function NewSale() {
                 </Fieldset>
               </Stack>
               <Stack>
-                <Fieldset legend="Details" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Details"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   <Textarea
                     label="Comments"
                     minRows={10}
-                    styles={{ input: { minHeight: "200px" } }}
+                    styles={{ input: { minHeight: "112px" } }}
                     {...form.getInputProps(`comments`)}
                   />
+
+                  <TextInput
+                    label="Site Super Email (For Automatic Emails)"
+                    placeholder="sitesuper@builder.com..."
+                    {...form.getInputProps(`sitesuper_email`)}
+                    styles={{
+                      ...getAutofillStyles("sitesuper_email"),
+                      root: {
+                        marginTop: 10,
+                      },
+                    }}
+                  />
                 </Fieldset>
-                <Fieldset legend="Requirements" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Requirements"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   <Group>
                     <Checkbox
                       label="Column/Floating Shelf/Woodtop"
@@ -1638,7 +1679,14 @@ export default function NewSale() {
                     />
                   </Group>
                 </Fieldset>
-                <Fieldset legend="Financials" variant="filled" bg={"white"}>
+                <Fieldset
+                  legend="Financials"
+                  variant="filled"
+                  bg={"white"}
+                  styles={{
+                    legend: { fontWeight: "bold" },
+                  }}
+                >
                   {form.values.order_type != "Multi Fam" && (
                     <Group gap={50}>
                       <Radio.Group
