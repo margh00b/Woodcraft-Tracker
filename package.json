@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.11.33",
-    "supabase": "^2.121.0",
+    "supabase": "^3.0.0",
     "tsx": "^4.23.15"
   },
   "dependencies": {

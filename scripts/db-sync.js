@@ -12,8 +12,8 @@ const TEST_DB_URL = process.env.DATABASE_URL_DEV;
 const PROD_DB_URL = process.env.DATABASE_URL_PROD;
 
 const cmdLocalUp = `npx supabase migration up`;
-const cmdPushDev = `npx supabase db push --db-url "${TEST_DB_URL}"`;
-const cmdPushProd = `npx supabase db push --db-url "${PROD_DB_URL}"`;
+const cmdPushDev = `npx supabase db push --remote "${TEST_DB_URL}"`;
+const cmdPushProd = `npx supabase db push --remote "${PROD_DB_URL}"`;
 
 const run = (name, command) => {
   console.log(`[${name}] Starting...`);
