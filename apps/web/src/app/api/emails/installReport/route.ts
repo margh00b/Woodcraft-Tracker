@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { FROM_DEV } from "@/lib/emailConstants";
+import { FROM_DEV, TO_DEV } from "@/lib/emailConstants";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
