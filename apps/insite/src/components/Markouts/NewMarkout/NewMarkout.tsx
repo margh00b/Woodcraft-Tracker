@@ -160,6 +160,7 @@ export default function NewMarkout() {
           },
           body: JSON.stringify({
             markoutId,
+            sitesuperEmail: sitesuperEmail.trim() || null,
           }),
         });
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMarkoutShareToken } from "@/lib/markout-share";
+import { FROM_DEV, REPLY_TO, TO_DEV } from "@/lib/emailConstants";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -37,6 +38,10 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     const markoutId = Number(body.markoutId);
+    const sitesuperEmail =
+      typeof body.sitesuperEmail === "string"
+        ? body.sitesuperEmail.trim().toLowerCase()
+        : null;
 
     if (!Number.isSafeInteger(markoutId) || markoutId <= 0) {
       return NextResponse.json(
@@ -175,9 +180,9 @@ export async function POST(request: Request) {
 
     const shareUrl = `${appUrl}/external/markout/${token}`;
     const { data, error: emailError } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      replyTo: "install@woodcraftkc.com",
-      to: ["delivered@resend.dev"],
+      from: FROM_DEV,
+      replyTo: REPLY_TO,
+      to: TO_DEV,
       subject: `Markout Report - ${address}`,
 
       html: `
@@ -365,7 +370,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "The share link was created, but the email could not be sent.",
+          error: emailError.message,
         },
         { status: 502 },
       );
