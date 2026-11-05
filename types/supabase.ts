@@ -1627,7 +1627,7 @@ isOneToOne: true
                   ]
                 },"service_orders_table_view": {
                   Row: {
-                    "client_name": string | null,"completed_at": string | null,"date_entered": string,"due_date": string | null,"installer_company": string | null,"installer_first": string | null,"installer_last": string | null,"installer_requested": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"sales_order_id": number | null,"service_order_id": number,"service_order_number": string,"site_address": string | null
+                    "cabinet_color": string | null,"client_name": string | null,"completed_at": string | null,"date_entered": string,"due_date": string | null,"installer_company": string | null,"installer_first": string | null,"installer_last": string | null,"installer_requested": boolean | null,"job_id": number | null,"job_number": string | null,"order_type": string | null,"sales_order_id": number | null,"service_order_id": number,"service_order_number": string,"site_address": string | null
                   }
                   ComputedFields: never
                   Relationships: [

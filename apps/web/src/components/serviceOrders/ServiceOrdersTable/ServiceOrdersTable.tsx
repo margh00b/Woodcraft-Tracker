@@ -72,7 +72,6 @@ type ServiceOrderView = Views<"service_orders_table_view"> & {
 export default function ServiceOrdersTable() {
   const { canEditServiceOrders } = usePermissions();
   const router = useRouter();
-
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 15,
@@ -216,6 +215,7 @@ export default function ServiceOrdersTable() {
       header: "Service Order #",
       size: 150,
       minSize: 120,
+      enableSorting: false,
       cell: (info) => (
         <CellWrapper
           onContextMenu={(e) =>
@@ -274,6 +274,7 @@ export default function ServiceOrdersTable() {
       header: "Client Name",
       size: 180,
       minSize: 140,
+      enableSorting: false,
       cell: (info) => (
         <CellWrapper
           onContextMenu={(e) =>
@@ -286,8 +287,9 @@ export default function ServiceOrdersTable() {
     }),
     columnHelper.accessor("site_address", {
       header: "Site Address",
-      size: 250,
+      size: 280,
       minSize: 180,
+      enableSorting: false,
       cell: (info) => (
         <CellWrapper
           onContextMenu={(e) =>
@@ -302,10 +304,27 @@ export default function ServiceOrdersTable() {
         </CellWrapper>
       ),
     }),
+    columnHelper.accessor("cabinet_color", {
+      id: "cabinet_color",
+      header: "Color",
+      size: 160,
+      minSize: 160,
+      enableSorting: false,
+      cell: (info) => (
+        <CellWrapper
+          onContextMenu={(e) =>
+            handleContextMenu(e, "cabinet_color", info.getValue())
+          }
+        >
+          <Text size="sm">{info.getValue() || "—"}</Text>
+        </CellWrapper>
+      ),
+    }),
     columnHelper.accessor("installer_company", {
-      header: "Service Technician",
-      size: 180,
-      minSize: 140,
+      header: "Service Tech",
+      size: 150,
+      minSize: 150,
+      enableSorting: false,
       cell: (info) => {
         const row = info.row.original;
         const installerRequested = row.installer_requested;
@@ -334,7 +353,7 @@ export default function ServiceOrdersTable() {
 
     columnHelper.accessor("date_entered", {
       header: "Date Entered",
-      size: 130,
+      size: 110,
       minSize: 110,
       cell: (info) => {
         const date = info.getValue();
@@ -347,7 +366,7 @@ export default function ServiceOrdersTable() {
     }),
     columnHelper.accessor("due_date", {
       header: "Date Due",
-      size: 130,
+      size: 110,
       minSize: 110,
       cell: (info) => {
         const date = info.getValue();
@@ -375,6 +394,7 @@ export default function ServiceOrdersTable() {
       header: "Status",
       size: 160,
       minSize: 130,
+      enableSorting: false,
       cell: (info) => {
         const date = info.getValue();
         return (
@@ -476,9 +496,9 @@ export default function ServiceOrdersTable() {
     }),
     columnHelper.display({
       id: "actions",
-      header: "Actions",
-      size: 100,
-      minSize: 80,
+      size: 50,
+      minSize: 50,
+      enableSorting: false,
       cell: (info) => {
         const id = info.row.original.service_order_id;
         const soNumber = info.row.original.service_order_number;
@@ -610,6 +630,15 @@ export default function ServiceOrdersTable() {
                 value={getInputFilterValue("client_name") as string}
                 onChange={(e) =>
                   setInputFilterValue("client_name", e.target.value)
+                }
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
+              />
+              <TextInput
+                label="Color"
+                placeholder="Search color..."
+                value={getInputFilterValue("cabinet_color") as string}
+                onChange={(e) =>
+                  setInputFilterValue("cabinet_color", e.target.value)
                 }
                 onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
@@ -757,29 +786,48 @@ export default function ServiceOrdersTable() {
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Table.Th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    onClick={header.column.getToggleSortingHandler()}
-                    style={{
-                      position: "relative",
-                      width: header.getSize(),
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    <Group gap="xs" wrap="nowrap">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {header.column.getIsSorted() === "asc" && <FaSortUp />}
-                      {header.column.getIsSorted() === "desc" && <FaSortDown />}
-                      {!header.column.getIsSorted() && <FaSort opacity={0.2} />}
-                    </Group>
-                  </Table.Th>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+
+                  return (
+                    <Table.Th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      onClick={
+                        canSort
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
+                      style={{
+                        position: "relative",
+                        width: header.getSize(),
+                        cursor: canSort ? "pointer" : "default",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <Group gap="xs" wrap="nowrap">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+
+                        {canSort && (
+                          <>
+                            {header.column.getIsSorted() === "asc" && (
+                              <FaSortUp />
+                            )}
+                            {header.column.getIsSorted() === "desc" && (
+                              <FaSortDown />
+                            )}
+                            {!header.column.getIsSorted() && (
+                              <FaSort opacity={0.2} />
+                            )}
+                          </>
+                        )}
+                      </Group>
+                    </Table.Th>
+                  );
+                })}
               </Table.Tr>
             ))}
           </Table.Thead>
