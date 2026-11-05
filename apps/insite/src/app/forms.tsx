@@ -14,12 +14,25 @@ import { useFormDetails } from "@/hooks/useFormDetails";
 import { useJob } from "@/context/JobContext";
 import JobFiles from "@/components/Common/JobFiles/JobFiles";
 import { useJobHydration } from "@/hooks/useJobHydration";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export default function FormsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ jobId?: string }>();
   const jobId = params.jobId ? Number(params.jobId) : undefined;
+  const { user } = useSupabase();
+  const role =
+    typeof user?.app_metadata?.role === "string" ? user.app_metadata.role : "";
+
+  const permissions = {
+    markouts: ["admin", "markouts"],
+    flha: ["admin", "installer"],
+    installationReports: ["admin", "installer"],
+  };
+
+  const canView = (item: keyof typeof permissions) =>
+    permissions[item].includes(role);
 
   const { selectedJob, activeJobVariants } = useJob();
   const { isLoadingJob } = useJobHydration(jobId);
@@ -134,43 +147,48 @@ export default function FormsScreen() {
           <Text className="mb-3 text-md font-bold uppercase tracking-wider text-slate-500">
             Forms
           </Text>
-          <ActionPill
-            title="Markout"
-            badge={markouts.length}
-            description={`${markouts.length} report${markouts.length === 1 ? "" : "s"} submitted`}
-            icon="✏️"
-            onPress={() =>
-              router.push({
-                pathname: "/markouts",
-                params: { jobId: String(jobId) },
-              })
-            }
-          />
-          <ActionPill
-            title="Field Level Hazard Assessment"
-            badge={flhaForms.length}
-            description={`${flhaForms.length} form${flhaForms.length === 1 ? "" : "s"} submitted`}
-            icon="⚠️"
-            onPress={() =>
-              router.push({
-                pathname: "/flha",
-                params: { jobId: String(jobId) },
-              })
-            }
-          />
-
-          <ActionPill
-            title="Installation Reports"
-            badge={installationReports.length}
-            description={`${installationReports.length} report${installationReports.length === 1 ? "" : "s"} submitted`}
-            icon="🛠️"
-            onPress={() =>
-              router.push({
-                pathname: "/install-reports",
-                params: { jobId: String(jobId) },
-              })
-            }
-          />
+          {canView("markouts") && (
+            <ActionPill
+              title="Markout"
+              badge={markouts.length}
+              description={`${markouts.length} report${markouts.length === 1 ? "" : "s"} submitted`}
+              icon="✏️"
+              onPress={() =>
+                router.push({
+                  pathname: "/markouts",
+                  params: { jobId: String(jobId) },
+                })
+              }
+            />
+          )}
+          {canView("flha") && (
+            <ActionPill
+              title="Field Level Hazard Assessment"
+              badge={flhaForms.length}
+              description={`${flhaForms.length} form${flhaForms.length === 1 ? "" : "s"} submitted`}
+              icon="⚠️"
+              onPress={() =>
+                router.push({
+                  pathname: "/flha",
+                  params: { jobId: String(jobId) },
+                })
+              }
+            />
+          )}
+          {canView("installationReports") && (
+            <ActionPill
+              title="Installation Reports"
+              badge={installationReports.length}
+              description={`${installationReports.length} report${installationReports.length === 1 ? "" : "s"} submitted`}
+              icon="🛠️"
+              onPress={() =>
+                router.push({
+                  pathname: "/install-reports",
+                  params: { jobId: String(jobId) },
+                })
+              }
+            />
+          )}
         </View>
       </ScrollView>
     </View>

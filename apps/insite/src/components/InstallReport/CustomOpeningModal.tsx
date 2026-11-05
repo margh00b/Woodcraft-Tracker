@@ -50,7 +50,6 @@ export function CustomOpeningModal({
             placeholderTextColor="#94a3b8"
             value={name}
             onChangeText={setName}
-            autoFocus
           />
 
           <View className="flex-row justify-end gap-3">

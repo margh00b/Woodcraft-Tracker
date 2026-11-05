@@ -10,7 +10,7 @@ export default function FlhaLayout() {
   return (
     <View className="flex-1 bg-slate-50">
       {selectedJob && (
-        <View className="px-5 pt-3 pb-1 bg-slate-50">
+        <View className="px-2 pt-1 pb-1 bg-slate-50">
           <ActiveJobCard
             job={selectedJob}
             relatedJobs={activeJobVariants}

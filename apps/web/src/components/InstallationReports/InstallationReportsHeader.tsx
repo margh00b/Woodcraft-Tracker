@@ -14,7 +14,7 @@ export default function InstallationReportsHeader({
       description="Review installation reports submitted through Insite."
       icon={<TbClipboardCheck size={27} />}
       jobId={jobId}
-      allReportsHref="/dashboard/installation-reports"
+      allReportsHref="/dashboard/install-reports"
     />
   );
 }

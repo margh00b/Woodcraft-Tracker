@@ -54,11 +54,7 @@ export function useInsiteReports({
   pagination,
   filters,
 }: UseInsiteReportsParams) {
-  const {
-    supabase,
-    isAuthenticated,
-    isLoading: isAuthLoading,
-  } = useSupabase();
+  const { supabase, isAuthenticated, isLoading: isAuthLoading } = useSupabase();
 
   return useQuery({
     queryKey: ["insite-reports", type, jobId, pagination, filters],
@@ -143,10 +139,7 @@ export function useInsiteReports({
       }
 
       if (filters.installer.trim()) {
-        query = query.ilike(
-          "submitted_by",
-          `%${filters.installer.trim()}%`,
-        );
+        query = query.ilike("submitted_by", `%${filters.installer.trim()}%`);
       }
 
       if (filters.createdFrom) {
@@ -178,18 +171,13 @@ export function useInsiteReports({
       }
 
       const jobIds = [
-        ...new Set(
-          rows.map((report: { job_id: number }) => report.job_id),
-        ),
+        ...new Set(rows.map((report: { job_id: number }) => report.job_id)),
       ];
       const reportIds = rows.map((report: { id: number }) => report.id);
 
       const [{ data: jobs, error: jobsError }, attachmentResult] =
         await Promise.all([
-          supabase
-            .from("jobs")
-            .select("id, job_number")
-            .in("id", jobIds),
+          supabase.from("jobs").select("id, job_number").in("id", jobIds),
           attachmentColumn
             ? supabase
                 .from("job_attachments")
@@ -241,10 +229,7 @@ export function useInsiteReports({
           const id = (row as Record<string, number>)[attachmentColumn];
 
           if (id != null) {
-            attachmentCounts.set(
-              id,
-              (attachmentCounts.get(id) ?? 0) + 1,
-            );
+            attachmentCounts.set(id, (attachmentCounts.get(id) ?? 0) + 1);
           }
         }
       }
@@ -266,8 +251,7 @@ export function useInsiteReports({
           return {
             ...report,
             details: reportDetails ?? {},
-            job_number:
-              jobNumber == null ? null : String(jobNumber),
+            job_number: jobNumber == null ? null : String(jobNumber),
             address:
               jobNumber == null
                 ? null

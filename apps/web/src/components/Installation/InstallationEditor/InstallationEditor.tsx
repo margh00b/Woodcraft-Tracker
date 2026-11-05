@@ -144,6 +144,7 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
           `
           id,
           job_number,
+          job_base_number,
           installation:installation_id (*),
           production_schedule:production_schedule (*),
           site_visits (*),
@@ -587,7 +588,9 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                       leftSection={<FaClipboardList size={15} />}
                       onClick={() =>
                         navigatePush(
-                          `/dashboard/installation-reports?jobId=${jobId}`,
+                          `/dashboard/install-reports?jobBaseNumber=${encodeURIComponent(
+                            jobData.job_base_number,
+                          )}`,
                         )
                       }
                     >

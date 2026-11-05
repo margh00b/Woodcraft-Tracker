@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Button,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
+import { Button, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
 import type { ReactNode } from "react";
 
 type InsiteReportsHeaderProps = {
@@ -45,16 +38,9 @@ export default function InsiteReportsHeader({
         </Stack>
       </Group>
 
-      {jobId !== null && (
-        <Button
-          variant="default"
-          component="a"
-          href={allReportsHref}
-          radius="md"
-        >
-          View all reports
-        </Button>
-      )}
+      <Button variant="default" component="a" href={allReportsHref} radius="md">
+        View all reports
+      </Button>
     </Group>
   );
 }

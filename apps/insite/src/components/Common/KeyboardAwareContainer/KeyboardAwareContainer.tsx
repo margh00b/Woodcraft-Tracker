@@ -23,6 +23,7 @@ interface KeyboardAwareContainerProps extends ScrollViewProps {
   children: ReactNode;
   className?: string;
   keyboardVerticalOffset?: number;
+  enabled?: boolean;
 }
 
 export const KeyboardAwareContainer = forwardRef<
@@ -35,6 +36,7 @@ export const KeyboardAwareContainer = forwardRef<
       className = "flex-1 px-5 pt-5",
       contentContainerStyle,
       keyboardVerticalOffset = 0,
+      enabled = true,
       ...scrollViewProps
     },
     ref,
@@ -64,6 +66,7 @@ export const KeyboardAwareContainer = forwardRef<
       };
     }, []);
     useEffect(() => {
+      if (!enabled) return;
       const subscription = Keyboard.addListener(
         Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
         () => {
@@ -80,7 +83,7 @@ export const KeyboardAwareContainer = forwardRef<
       );
 
       return () => subscription.remove();
-    }, []);
+    }, [enabled]);
 
     return (
       <View style={{ flex: 1 }}>

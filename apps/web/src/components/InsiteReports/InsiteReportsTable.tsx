@@ -72,7 +72,10 @@ export default function InsiteReportsTable({
 }: InsiteReportsTableProps) {
   const pageCount = Math.max(1, Math.ceil(total / pagination.pageSize));
   const hasFilters = Object.values(filters).some(Boolean);
-
+  const normalizedReportLabel =
+    reportLabel.toLowerCase() === "installation report"
+      ? "Installation Report"
+      : reportLabel;
   const updateFilter = (key: keyof InsiteReportFilters, value: string) => {
     onFiltersChange({ ...filters, [key]: value });
     onPaginationChange({ ...pagination, pageIndex: 0 });
@@ -115,13 +118,13 @@ export default function InsiteReportsTable({
           <Stack gap={3}>
             <Title order={4}>
               {jobId !== null
-                ? `${reportLabel} for Job #${reports[0]?.job_number?.replace(/[^0-9]+$/, "") ?? jobId}`
-                : `Submitted ${reportLabel}s`}
+                ? `${normalizedReportLabel} for Job #${reports[0]?.job_number?.replace(/[^0-9]+$/, "") ?? jobId}`
+                : `Submitted ${normalizedReportLabel}s`}
             </Title>
 
             <Text size="sm" c="dimmed">
               {jobId !== null
-                ? `${reportLabel} submissions for this job.`
+                ? `${normalizedReportLabel} submissions for this job.`
                 : "Filter by job, address, submitter, or submission date."}
             </Text>
           </Stack>
@@ -129,8 +132,8 @@ export default function InsiteReportsTable({
           <Badge variant="light" color="violet" size="lg" radius="sm">
             {total}{" "}
             {total === 1
-              ? reportLabel.toLowerCase()
-              : `${reportLabel.toLowerCase()}s`}
+              ? normalizedReportLabel.toLowerCase()
+              : `${normalizedReportLabel.toLowerCase()}s`}
           </Badge>
         </Group>
 
@@ -220,7 +223,7 @@ export default function InsiteReportsTable({
           <Stack align="center" gap="sm">
             <Loader color="violet" />
             <Text size="sm" c="dimmed">
-              Loading {reportLabel.toLowerCase()}s...
+              Loading {normalizedReportLabel.toLowerCase()}s...
             </Text>
           </Stack>
         </Center>
@@ -228,7 +231,7 @@ export default function InsiteReportsTable({
         <Center p="xl">
           <Alert
             color="red"
-            title={`Unable to load ${reportLabel.toLowerCase()}s`}
+            title={`Unable to load ${normalizedReportLabel.toLowerCase()}s`}
             maw={600}
           >
             {error instanceof Error
@@ -246,13 +249,13 @@ export default function InsiteReportsTable({
             <Text fw={600}>
               {hasFilters
                 ? "No matching submissions"
-                : `No ${reportLabel.toLowerCase()}s found`}
+                : `No ${normalizedReportLabel.toLowerCase()}s found`}
             </Text>
 
             <Text size="sm" c="dimmed" ta="center" maw={380}>
               {hasFilters
                 ? "Try changing or clearing your filters."
-                : `Submitted Insite ${reportLabel.toLowerCase()}s will appear here.`}
+                : `Submitted Insite ${normalizedReportLabel.toLowerCase()}s will appear here.`}
             </Text>
 
             {hasFilters && (
@@ -346,7 +349,7 @@ export default function InsiteReportsTable({
 
                   <Table.Td>
                     <Tooltip
-                      label={`View ${reportLabel.toLowerCase()} details`}
+                      label={`View ${normalizedReportLabel.toLowerCase()} details`}
                     >
                       <Button
                         size="xs"
@@ -372,7 +375,7 @@ export default function InsiteReportsTable({
       <Flex justify="space-between" align="center" wrap="wrap" gap="sm" p="md">
         <Text size="sm" c="dimmed">
           {total === 0
-            ? `No ${reportLabel.toLowerCase()}s`
+            ? `No ${normalizedReportLabel.toLowerCase()}s`
             : `Showing ${pagination.pageIndex * pagination.pageSize + 1}–${Math.min(
                 (pagination.pageIndex + 1) * pagination.pageSize,
                 total,

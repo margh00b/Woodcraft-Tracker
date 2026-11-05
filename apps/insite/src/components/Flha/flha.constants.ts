@@ -28,7 +28,7 @@ export const RATINGS: {
   activeColor: string;
 }[] = [
   {
-    label: "Acc",
+    label: "Acceptable",
     value: "acceptable",
     color: "border-emerald-200 text-emerald-700 bg-emerald-50",
     activeColor: "bg-emerald-600 border-emerald-600 text-white",

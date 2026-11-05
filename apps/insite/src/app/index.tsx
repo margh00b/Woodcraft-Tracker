@@ -13,11 +13,14 @@ import JobSearchBar from "@/components/JobSearchBar/JobSearchBar";
 import ActiveJobCard from "@/components/Common/ActiveJobCard/ActiveJobCard";
 import { useJob } from "@/context/JobContext";
 import { useActiveJobSelection } from "@/hooks/useActiveJobSelection";
+import { useSupabase } from "@/hooks/useSupabase";
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
+  const { user } = useSupabase();
+  const role =
+    typeof user?.app_metadata?.role === "string" ? user.app_metadata.role : "";
   const {
     searchResultJob,
     matchingJobs,
@@ -86,11 +89,11 @@ export default function HomeScreen() {
 
         {searchResultJob && (
           <View className="mb-6 mt-1 rounded-xl border border-slate-200 bg-white p-4">
-            <Text className="mb-3 text-md font-bold text-slate-700">
-              Selected search result
-            </Text>
-
-            <ActiveJobCard job={searchResultJob} relatedJobs={matchingJobs} />
+            <ActiveJobCard
+              job={searchResultJob}
+              relatedJobs={matchingJobs}
+              isSearchResult={true}
+            />
 
             <Pressable
               className="items-center rounded-lg bg-slate-900 px-4 py-3"
@@ -100,103 +103,104 @@ export default function HomeScreen() {
             </Pressable>
           </View>
         )}
-
-        <View className="mb-6">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-md font-bold uppercase tracking-wider text-slate-500">
-              My Assigned Jobs
-            </Text>
-
-            {!isAssignedJobsLoading && (
-              <Text className="text-sm text-slate-500">
-                {groupedJobs.length} job
-                {groupedJobs.length === 1 ? "" : "s"}
-              </Text>
-            )}
-          </View>
-
-          {isAssignedJobsLoading ? (
-            <View className="items-center py-8">
-              <ActivityIndicator size="large" color="#0f172a" />
-              <Text className="mt-3 text-sm text-slate-500">
-                Loading your assigned jobs...
-              </Text>
-            </View>
-          ) : assignedJobsError && assignedJobs.length === 0 ? (
-            <View className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-              <Text className="font-semibold text-rose-700">
-                {assignedJobsError}
+        {role === "installer" && (
+          <View className="mb-6">
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="text-md font-bold uppercase tracking-wider text-slate-500">
+                My Assigned Jobs
               </Text>
 
-              <Pressable
-                className="mt-3 self-start rounded-lg bg-slate-900 px-4 py-2"
-                onPress={() => void refreshAssignedJobs()}
-              >
-                <Text className="font-semibold text-white">Retry</Text>
-              </Pressable>
-            </View>
-          ) : groupedJobs.length === 0 ? (
-            <View className="rounded-xl border border-slate-200 bg-white p-4">
-              <Text className="text-sm text-slate-600">
-                You don't have any active jobs assigned to you.
-              </Text>
-            </View>
-          ) : (
-            <>
-              {assignedJobsError && (
-                <View className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                  <Text className="text-sm text-amber-800">
-                    Could not refresh jobs. Showing previously loaded jobs.
-                  </Text>
-                </View>
+              {!isAssignedJobsLoading && (
+                <Text className="text-sm text-slate-500">
+                  {groupedJobs.length} job
+                  {groupedJobs.length === 1 ? "" : "s"}
+                </Text>
               )}
+            </View>
 
-              {groupedJobs.map(({ job, suffixes }) => (
+            {isAssignedJobsLoading ? (
+              <View className="items-center py-8">
+                <ActivityIndicator size="large" color="#0f172a" />
+                <Text className="mt-3 text-sm text-slate-500">
+                  Loading your assigned jobs...
+                </Text>
+              </View>
+            ) : assignedJobsError && assignedJobs.length === 0 ? (
+              <View className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                <Text className="font-semibold text-rose-700">
+                  {assignedJobsError}
+                </Text>
+
                 <Pressable
-                  key={job.id}
-                  className="mb-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-slate-100"
-                  onPress={() => openForms(job)}
+                  className="mt-3 self-start rounded-lg bg-slate-900 px-4 py-2"
+                  onPress={() => void refreshAssignedJobs()}
                 >
-                  <View className="mb-2 flex-row items-center justify-between">
-                    <View className="flex-row flex-wrap items-center gap-2">
-                      <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
-                        <Text className="text-xs font-bold text-white">
-                          #{job.job_base_number}
-                        </Text>
-                      </View>
-
-                      {suffixes.length > 0 && (
-                        <View className="rounded border border-slate-200 bg-slate-100 px-2 py-1">
-                          <Text className="text-xs font-semibold text-slate-600">
-                            - {suffixes.join(", ")}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <Text className="text-sm font-semibold text-blue-700">
-                      Select →
+                  <Text className="font-semibold text-white">Retry</Text>
+                </Pressable>
+              </View>
+            ) : groupedJobs.length === 0 ? (
+              <View className="rounded-xl border border-slate-200 bg-white p-4">
+                <Text className="text-sm text-slate-600">
+                  You don't have any active jobs assigned to you.
+                </Text>
+              </View>
+            ) : (
+              <>
+                {assignedJobsError && (
+                  <View className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <Text className="text-sm text-amber-800">
+                      Could not refresh jobs. Showing previously loaded jobs.
                     </Text>
                   </View>
+                )}
 
-                  <Text className="text-sm font-semibold text-slate-700">
-                    {job.sales_orders?.shipping_client_name ||
-                      "Client not available"}
-                  </Text>
+                {groupedJobs.map(({ job, suffixes }) => (
+                  <Pressable
+                    key={job.id}
+                    className="mb-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-slate-100"
+                    onPress={() => openForms(job)}
+                  >
+                    <View className="mb-2 flex-row items-center justify-between">
+                      <View className="flex-row flex-wrap items-center gap-2">
+                        <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
+                          <Text className="text-xs font-bold text-white">
+                            #{job.job_base_number}
+                          </Text>
+                        </View>
 
-                  <Text className="mt-1 text-sm text-slate-500">
-                    {[
-                      job.sales_orders?.shipping_street,
-                      job.sales_orders?.shipping_city,
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "Address not available"}
-                  </Text>
-                </Pressable>
-              ))}
-            </>
-          )}
-        </View>
+                        {suffixes.length > 0 && (
+                          <View className="rounded border border-slate-200 bg-slate-100 px-2 py-1">
+                            <Text className="text-xs font-semibold text-slate-600">
+                              - {suffixes.join(", ")}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <Text className="text-sm font-semibold text-blue-700">
+                        Select →
+                      </Text>
+                    </View>
+
+                    <Text className="text-sm font-semibold text-slate-700">
+                      {job.sales_orders?.shipping_client_name ||
+                        "Client not available"}
+                    </Text>
+
+                    <Text className="mt-1 text-sm text-slate-500">
+                      {[
+                        job.sales_orders?.shipping_street,
+                        job.sales_orders?.shipping_city,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "Address not available"}
+                    </Text>
+                  </Pressable>
+                ))}
+              </>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

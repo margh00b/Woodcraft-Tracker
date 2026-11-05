@@ -80,7 +80,7 @@ export function OpeningCard({
               className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-3"
               placeholder="Enter exact measurement/location (e.g., 36.5)"
               placeholderTextColor="#94a3b8"
-              keyboardType="decimal-pad"
+              keyboardType="email-address"
               value={opening.measurement}
               onChangeText={onMeasurementChange}
               editable={!disabled && !isNotApplicable}

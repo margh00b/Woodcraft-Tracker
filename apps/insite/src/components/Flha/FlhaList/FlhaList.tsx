@@ -88,11 +88,11 @@ export default function FlhaList({ jobId, onSelectFlha }: FlhaListProps) {
               </View>
 
               <View className="items-end">
-                <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                <Text className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Submitted By
                 </Text>
                 <Text
-                  className="text-xs font-semibold text-slate-800"
+                  className="text-md font-semibold text-slate-800"
                   numberOfLines={1}
                 >
                   {item.submitted_by || "Unknown"}

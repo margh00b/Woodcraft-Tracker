@@ -594,7 +594,7 @@ export default function EditInstallReport({
         <View className="w-12" />
       </View>
 
-      <KeyboardAwareContainer ref={scrollViewRef}>
+      <KeyboardAwareContainer ref={scrollViewRef} enabled={!customModalVisible}>
         {isLoading ? (
           <View className="flex-1 items-center justify-center py-12">
             <ActivityIndicator size="large" color="#0f172a" />

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         ? "http://localhost:3000"
         : "https://core.woodcraftkc.com";
 
-    const dashboardLink = `${appUrl}/dashboard/installation-reports?jobId=${jobId}&fromResend=${true}&reportId=${reportId}`;
+    const dashboardLink = `${appUrl}/dashboard/install-reports?jobId=${jobId}&fromResend=${true}&reportId=${reportId}`;
 
     const data = await resend.emails.send({
       from: "Acme <onboarding@resend.dev>",

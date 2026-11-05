@@ -1,18 +1,9 @@
-CREATE OR REPLACE FUNCTION insite.submit_install_report (
-  p_job_id          bigint,
-  p_details         jsonb,
-  p_submitted_by    text,
-  p_idempotency_key uuid,
-  p_attachments     jsonb
-)
-  RETURNS bigint
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path TO ''
-  AS $function$
+CREATE OR REPLACE FUNCTION insite.submit_install_report (p_job_id bigint, p_details jsonb, p_submitted_by text, p_idempotency_key uuid, p_attachments jsonb) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO '' AS $function$
 DECLARE
   v_report_id bigint;
   v_attachment jsonb;
+  v_job_base_number public.jobs.job_base_number%TYPE;
 BEGIN
   IF p_idempotency_key IS NULL THEN
     RAISE EXCEPTION 'Idempotency key is required'
@@ -23,6 +14,14 @@ BEGIN
     RAISE EXCEPTION 'Job ID is required'
       USING ERRCODE = '22023';
   END IF;
+  SELECT job_base_number
+INTO v_job_base_number
+FROM public.jobs
+WHERE id = p_job_id;
+
+IF NOT FOUND THEN
+  RAISE EXCEPTION 'Job % not found', p_job_id;
+END IF;
 
   IF p_details IS NULL OR jsonb_typeof(p_details) <> 'object' THEN
     RAISE EXCEPTION 'Report details must be a JSON object'
@@ -116,34 +115,22 @@ BEGIN
     END IF;
   END IF;
 
-  UPDATE public.installation AS i
+
+
+UPDATE public.installation AS i
 SET installation_report_received = NOW()
 FROM public.jobs AS j
-WHERE j.id = p_job_id
+WHERE j.job_base_number = v_job_base_number
   AND i.installation_id = j.installation_id
   AND i.installation_report_received IS NULL;
-
-IF NOT FOUND THEN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM public.jobs AS j
-    JOIN public.installation AS i
-      ON i.installation_id = j.installation_id
-    WHERE j.id = p_job_id
-      AND i.installation_report_received IS NULL
-  ) THEN
-    NULL;
-  ELSE
-    RAISE EXCEPTION
-      'Failed to update installation_report_received for job %',
-      p_job_id;
-  END IF;
-END IF;
 
   RETURN v_report_id;
 END;
 $function$;
 
-GRANT EXECUTE ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid, jsonb) TO "authenticated";
+GRANT EXECUTE ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid,
+                                                                                jsonb) TO "authenticated";
 
-REVOKE ALL ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid, jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION "insite"."submit_install_report"(bigint, jsonb, text, uuid,
+                                                                             jsonb)
+FROM PUBLIC;

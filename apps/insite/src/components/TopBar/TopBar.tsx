@@ -62,14 +62,16 @@ export default function TopBar({
       </View>
 
       <View className="flex-row items-center gap-2">
-        <Pressable
-          onPress={handleRefresh}
-          disabled={isRefreshing}
-          className="h-10 w-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
-          style={{ opacity: isRefreshing ? 0.5 : 1 }}
-        >
-          <Ionicons name="refresh" size={20} color="#0f172a" />
-        </Pressable>
+        {role === "installer" && (
+          <Pressable
+            onPress={handleRefresh}
+            disabled={isRefreshing}
+            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
+            style={{ opacity: isRefreshing ? 0.5 : 1 }}
+          >
+            <Ionicons name="refresh" size={20} color="#0f172a" />
+          </Pressable>
+        )}
 
         <Pressable
           className="bg-slate-100 active:bg-slate-200 px-3.5 py-2 rounded-lg items-center border border-slate-200"

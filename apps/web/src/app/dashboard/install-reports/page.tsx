@@ -20,12 +20,15 @@ import { InstallationReportPdf } from "@/documents/InstallationReportPdf";
 function InstallationReportsContent() {
   const searchParams = useSearchParams();
   const jobIdParam = searchParams.get("jobId");
+  const jobBaseNumber = searchParams.get("jobBaseNumber");
   const reportId = searchParams.get("reportId");
+
   const jobId =
     jobIdParam && /^\d+$/.test(jobIdParam) ? Number(jobIdParam) : null;
 
   const [filters, setFilters] = useState<InsiteReportFilters>({
     ...emptyInsiteReportFilters,
+    jobNumber: jobBaseNumber ?? "",
   });
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -49,7 +52,7 @@ function InstallationReportsContent() {
     setPagination((current) =>
       current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
     );
-  }, [jobId]);
+  }, [jobId, jobBaseNumber]);
 
   useEffect(() => {
     if (!reportId || !reports.length || hasAutoOpened.current) return;
@@ -80,7 +83,7 @@ function InstallationReportsContent() {
         description="Review installation reports submitted through Insite."
         icon={<TbClipboardCheck size={27} />}
         jobId={jobId}
-        allReportsHref="/dashboard/installation-reports"
+        allReportsHref="/dashboard/install-reports"
       />
 
       <InsiteReportsTable

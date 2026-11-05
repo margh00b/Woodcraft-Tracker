@@ -6,6 +6,7 @@ interface ActiveJobCardProps {
   job: JobOption;
   relatedJobs: JobOption[];
   variant?: "default" | "compact";
+  isSearchResult?: boolean;
   className?: string;
 }
 
@@ -13,6 +14,7 @@ export default function ActiveJobCard({
   job,
   relatedJobs,
   variant = "default",
+  isSearchResult = false,
   className = "",
 }: ActiveJobCardProps) {
   const isCompact = variant === "compact";
@@ -42,26 +44,35 @@ export default function ActiveJobCard({
       } ${className || "bg-white"}`}
     >
       <View className="mb-1.5 flex-row items-center justify-between">
-        <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Active Job
-        </Text>
+        {!!isSearchResult ? (
+          <Text className="text-sm font-bold uppercase tracking-wider text-slate-500">
+            Search Result
+          </Text>
+        ) : (
+          <Text className="text-sm font-bold uppercase tracking-wider text-slate-500">
+            Active Job
+          </Text>
+        )}
+
         <View className="flex-row flex-wrap items-center gap-1.5">
           <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
-            <Text className="text-xs font-bold text-white">#{baseJobNumber}</Text>
+            <Text className="text-sm font-bold text-white">
+              #{baseJobNumber}
+            </Text>
           </View>
           {suffixes.length > 0 && (
             <View className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
-              <Text className="text-[11px] font-semibold text-slate-600">
+              <Text className="text-sm font-semibold text-slate-600">
                 - {suffixes.join(", ")}
               </Text>
             </View>
           )}
         </View>
       </View>
-      <Text className={`${isCompact ? "text-md" : "text-lg"} font-bold text-slate-800`}>
+      <Text className="text-lg font-bold text-slate-800">
         {job.sales_orders?.shipping_client_name || "Client Name N/A"}
       </Text>
-      <Text className="mt-0.5 text-sm text-slate-600">
+      <Text className="mt-0.5 text-md text-slate-600">
         {job.sales_orders?.shipping_street || "Street Name N/A"},{" "}
         {job.sales_orders?.shipping_city || "City N/A"}
       </Text>

@@ -492,7 +492,7 @@ export default function NewInstallReport() {
         <View className="w-12" />
       </View>
 
-      <KeyboardAwareContainer ref={scrollViewRef}>
+      <KeyboardAwareContainer ref={scrollViewRef} enabled={!customModalVisible}>
         {!selectedJob ? (
           <View className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-5 shadow-sm">
             <Text className="text-sm font-bold text-amber-800 mb-1">
