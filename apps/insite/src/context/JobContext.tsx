@@ -52,6 +52,8 @@ const JobContext = createContext<JobContextType | undefined>(undefined);
 
 export function JobProvider({ children }: { children: ReactNode }) {
   const { supabase, user, isLoading: isAuthLoading } = useSupabase();
+  const role = user?.app_metadata?.role;
+  const canLoadAssignedJobs = role === "installer";
 
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null);
   const [activeJobVariants, setActiveJobVariants] = useState<JobOption[]>([]);
@@ -71,7 +73,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const refreshAssignedJobs = useCallback(async () => {
     if (isAuthLoading) return;
 
-    if (!user) {
+    if (!user || !canLoadAssignedJobs) {
       setAssignedJobs([]);
       setAssignedJobsError(null);
       setIsAssignedJobsLoading(false);
@@ -95,7 +97,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsAssignedJobsLoading(false);
     }
-  }, [supabase, user, isAuthLoading]);
+  }, [supabase, user, isAuthLoading, canLoadAssignedJobs]);
 
   useEffect(() => {
     void refreshAssignedJobs();
