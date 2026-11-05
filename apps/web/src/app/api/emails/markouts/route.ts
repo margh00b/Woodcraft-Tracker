@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMarkoutShareToken } from "@/lib/markout-share";
-import { FROM_DEV, REPLY_TO, TO_DEV } from "@/lib/emailConstants";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -179,10 +178,20 @@ export async function POST(request: Request) {
         : "https://core.woodcraftkc.com";
 
     const shareUrl = `${appUrl}/external/markout/${token}`;
+
+    const FROM_DEV = "Acme <onboarding@resend.dev>";
+    const TO_DEV = ["delivered@resend.dev"];
+    const FROM_PROD = "Woodcraft KC <notifications@woodcraftkc.com>";
+    const MARKOUTS_TO_PROD = [designerEmail, sitesuperEmail].filter(
+      (email): email is string =>
+        typeof email === "string" && email.trim().length > 0,
+    );
+    const REPLY_TO = "install@woodcraftkc.com";
+
     const { data, error: emailError } = await resend.emails.send({
-      from: FROM_DEV,
+      from: FROM_PROD,
       replyTo: REPLY_TO,
-      to: TO_DEV,
+      to: MARKOUTS_TO_PROD,
       subject: `Markout Report - ${address}`,
 
       html: `

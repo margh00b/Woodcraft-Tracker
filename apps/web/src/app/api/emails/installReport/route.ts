@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { FROM_DEV, TO_DEV } from "@/lib/emailConstants";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -59,8 +58,12 @@ export async function POST(request: Request) {
 
     const dashboardLink = `${appUrl}/dashboard/install-reports?jobId=${jobId}&fromResend=${true}&reportId=${reportId}`;
 
+    const FROM_DEV = "Acme <onboarding@resend.dev>";
+    const TO_DEV = ["delivered@resend.dev"];
+    const FROM_PROD = "Woodcraft KC <notifications@woodcraftkc.com>";
+
     const data = await resend.emails.send({
-      from: FROM_DEV,
+      from: FROM_PROD,
       to: TO_DEV,
       subject: `New Install Report - Job # ${cleanJobNumber}`,
       html: `

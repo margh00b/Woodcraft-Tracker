@@ -28,6 +28,11 @@ export function PhotoPickerModal({
   openings,
 }: PhotoPickerModalProps) {
   const [isPicking, setIsPicking] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [capturedCount, setCapturedCount] = useState(0);
+  const [continueCapturing, setContinueCapturing] = useState<
+    ((takeAnother: boolean) => void) | null
+  >(null);
 
   const handleTakePhoto = async () => {
     if (!target || isPicking) return;
@@ -61,15 +66,9 @@ export function PhotoPickerModal({
         capturedPhotos.push(createPhotoInfo(asset.uri, asset.mimeType));
 
         const takeAnother = await new Promise<boolean>((resolve) => {
-          Alert.alert(
-            "Photo Captured",
-            `${capturedPhotos.length} photo(s) captured.`,
-            [
-              { text: "Done", onPress: () => resolve(false) },
-              { text: "Take Another", onPress: () => resolve(true) },
-            ],
-            { cancelable: false },
-          );
+          setCapturedCount(capturedPhotos.length);
+          setContinueCapturing(() => resolve);
+          setShowPhotoOptions(true);
         });
 
         if (!takeAnother) break;
@@ -81,6 +80,8 @@ export function PhotoPickerModal({
     } catch (error) {
       Alert.alert("Photo Error", getErrorMessage(error));
     } finally {
+      setShowPhotoOptions(false);
+      setContinueCapturing(null);
       setIsPicking(false);
     }
   };
@@ -116,6 +117,12 @@ export function PhotoPickerModal({
     }
   };
 
+  const handlePhotoChoice = (takeAnother: boolean) => {
+    setShowPhotoOptions(false);
+    continueCapturing?.(takeAnother);
+    setContinueCapturing(null);
+  };
+
   const targetLabel =
     target === "generic"
       ? "the overall installation or site conditions"
@@ -123,93 +130,136 @@ export function PhotoPickerModal({
         "this opening");
 
   return (
-    <Modal
-      visible={target !== null}
-      transparent
-      animationType="slide"
-      onRequestClose={() => {
-        if (!isPicking) onClose();
-      }}
-    >
-      <View className="flex-1 justify-end bg-black/40">
-        <Pressable
-          className="flex-1"
-          onPress={() => {
-            if (!isPicking) onClose();
-          }}
-        />
-
-        <View className="rounded-t-3xl bg-white px-5 pt-3 pb-8">
-          <View className="self-center h-1.5 w-12 rounded-full bg-slate-300 mb-5" />
-
-          <Text className="text-xl font-bold text-slate-900">Add Photos</Text>
-
-          <Text className="text-sm text-slate-500 mt-1 mb-5">
-            Add photos for {targetLabel}.
-          </Text>
-
+    <>
+      <Modal
+        visible={target !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!isPicking) onClose();
+        }}
+      >
+        <View className="flex-1 justify-end bg-black/40">
           <Pressable
-            disabled={isPicking || !target}
-            onPress={() => void handleTakePhoto()}
-            className="flex-row items-center rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-3 active:bg-slate-100"
-          >
-            <View className="h-12 w-12 items-center justify-center rounded-xl bg-slate-900">
-              <Text className="text-2xl text-white">📷</Text>
-            </View>
+            className="flex-1"
+            onPress={() => {
+              if (!isPicking) onClose();
+            }}
+          />
 
-            <View className="flex-1 ml-4">
-              <Text className="text-base font-semibold text-slate-900">
-                Take Photo
-              </Text>
-              <Text className="text-sm text-slate-500 mt-1">
-                Take several photos, one at a time.
-              </Text>
-            </View>
+          <View className="rounded-t-3xl bg-white px-5 pt-3 pb-8">
+            <View className="self-center h-1.5 w-12 rounded-full bg-slate-300 mb-5" />
 
-            <Text className="text-xl text-slate-400">›</Text>
-          </Pressable>
+            <Text className="text-xl font-bold text-slate-900">Add Photos</Text>
 
-          <Pressable
-            disabled={isPicking || !target}
-            onPress={() => void handleChoosePhotos()}
-            className="flex-row items-center rounded-2xl border border-slate-200 bg-slate-50 p-4 active:bg-slate-100"
-          >
-            <View className="h-12 w-12 items-center justify-center rounded-xl bg-indigo-100">
-              <Text className="text-2xl">🖼️</Text>
-            </View>
-
-            <View className="flex-1 ml-4">
-              <Text className="text-base font-semibold text-slate-900">
-                Choose from Library
-              </Text>
-              <Text className="text-sm text-slate-500 mt-1">
-                Select multiple photos in one go.
-              </Text>
-            </View>
-
-            <Text className="text-xl text-slate-400">›</Text>
-          </Pressable>
-
-          {isPicking && (
-            <View className="flex-row items-center justify-center mt-5">
-              <ActivityIndicator />
-              <Text className="ml-2 text-sm text-slate-500">
-                Opening photo picker...
-              </Text>
-            </View>
-          )}
-
-          <Pressable
-            disabled={isPicking}
-            onPress={onClose}
-            className="items-center py-4 mt-2"
-          >
-            <Text className="text-base font-semibold text-slate-600">
-              Cancel
+            <Text className="text-sm text-slate-500 mt-1 mb-5">
+              Add photos for {targetLabel}.
             </Text>
-          </Pressable>
+
+            <Pressable
+              disabled={isPicking || !target}
+              onPress={() => void handleTakePhoto()}
+              className="flex-row items-center rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-3 active:bg-slate-100"
+            >
+              <View className="h-12 w-12 items-center justify-center rounded-xl bg-slate-900">
+                <Text className="text-2xl text-white">📷</Text>
+              </View>
+
+              <View className="flex-1 ml-4">
+                <Text className="text-base font-semibold text-slate-900">
+                  Take Photo
+                </Text>
+                <Text className="text-sm text-slate-500 mt-1">
+                  Take several photos, one at a time.
+                </Text>
+              </View>
+
+              <Text className="text-xl text-slate-400">›</Text>
+            </Pressable>
+
+            <Pressable
+              disabled={isPicking || !target}
+              onPress={() => void handleChoosePhotos()}
+              className="flex-row items-center rounded-2xl border border-slate-200 bg-slate-50 p-4 active:bg-slate-100"
+            >
+              <View className="h-12 w-12 items-center justify-center rounded-xl bg-indigo-100">
+                <Text className="text-2xl">🖼️</Text>
+              </View>
+
+              <View className="flex-1 ml-4">
+                <Text className="text-base font-semibold text-slate-900">
+                  Choose from Library
+                </Text>
+                <Text className="text-sm text-slate-500 mt-1">
+                  Select multiple photos in one go.
+                </Text>
+              </View>
+
+              <Text className="text-xl text-slate-400">›</Text>
+            </Pressable>
+
+            {isPicking && (
+              <View className="flex-row items-center justify-center mt-5">
+                <ActivityIndicator />
+                <Text className="ml-2 text-sm text-slate-500">
+                  Opening photo picker...
+                </Text>
+              </View>
+            )}
+
+            <Pressable
+              disabled={isPicking}
+              onPress={onClose}
+              className="items-center py-4 mt-2"
+            >
+              <Text className="text-base font-semibold text-slate-600">
+                Cancel
+              </Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <Modal
+        visible={showPhotoOptions}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="w-full rounded-3xl bg-white p-6">
+            <View className="flex-row justify-center gap-3">
+              <Text className="text-xl font-bold text-slate-900">
+                Photo captured
+              </Text>
+              <Text className=" text-xl text-emerald-700">✓</Text>
+            </View>
+
+            <Text className="text-sm text-slate-500 mt-2 mb-6">
+              {capturedCount} {capturedCount === 1 ? "photo" : "photos"}{" "}
+              captured. Would you like to take another?
+            </Text>
+
+            <Pressable
+              onPress={() => handlePhotoChoice(true)}
+              className="rounded-xl bg-slate-900 py-4 items-center"
+            >
+              <Text className="text-base font-semibold text-white">
+                Take Another Photo
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => handlePhotoChoice(false)}
+              className="rounded-xl bg-slate-100 py-4 items-center mt-3"
+            >
+              <Text className="text-base font-semibold text-slate-700">
+                Done
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
