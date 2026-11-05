@@ -22,7 +22,10 @@ CREATE TRIGGER set_updated_at
   BEFORE UPDATE ON insite.markouts
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
-
+CREATE TRIGGER cleanup_insite_attachment_files
+  BEFORE DELETE ON insite.markouts
+  FOR EACH ROW
+  EXECUTE FUNCTION public.cleanup_insite_attachment_files();
 CREATE POLICY "Enable insert for authenticated users" ON "insite"."markouts"
   FOR INSERT
   TO PUBLIC

@@ -22,10 +22,10 @@ CREATE TRIGGER set_updated_at
   BEFORE UPDATE ON insite.install_reports
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
-CREATE TRIGGER cleanup_install_report_files
+CREATE TRIGGER cleanup_insite_attachment_files
   BEFORE DELETE ON insite.install_reports
   FOR EACH ROW
-  EXECUTE FUNCTION public.cleanup_install_report_files();
+  EXECUTE FUNCTION public.cleanup_insite_attachment_files();
 CREATE POLICY "Enable insert for authenticated users" ON "insite"."install_reports"
   FOR INSERT
   TO PUBLIC

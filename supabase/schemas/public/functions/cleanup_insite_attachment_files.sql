@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.cleanup_install_report_files()
+CREATE OR REPLACE FUNCTION public.cleanup_insite_attachment_files()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -9,10 +9,22 @@ DECLARE
   v_project_url text;
   v_secret text;
 BEGIN
-  SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
-  INTO v_paths
-  FROM public.job_attachments
-  WHERE install_report_id = OLD.id;
+  IF TG_TABLE_SCHEMA <> 'insite'
+     OR TG_TABLE_NAME NOT IN ('install_reports', 'markouts') THEN
+    RAISE EXCEPTION 'Unsupported table for attachment cleanup';
+  END IF;
+
+  IF TG_TABLE_NAME = 'install_reports' THEN
+    SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
+    INTO v_paths
+    FROM public.job_attachments
+    WHERE install_report_id = OLD.id;
+  ELSE
+    SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
+    INTO v_paths
+    FROM public.job_attachments
+    WHERE markout_id = OLD.id;
+  END IF;
 
   IF jsonb_array_length(v_paths) = 0 THEN
     RETURN OLD;
@@ -38,19 +50,9 @@ BEGIN
       'Content-Type', 'application/json',
       'x-cleanup-secret', v_secret
     ),
-    body := jsonb_build_object(
-      'paths', v_paths
-    )
+    body := jsonb_build_object('paths', v_paths)
   );
 
   RETURN OLD;
 END;
 $$;
-
-DROP TRIGGER IF EXISTS cleanup_install_report_files
-ON insite.install_reports;
-
-CREATE TRIGGER cleanup_install_report_files
-BEFORE DELETE ON insite.install_reports
-FOR EACH ROW
-EXECUTE FUNCTION public.cleanup_install_report_files();
