@@ -143,27 +143,40 @@ export default function NewMarkout() {
       let emailWarning: string | null = null;
 
       try {
-        const {
+        let {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
 
-        if (sessionError || !session?.access_token) {
-          throw new Error("Unable to retrieve your login session.");
+        if (sessionError || !session) {
+          throw new Error("Your session has expired. Please sign in again.");
+        }
+
+        const isExpiring =
+          !session.expires_at ||
+          session.expires_at * 1000 <= Date.now() + 60_000;
+
+        if (isExpiring) {
+          const { data, error } = await supabase.auth.refreshSession();
+
+          if (error || !data.session) {
+            throw new Error("Your session has expired. Please sign in again.");
+          }
+
+          session = data.session;
         }
 
         const response = await fetch(`${getWebAPIUrl()}/api/emails/markouts`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             markoutId,
             sitesuperEmail: sitesuperEmail.trim() || null,
           }),
         });
-
         const result = await response.json();
 
         if (!response.ok) {
