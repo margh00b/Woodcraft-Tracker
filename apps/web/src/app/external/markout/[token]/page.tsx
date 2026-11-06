@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import capitalize from "@/utils/capitalize";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -236,7 +237,7 @@ export default async function ExternalMarkoutPage({ params }: PageProps) {
               <div>
                 <p className="text-sm text-slate-500">Submitted By</p>
                 <p className="mt-1 font-semibold text-slate-900">
-                  {markout.submitted_by || "Not specified"}
+                  {capitalize(markout.submitted_by) || "Not specified"}
                 </p>
               </div>
             </div>
@@ -303,7 +304,6 @@ export default async function ExternalMarkoutPage({ params }: PageProps) {
             {notes || "No notes were provided."}
           </p>
         </section>
-
         {/* Photos */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-center justify-between">
@@ -329,7 +329,7 @@ export default async function ExternalMarkoutPage({ params }: PageProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {validPhotos.map((photo, index) => (
                 <figure
                   key={photo.id}
@@ -339,17 +339,17 @@ export default async function ExternalMarkoutPage({ params }: PageProps) {
                     href={photo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block overflow-hidden"
+                    className="flex min-h-56 max-h-105 items-center justify-center overflow-hidden bg-slate-100"
                   >
                     <img
                       src={photo.url}
                       alt={photo.name}
-                      className="aspect-4/3 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      className="max-h-105 max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   </a>
 
-                  <figcaption className="flex items-center justify-between gap-3 px-4 py-3">
-                    <span className="shrink-0 text-xs text-slate-400">
+                  <figcaption className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3">
+                    <span className="shrink-0 text-xs font-semibold text-slate-400">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </figcaption>
