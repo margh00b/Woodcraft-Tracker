@@ -475,17 +475,17 @@ export default function NewInstallReport() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
+    <View className="flex-1 bg-[#F1F1F7]">
+      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-[#E9E8F1]">
         <Pressable
-          className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
+          className="px-3 py-1.5 rounded-lg bg-[#F1EEFF] border border-[#E9E8F1]"
           onPress={() => router.back()}
           disabled={isSubmitting}
         >
-          <Text className="text-slate-700 font-medium text-md">← Back</Text>
+          <Text className="text-[#5141A5] font-medium text-md">← Back</Text>
         </Pressable>
 
-        <Text className="text-lg font-bold text-slate-900">
+        <Text className="text-lg font-bold text-[#17152D]">
           New Install Report
         </Text>
 
@@ -524,7 +524,7 @@ export default function NewInstallReport() {
 
             <View className="mb-2">
               <View className="flex-row justify-between items-center mb-3 px-1">
-                <Text className="text-md font-semibold text-slate-500 uppercase">
+                <Text className="text-md font-semibold text-[#85849A] uppercase">
                   Openings & Measurements
                 </Text>
 
@@ -568,12 +568,12 @@ export default function NewInstallReport() {
               </Pressable>
             </View>
 
-            <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-              <Text className="text-md font-semibold text-slate-500 uppercase mb-3">
+            <View className="bg-white p-4 rounded-xl border border-[#E9E8F1] mb-5 shadow-sm">
+              <Text className="text-md font-semibold text-[#85849A] uppercase mb-3">
                 Installation Photos
               </Text>
 
-              <Text className="text-xs text-slate-500 mb-3">
+              <Text className="text-xs text-[#85849A] mb-3">
                 Upload overall site conditions, completed overviews, or extra
                 context photos here.
               </Text>
@@ -587,7 +587,7 @@ export default function NewInstallReport() {
             </View>
 
             {isSubmitting && uploadProgress.total > 0 && (
-              <Text className="text-xs text-slate-500 text-center mb-3">
+              <Text className="text-xs text-[#85849A] text-center mb-3">
                 Uploaded {uploadProgress.current} of {uploadProgress.total}{" "}
                 photos
               </Text>
@@ -596,7 +596,7 @@ export default function NewInstallReport() {
             <Pressable
               className={`p-4 rounded-xl items-center mb-6 ${
                 !isSubmitting
-                  ? "bg-slate-900 active:bg-slate-800"
+                  ? "bg-[#5141A5] active:bg-slate-800"
                   : "bg-slate-300"
               }`}
               disabled={isSubmitting}

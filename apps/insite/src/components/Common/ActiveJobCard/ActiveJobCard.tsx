@@ -39,40 +39,40 @@ export default function ActiveJobCard({
 
   return (
     <View
-      className={`rounded-xl border border-slate-200 shadow-sm ${
+      className={`rounded-[22px] border border-[#E9E8F1] shadow-sm ${
         isCompact ? "p-3.5" : "p-4 mb-5"
       } ${className || "bg-white"}`}
     >
       <View className="mb-1.5 flex-row items-center justify-between">
         {!!isSearchResult ? (
-          <Text className="text-sm font-bold uppercase tracking-wider text-slate-500">
+          <Text className="text-sm font-bold uppercase tracking-wider text-[#85849A]">
             Search Result
           </Text>
         ) : (
-          <Text className="text-sm font-bold uppercase tracking-wider text-slate-500">
+          <Text className="text-sm font-bold uppercase tracking-wider text-[#85849A]">
             Active Job
           </Text>
         )}
 
         <View className="flex-row flex-wrap items-center gap-1.5">
-          <View className="rounded-md border border-slate-900 bg-slate-900 px-2.5 py-1">
+          <View className="rounded-md border border-slate-900 bg-[#5141A5] px-2.5 py-1">
             <Text className="text-sm font-bold text-white">
               #{baseJobNumber}
             </Text>
           </View>
           {suffixes.length > 0 && (
-            <View className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
-              <Text className="text-sm font-semibold text-slate-600">
+            <View className="rounded border border-[#E9E8F1] bg-[#F1EEFF] px-2 py-0.5">
+              <Text className="text-sm font-semibold text-[#68677D]">
                 - {suffixes.join(", ")}
               </Text>
             </View>
           )}
         </View>
       </View>
-      <Text className="text-lg font-bold text-slate-800">
+      <Text className="text-lg font-bold text-[#302D4B]">
         {job.sales_orders?.shipping_client_name || "Client Name N/A"}
       </Text>
-      <Text className="mt-0.5 text-md text-slate-600">
+      <Text className="mt-0.5 text-md text-[#68677D]">
         {job.sales_orders?.shipping_street || "Street Name N/A"},{" "}
         {job.sales_orders?.shipping_city || "City N/A"}
       </Text>

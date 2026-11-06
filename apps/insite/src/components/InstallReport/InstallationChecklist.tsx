@@ -16,7 +16,7 @@ export function InstallationChecklist({
 }: InstallationChecklistProps) {
   return (
     <View className="mb-5">
-      <Text className="text-md font-semibold text-slate-500 uppercase mb-3 px-1">
+      <Text className="text-md font-semibold text-[#85849A] uppercase mb-3 px-1">
         Installation Checklist
       </Text>
 
@@ -27,13 +27,13 @@ export function InstallationChecklist({
           <Pressable
             key={item.key}
             onPress={() => onChange(item.key)}
-            className="flex-row items-center bg-white p-4 rounded-xl border border-slate-200 mb-2.5 shadow-sm active:bg-slate-50"
+            className="flex-row items-center bg-white p-4 rounded-xl border border-[#E9E8F1] mb-2.5 shadow-sm active:bg-[#F1F1F7]"
           >
             <View
               className={`w-5 h-5 rounded-md border items-center justify-center mr-3 ${
                 checked
-                  ? "bg-slate-900 border-slate-900"
-                  : "border-slate-300 bg-slate-50"
+                  ? "bg-[#5141A5] border-slate-900"
+                  : "border-slate-300 bg-[#F1F1F7]"
               }`}
             >
               {checked && (
@@ -41,7 +41,7 @@ export function InstallationChecklist({
               )}
             </View>
 
-            <Text className="flex-1 text-sm font-medium text-slate-800">
+            <Text className="flex-1 text-sm font-medium text-[#302D4B]">
               {item.label}
             </Text>
           </Pressable>

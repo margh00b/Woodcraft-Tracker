@@ -42,18 +42,18 @@ export function OpeningCard({
     <View
       className={`mb-4 rounded-xl border p-4 shadow-sm ${
         isNotApplicable
-          ? "border-slate-200 bg-slate-100"
-          : "border-slate-200 bg-white"
+          ? "border-[#E9E8F1] bg-[#F1EEFF]"
+          : "border-[#E9E8F1] bg-white"
       }`}
     >
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="flex-1 text-sm font-bold text-slate-900 mr-2">
+        <Text className="flex-1 text-sm font-bold text-[#17152D] mr-2">
           {opening.label}
           {opening.isMandatory && <Text className="text-rose-500"> *</Text>}
         </Text>
 
         <View className="flex-row items-center gap-2">
-          <Text className="text-xs font-medium text-slate-500">N/A</Text>
+          <Text className="text-xs font-medium text-[#85849A]">N/A</Text>
           <Switch
             value={isNotApplicable}
             onValueChange={onToggleNotApplicable}
@@ -77,7 +77,7 @@ export function OpeningCard({
         >
           {opening.id != "fridge_opening" ? (
             <TextInput
-              className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-3"
+              className="bg-[#F1F1F7] border border-[#E9E8F1] rounded-lg p-3 text-[#17152D] text-sm mb-3"
               placeholder="Enter exact measurement/location (e.g., 36.5)"
               placeholderTextColor="#94a3b8"
               keyboardType="email-address"
@@ -88,7 +88,7 @@ export function OpeningCard({
           ) : (
             <View className="flex-row gap-3 justify-center mb-3">
               <TextInput
-                className="bg-slate-50 w-[50%] border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-2"
+                className="bg-[#F1F1F7] w-[50%] border border-[#E9E8F1] rounded-lg p-3 text-[#17152D] text-sm mb-2"
                 placeholder="Top (e.g., 36.5)"
                 placeholderTextColor="#94a3b8"
                 keyboardType="decimal-pad"
@@ -97,7 +97,7 @@ export function OpeningCard({
                 editable={!disabled && !isNotApplicable}
               />
               <TextInput
-                className="bg-slate-50 w-[50%] border border-slate-200 rounded-lg p-3 text-slate-900 text-sm mb-2"
+                className="bg-[#F1F1F7] w-[50%] border border-[#E9E8F1] rounded-lg p-3 text-[#17152D] text-sm mb-2"
                 placeholder="Bottom (e.g., 36.5)"
                 placeholderTextColor="#94a3b8"
                 keyboardType="decimal-pad"
@@ -121,8 +121,8 @@ export function OpeningCard({
             pointerEvents="none"
             className="absolute inset-0 items-center justify-center"
           >
-            <View className="rounded-lg border border-slate-300 bg-slate-100/95 px-4 py-2">
-              <Text className="text-sm font-semibold text-slate-600">
+            <View className="rounded-lg border border-slate-300 bg-[#F1EEFF]/95 px-4 py-2">
+              <Text className="text-sm font-semibold text-[#68677D]">
                 Not applicable
               </Text>
             </View>

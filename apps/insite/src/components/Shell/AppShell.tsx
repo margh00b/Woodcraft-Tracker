@@ -48,7 +48,7 @@ export default function AppShell() {
   if (isLoading) {
     return (
       <View
-        className="flex-1 justify-center items-center bg-slate-50"
+        className="flex-1 justify-center items-center bg-[#F1F1F7]"
         style={{ paddingTop: insets.top }}
       >
         <ActivityIndicator size="large" color="#0f172a" />
@@ -57,7 +57,7 @@ export default function AppShell() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-[#F1F1F7]" style={{ paddingTop: insets.top }}>
       {session && (
         <TopBar
           name={toCapitalize(username)}

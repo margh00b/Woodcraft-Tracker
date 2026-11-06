@@ -48,8 +48,8 @@ export function FormSubmissionsList({
   if (isLoading && reports.length === 0) {
     return (
       <View className="p-8 items-center justify-center">
-        <ActivityIndicator size="small" color="#0f172a" />
-        <Text className="text-sm text-slate-500 mt-2">
+        <ActivityIndicator size="small" color="#6654D9" />
+        <Text className="text-sm text-[#85849A] mt-2">
           Loading {itemLabel.toLowerCase()}s...
         </Text>
       </View>
@@ -74,11 +74,11 @@ export function FormSubmissionsList({
 
   if (reports.length === 0) {
     return (
-      <View className="p-6 bg-white border border-slate-200 rounded-xl items-center justify-center shadow-sm">
-        <Text className="text-base font-semibold text-slate-800">
+      <View className="p-6 bg-white border border-[#E9E8F1] rounded-xl items-center justify-center shadow-sm">
+        <Text className="text-base font-semibold text-[#302D4B]">
           {emptyTitle || `No ${itemLabel}s Logged`}
         </Text>
-        <Text className="text-sm text-slate-500 text-center mt-1">
+        <Text className="text-sm text-[#85849A] text-center mt-1">
           {emptySubtitle || `There are no ${itemLabel.toLowerCase()}s submitted for this job yet.`}
         </Text>
       </View>
@@ -95,11 +95,11 @@ export function FormSubmissionsList({
         renderItem={({ item }) => (
           <Pressable
             onPress={() => onSelectReport?.(item.id)}
-            className="bg-white p-4 rounded-xl border border-slate-200 mb-3 shadow-sm active:bg-slate-50"
+            className="bg-white p-4 rounded-xl border border-[#E9E8F1] mb-3 shadow-sm active:bg-[#F1F1F7]"
           >
             <View className="flex-row justify-between items-center mb-3">
-              <View className="bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                <Text className="text-sm font-bold text-slate-800">
+              <View className="bg-[#F1EEFF] px-2.5 py-1 rounded-md border border-[#E9E8F1]">
+                <Text className="text-sm font-bold text-[#302D4B]">
                   {itemLabel} #{item.id}
                 </Text>
               </View>
@@ -109,7 +109,7 @@ export function FormSubmissionsList({
                   Submitted By
                 </Text>
                 <Text
-                  className="text-sm font-semibold text-slate-800"
+                  className="text-sm font-semibold text-[#302D4B]"
                   numberOfLines={1}
                 >
                   {item.submitted_by || "Unknown"}
@@ -122,7 +122,7 @@ export function FormSubmissionsList({
                 <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
                   Created
                 </Text>
-                <Text className="text-sm font-medium text-slate-600">
+                <Text className="text-sm font-medium text-[#68677D]">
                   {item.created_at
                     ? new Date(item.created_at).toLocaleDateString(undefined, {
                         month: "short",
@@ -139,7 +139,7 @@ export function FormSubmissionsList({
                   <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
                     Updated
                   </Text>
-                  <Text className="text-sm font-medium text-slate-600">
+                  <Text className="text-sm font-medium text-[#68677D]">
                     {new Date(item.updated_at!).toLocaleDateString(undefined, {
                       month: "short",
                       day: "numeric",
