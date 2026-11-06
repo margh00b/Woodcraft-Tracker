@@ -20,6 +20,7 @@ import { invalidateFormDetailsCache } from "@/hooks/useFormDetails";
 import type { PhotoInfo, ExistingPhoto } from "@/types/markout";
 import { getErrorMessage } from "@/utils/installReports/photos";
 import { useJob } from "@/context/JobContext";
+import { getWebAPIUrl } from "@/utils/api";
 
 interface EditMarkoutProps {
   reportId: string;
@@ -55,7 +56,7 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const {
     uploadPhotos,
     commitSuccess,
@@ -167,7 +168,61 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     },
     [photos],
   );
+  const handleResendEmail = async () => {
+    if (isBusy || !parsedReportId) return;
 
+    setIsSendingEmail(true);
+
+    try {
+      let {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+
+      const isExpiring =
+        !session.expires_at || session.expires_at * 1000 <= Date.now() + 60_000;
+
+      if (isExpiring) {
+        const { data, error } = await supabase.auth.refreshSession();
+
+        if (error || !data.session) {
+          throw new Error("Your session has expired. Please sign in again.");
+        }
+
+        session = data.session;
+      }
+
+      const response = await fetch(`${getWebAPIUrl()}/api/emails/markouts`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          markoutId: parsedReportId,
+          sitesuperEmail: sitesuperEmail.trim() || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Email could not be sent.");
+      }
+
+      Alert.alert("Success", "Markout email has been resent successfully.");
+    } catch (error) {
+      Alert.alert("Email Failed", getErrorMessage(error));
+
+      console.error("Markout email resend failed:", error);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
   const handleUpdate = async () => {
     if (isSubmitting || isUploading) return;
 
@@ -251,7 +306,8 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
     }
   };
 
-  const isBusy = isSubmitting || isUploading;
+  const isUpdating = isSubmitting || isUploading;
+  const isBusy = isUpdating || isSendingEmail;
 
   if (isLoadingReport) {
     return (
@@ -322,6 +378,26 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
               onChangeText={setSitesuperEmail}
               returnKeyType="done"
             />
+            <Pressable
+              className={`w-full py-3.5 rounded-xl items-center justify-center border border-blue-200 mt-1 mb-3 ${
+                isBusy ? "bg-slate-100" : "bg-blue-50 active:bg-blue-100"
+              }`}
+              onPress={handleResendEmail}
+              disabled={isBusy}
+            >
+              {isSendingEmail ? (
+                <View className="flex-row items-center">
+                  <ActivityIndicator color="#2563eb" size="small" />
+                  <Text className="text-blue-700 font-semibold text-base ml-2">
+                    Sending Email...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-blue-700 font-semibold text-base">
+                  ↻ Resend Email
+                </Text>
+              )}
+            </Pressable>
           </View>
           <Pressable
             className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
@@ -330,7 +406,7 @@ export default function EditMarkout({ reportId }: EditMarkoutProps) {
             onPress={handleUpdate}
             disabled={isBusy}
           >
-            {isBusy ? (
+            {isUpdating ? (
               <View className="flex-row items-center">
                 <ActivityIndicator color="#ffffff" size="small" />
                 <Text className="text-white font-bold text-base ml-2">
