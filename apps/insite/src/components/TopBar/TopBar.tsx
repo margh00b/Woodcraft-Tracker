@@ -43,10 +43,12 @@ export default function TopBar({
   };
 
   return (
-    <View className="flex-row justify-between items-center px-5 py-3.5 bg-white border-b border-slate-200 shadow-sm">
+    <View className="flex-row justify-between items-center px-5 py-3.5 bg-[#21134B] border-b border-violet-400/20 shadow-sm overflow-hidden">
+      <View pointerEvents="none" className="absolute -right-8 -top-16 h-40 w-40 rounded-full border-[22px] border-violet-300/10" />
+      <View pointerEvents="none" className="absolute right-24 -bottom-12 h-28 w-28 rounded-full bg-violet-500/15" />
       <View className="flex-row items-center gap-3">
         <View className="relative">
-          <View className="w-10 h-10 rounded-full bg-slate-900 justify-center items-center">
+          <View className="w-10 h-10 rounded-full bg-violet-400/25 border border-violet-200/30 justify-center items-center">
             <Text className="text-white font-bold text-xs">{avatarText}</Text>
           </View>
 
@@ -56,8 +58,8 @@ export default function TopBar({
         </View>
 
         <View>
-          <Text className="font-semibold text-slate-900 text-sm">{name}</Text>
-          <Text className="text-xs text-slate-500">{role}</Text>
+          <Text className="font-bold text-white text-sm">{name}</Text>
+          <Text className="text-xs text-violet-200">{role}</Text>
         </View>
       </View>
 
@@ -66,18 +68,18 @@ export default function TopBar({
           <Pressable
             onPress={handleRefresh}
             disabled={isRefreshing}
-            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
+            className="h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 active:bg-white/20"
             style={{ opacity: isRefreshing ? 0.5 : 1 }}
           >
-            <Ionicons name="refresh" size={20} color="#0f172a" />
+            <Ionicons name="refresh" size={20} color="#6654D9" />
           </Pressable>
         )}
 
         <Pressable
-          className="bg-slate-100 active:bg-slate-200 px-3.5 py-2 rounded-lg items-center border border-slate-200"
+          className="bg-white/10 active:bg-white/20 px-3.5 py-2 rounded-xl items-center border border-white/20"
           onPress={signout}
         >
-          <Text className="text-slate-700 font-semibold text-xs">Sign Out</Text>
+          <Text className="text-white font-semibold text-xs">Sign Out</Text>
         </Pressable>
       </View>
     </View>
