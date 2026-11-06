@@ -60,11 +60,12 @@ export async function POST(request: Request) {
 
     const FROM_DEV = "Acme <onboarding@resend.dev>";
     const TO_DEV = ["delivered@resend.dev"];
+    const TO_PROD = ["install@woodcraftkc.com"];
     const FROM_PROD = "Woodcraft KC <notifications@woodcraftkc.com>";
 
     const data = await resend.emails.send({
       from: FROM_PROD,
-      to: TO_DEV,
+      to: TO_PROD,
       subject: `New Install Report - Job # ${cleanJobNumber}`,
       html: `
 <!DOCTYPE html>
