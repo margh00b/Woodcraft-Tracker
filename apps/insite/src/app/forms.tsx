@@ -68,16 +68,16 @@ export default function FormsScreen() {
 
   if (!jobId) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 px-6">
-        <Text className="text-center text-base font-semibold text-slate-800">
+      <View className="flex-1 items-center justify-center bg-[#F1F1F7] px-6">
+        <Text className="text-center text-base font-semibold text-[#302D4B]">
           No job selected
         </Text>
-        <Text className="mt-2 text-center text-sm text-slate-500">
+        <Text className="mt-2 text-center text-sm text-[#85849A]">
           Return to the dashboard and select a job before opening its forms.
         </Text>
         <Pressable
           onPress={() => router.back()}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-3"
+          className="mt-4 rounded-lg bg-[#5141A5] px-4 py-3"
         >
           <Text className="font-semibold text-white">Back to Dashboard</Text>
         </Pressable>
@@ -87,9 +87,9 @@ export default function FormsScreen() {
 
   if (isLoadingJob || (jobId && selectedJob?.id !== jobId)) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
-        <ActivityIndicator size="large" color="#0f172a" />
-        <Text className="mt-3 text-sm text-slate-500">
+      <View className="flex-1 items-center justify-center bg-[#F1F1F7]">
+        <ActivityIndicator size="large" color="#6654D9" />
+        <Text className="mt-3 text-sm text-[#85849A]">
           Loading active job...
         </Text>
       </View>
@@ -98,17 +98,17 @@ export default function FormsScreen() {
 
   if (!selectedJob) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 px-6">
-        <Text className="text-center text-base font-semibold text-slate-800">
+      <View className="flex-1 items-center justify-center bg-[#F1F1F7] px-6">
+        <Text className="text-center text-base font-semibold text-[#302D4B]">
           Job not available
         </Text>
-        <Text className="mt-2 text-center text-sm text-slate-500">
+        <Text className="mt-2 text-center text-sm text-[#85849A]">
           This job is not available in the current session. Return to the
           dashboard and select it again.
         </Text>
         <Pressable
           onPress={() => router.back()}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-3"
+          className="mt-4 rounded-lg bg-[#5141A5] px-4 py-3"
         >
           <Text className="font-semibold text-white">Back to Dashboard</Text>
         </Pressable>
@@ -117,7 +117,9 @@ export default function FormsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-[#F1F1F7]">
+      <View pointerEvents="none" className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-violet-300/20" />
+      <View pointerEvents="none" className="absolute top-80 -left-24 h-64 w-64 rounded-full bg-purple-200/20" />
       <ScrollView
         className="flex-1 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
@@ -126,16 +128,16 @@ export default function FormsScreen() {
         <View className="flex-row justify-between items-center mb-2">
           <Pressable
             onPress={() => router.back()}
-            className="self-start flex-row items-center rounded-lg border border-slate-200 bg-white px-3 py-2"
+            className="self-start flex-row items-center rounded-lg border border-[#E9E8F1] bg-white px-3 py-2"
             accessibilityRole="button"
             accessibilityLabel="Go back to dashboard"
           >
-            <Text className="mr-2 text-base font-semibold text-slate-700">
+            <Text className="mr-2 text-base font-semibold text-[#5141A5]">
               ←
             </Text>
-            <Text className="text-sm font-semibold text-slate-700">Back</Text>
+            <Text className="text-sm font-semibold text-[#5141A5]">Back</Text>
           </Pressable>
-          <Text className="text-2xl font-bold text-slate-900 text-center">
+          <Text className="text-xl font-extrabold text-[#5141A5] text-center">
             Forms & Details
           </Text>
           <View className="w-12" />
@@ -144,7 +146,7 @@ export default function FormsScreen() {
         <JobFiles selectedJob={selectedJob} category="Procurement" />
 
         <View className="mb-6">
-          <Text className="mb-3 text-md font-bold uppercase tracking-wider text-slate-500">
+          <Text className="mb-3 text-md font-bold uppercase tracking-wider text-[#85849A]">
             Forms
           </Text>
           {canView("markouts") && (
