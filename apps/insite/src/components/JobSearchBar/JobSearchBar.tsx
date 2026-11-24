@@ -82,9 +82,9 @@ export default function JobSearchBar() {
   };
 
   return (
-    <View className=" rounded-xl border border-slate-200 bg-white p-4 shadow-sm mb-6">
+    <View className=" rounded-[22px] border border-[#E9E8F1] bg-white p-4 shadow-sm mb-6">
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-sm font-bold uppercase tracking-wider text-slate-600">
+        <Text className="text-sm font-bold uppercase tracking-wider text-[#68677D]">
           Job Number
         </Text>
 
@@ -100,7 +100,7 @@ export default function JobSearchBar() {
       </View>
 
       <TextInput
-        className="h-12 rounded-lg border border-slate-200 bg-slate-50 px-3 text-base font-semibold text-slate-900"
+        className="h-12 rounded-2xl border border-[#E9E8F1] bg-[#F7F7FB] px-3 text-base font-semibold text-[#17152D]"
         placeholder="Enter job number..."
         placeholderTextColor="#94a3b8"
         keyboardType="number-pad"
@@ -121,8 +121,8 @@ export default function JobSearchBar() {
 
         {isSearching && (
           <View className="flex-row items-center py-1">
-            <ActivityIndicator size="small" color="#0f172a" />
-            <Text className="ml-2 text-sm text-slate-500">
+            <ActivityIndicator size="small" color="#6654D9" />
+            <Text className="ml-2 text-sm text-[#85849A]">
               Searching jobs...
             </Text>
           </View>

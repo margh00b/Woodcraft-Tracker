@@ -32,15 +32,15 @@ export function FormIndexScreen({
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
+    <View className="flex-1 bg-[#F1F1F7]">
+      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-[#E9E8F1]">
         <Pressable
-          className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
+          className="px-3 py-1.5 rounded-lg bg-[#F1EEFF] border border-[#E9E8F1]"
           onPress={() => router.back()}
         >
-          <Text className="text-slate-700 font-medium text-md">← Back</Text>
+          <Text className="text-[#5141A5] font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">{title}</Text>
+        <Text className="text-lg font-bold text-[#17152D]">{title}</Text>
         <View className="w-12" />
       </View>
 
@@ -68,13 +68,13 @@ export function FormIndexScreen({
         )}
 
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-md font-bold text-slate-500 uppercase tracking-wider">
+          <Text className="text-md font-bold text-[#85849A] uppercase tracking-wider">
             Past Submissions
           </Text>
           {selectedJob && (
             <Pressable
               onPress={handleCreateNew}
-              className="bg-slate-900 px-3.5 py-2 rounded-lg shadow-sm active:opacity-80"
+              className="bg-[#5141A5] px-3.5 py-2 rounded-lg shadow-sm active:opacity-80"
             >
               <Text className="text-white text-sm font-bold">
                 {newButtonLabel || `+ New ${itemLabel}`}

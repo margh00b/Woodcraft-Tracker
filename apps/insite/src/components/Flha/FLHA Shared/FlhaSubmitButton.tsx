@@ -20,7 +20,7 @@ export default function FlhaSubmitButton({
     <Pressable
       className={`p-4 rounded-xl items-center mb-6 ${
         !isButtonDisabled
-          ? "bg-slate-900 active:bg-slate-800"
+          ? "bg-[#5141A5] active:bg-slate-800"
           : "bg-slate-300"
       }`}
       disabled={isButtonDisabled}

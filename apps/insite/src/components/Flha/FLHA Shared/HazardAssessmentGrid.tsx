@@ -17,7 +17,7 @@ export default function HazardAssessmentGrid({
 }: HazardAssessmentGridProps) {
   return (
     <View className="mb-5">
-      <Text className="text-md font-semibold text-slate-500 uppercase mb-3 px-1">
+      <Text className="text-md font-semibold text-[#85849A] uppercase mb-3 px-1">
         Hazard Assessments (Select Ratings)
       </Text>
 
@@ -26,9 +26,9 @@ export default function HazardAssessmentGrid({
         return (
           <View
             key={category.key}
-            className="bg-white p-3.5 rounded-xl border border-slate-200 mb-3 shadow-sm"
+            className="bg-white p-3.5 rounded-xl border border-[#E9E8F1] mb-3 shadow-sm"
           >
-            <Text className="text-md font-bold text-slate-800 mb-2.5">
+            <Text className="text-md font-bold text-[#302D4B] mb-2.5">
               {category.label}
             </Text>
             <View className="flex-row gap-1.5 justify-between">
@@ -43,7 +43,7 @@ export default function HazardAssessmentGrid({
                     }`}
                   >
                     <Text
-                      className={`text-[11px] font-bold ${isSelected ? "text-white" : "text-slate-700"}`}
+                      className={`text-[11px] font-bold ${isSelected ? "text-white" : "text-[#5141A5]"}`}
                     >
                       {rat.label}
                     </Text>

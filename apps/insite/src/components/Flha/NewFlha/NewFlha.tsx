@@ -99,15 +99,15 @@ export default function NewFlha() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
+    <View className="flex-1 bg-[#F1F1F7]">
+      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-[#E9E8F1]">
         <Pressable
-          className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
+          className="px-3 py-1.5 rounded-lg bg-[#F1EEFF] border border-[#E9E8F1]"
           onPress={() => router.back()}
         >
-          <Text className="text-slate-700 font-medium text-md">← Back</Text>
+          <Text className="text-[#5141A5] font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">New FLHA Form</Text>
+        <Text className="text-lg font-bold text-[#17152D]">New FLHA Form</Text>
         <View className="w-12" />
       </View>
 

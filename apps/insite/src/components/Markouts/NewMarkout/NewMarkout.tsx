@@ -212,26 +212,26 @@ export default function NewMarkout() {
 
   const isBusy = isSubmitting || isUploading;
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-slate-200">
+    <View className="flex-1 bg-[#F1F1F7]">
+      <View className="flex-row items-center justify-between px-5 py-4 bg-white border-b border-[#E9E8F1]">
         <Pressable
-          className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200"
+          className="px-3 py-1.5 rounded-lg bg-[#F1EEFF] border border-[#E9E8F1]"
           onPress={() => router.back()}
           disabled={isBusy}
         >
-          <Text className="text-slate-700 font-medium text-md">← Back</Text>
+          <Text className="text-[#5141A5] font-medium text-md">← Back</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-slate-900">New Markout</Text>
+        <Text className="text-lg font-bold text-[#17152D]">New Markout</Text>
         <View className="w-12" />
       </View>
       <KeyboardAwareContainer ref={scrollViewRef}>
-        <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
+        <View className="bg-white p-4 rounded-xl border border-[#E9E8F1] mb-5 shadow-sm">
           <View className="flex-row justify-between items-center mb-5">
-            <Text className="text-md font-semibold text-slate-500 uppercase">
+            <Text className="text-md font-semibold text-[#85849A] uppercase">
               Markout Photos
             </Text>
 
-            <Text className="text-xs font-semibold text-slate-500">
+            <Text className="text-xs font-semibold text-[#85849A]">
               {photos.length} photo{photos.length === 1 ? "" : "s"}
             </Text>
             <Pressable
@@ -254,16 +254,16 @@ export default function NewMarkout() {
         </View>
 
         <MarkoutNotes value={notes} onChange={setNotes} disabled={isBusy} />
-        <View className="bg-white p-4 rounded-xl border border-slate-200 mb-5 shadow-sm">
-          <Text className="text-md font-semibold text-slate-500 uppercase mb-2">
+        <View className="bg-white p-4 rounded-xl border border-[#E9E8F1] mb-5 shadow-sm">
+          <Text className="text-md font-semibold text-[#85849A] uppercase mb-2">
             Site Supervisor Email
           </Text>
-          <Text className="text-xs text-slate-500 mb-2">
+          <Text className="text-xs text-[#85849A] mb-2">
             (If left blank, it will not be emailed to the site supervisor)
           </Text>
 
           <TextInput
-            className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 text-sm"
+            className="bg-[#F1F1F7] border border-[#E9E8F1] rounded-lg p-3 text-[#17152D] text-sm"
             placeholder="Site supervisor email..."
             placeholderTextColor="#94a3b8"
             keyboardType="email-address"
@@ -276,7 +276,7 @@ export default function NewMarkout() {
         </View>
         <Pressable
           className={`w-full py-4 rounded-xl items-center justify-center shadow-sm mt-2 ${
-            isBusy ? "bg-slate-400" : "bg-slate-900 active:bg-slate-800"
+            isBusy ? "bg-slate-400" : "bg-[#5141A5] active:bg-slate-800"
           }`}
           onPress={handleSubmit}
           disabled={isBusy}

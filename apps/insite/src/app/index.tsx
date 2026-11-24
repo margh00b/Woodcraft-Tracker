@@ -70,24 +70,20 @@ export default function HomeScreen() {
   });
 
   return (
-    <View className="flex-1 bg-[#F1F1F7]">
-      <View pointerEvents="none" className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-violet-300/25" />
-      <View pointerEvents="none" className="absolute top-52 -left-24 h-64 w-64 rounded-full bg-purple-200/25" />
+    <View className="flex-1 bg-slate-50">
       <ScrollView
         className="flex-1 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-5 overflow-hidden rounded-[24px] border border-violet-200/70 bg-[#21134B] px-5 py-5">
-          <View pointerEvents="none" className="absolute -right-10 -top-16 h-48 w-48 rounded-full border-[24px] border-violet-300/10" />
-          <View pointerEvents="none" className="absolute -right-2 top-10 h-28 w-28 rounded-full bg-violet-500/20" />
-          <Text className="mb-1 text-2xl font-extrabold text-white">Dashboard</Text>
-          <Text className="text-sm text-violet-200">Search for a job or select one assigned to you.</Text>
-          <View className="mt-4 h-1 w-16 overflow-hidden rounded-full bg-white/15">
-            <View className="h-full w-10 rounded-full bg-violet-300" />
-          </View>
-        </View>
+        <Text className="mb-1 text-2xl font-bold text-slate-900">
+          Dashboard
+        </Text>
+
+        <Text className="mb-5 text-sm text-slate-500">
+          Search for a job or select one assigned to you.
+        </Text>
 
         <JobSearchBar />
 

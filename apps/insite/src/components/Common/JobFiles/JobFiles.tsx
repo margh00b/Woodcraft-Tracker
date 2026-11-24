@@ -63,9 +63,9 @@ function getFileBadge(fileName: string) {
     default:
       return {
         label: ext.slice(0, 4),
-        bg: "bg-slate-100",
-        text: "text-slate-700",
-        border: "border-slate-200",
+        bg: "bg-[#F1EEFF]",
+        text: "text-[#5141A5]",
+        border: "border-[#E9E8F1]",
       };
   }
 }
@@ -90,17 +90,17 @@ export default function JobFiles({ selectedJob, category }: JobFilesProps) {
   };
 
   return (
-    <View className="relative mb-4 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+    <View className="relative mb-4 overflow-hidden rounded-xl border border-[#E9E8F1] shadow-sm">
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setIsOpen(!isOpen)}
         className="flex-row items-center justify-between bg-white px-3.5 py-5"
       >
-        <Text className="text-xs font-semibold text-slate-700">
+        <Text className="text-xs font-semibold text-[#5141A5]">
           Files ({files.length})
         </Text>
 
-        <Text className="ml-2 text-[10px] text-slate-500">
+        <Text className="ml-2 text-[10px] text-[#85849A]">
           {isOpen ? "▲" : "▼"}
         </Text>
       </TouchableOpacity>
@@ -120,21 +120,21 @@ export default function JobFiles({ selectedJob, category }: JobFilesProps) {
             onPress={(e) => e.stopPropagation()}
           >
             <View className="flex-row items-center justify-between pb-3 mb-2 border-b border-slate-100">
-              <Text className="text-base font-bold text-slate-900">
+              <Text className="text-base font-bold text-[#17152D]">
                 Job Attachments
               </Text>
 
               <TouchableOpacity
                 onPress={() => setIsOpen(false)}
-                className="rounded-full bg-slate-100 px-2 py-0.5"
+                className="rounded-full bg-[#F1EEFF] px-2 py-0.5"
               >
-                <Text className="text-xs font-bold text-slate-500">✕</Text>
+                <Text className="text-xs font-bold text-[#85849A]">✕</Text>
               </TouchableOpacity>
             </View>
 
             {loading ? (
               <View className="py-8 items-center justify-center">
-                <ActivityIndicator size="small" color="#0284c7" />
+                <ActivityIndicator size="small" color="#6654D9" />
               </View>
             ) : error ? (
               <View className="py-6 items-center">
@@ -179,7 +179,7 @@ export default function JobFiles({ selectedJob, category }: JobFilesProps) {
                         <View className="flex-1 ml-2">
                           <Text
                             numberOfLines={1}
-                            className="text-sm font-medium text-slate-800"
+                            className="text-sm font-medium text-[#302D4B]"
                           >
                             {file.file_name || "Attachment"}
                           </Text>
@@ -196,9 +196,9 @@ export default function JobFiles({ selectedJob, category }: JobFilesProps) {
                         <TouchableOpacity
                           activeOpacity={0.7}
                           onPress={() => handleOpenFile(file)}
-                          className="rounded-md bg-slate-100 px-2 py-1.5"
+                          className="rounded-md bg-[#F1EEFF] px-2 py-1.5"
                         >
-                          <Text className="text-[11px] font-semibold text-slate-700">
+                          <Text className="text-[11px] font-semibold text-[#5141A5]">
                             View ↗
                           </Text>
                         </TouchableOpacity>

@@ -875,15 +875,19 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
                             placeholder="Document site conditions, issues, or specific instructions here."
                             {...form.getInputProps("installation_notes")}
                             onKeyDown={(e) => {
-                              if (e.shiftKey && e.key.toLowerCase() === "d") {
+                              if (e.shiftKey && e.code === "Backquote") {
                                 e.preventDefault();
                                 const dateString =
                                   dayjs().format("~YYYY-MM-DD :\t");
                                 const currentValue =
                                   form.values.installation_notes || "";
-                                const newValue = currentValue
+                                const needsNewline =
+                                  currentValue.length > 0 &&
+                                  !currentValue.endsWith("\n");
+                                const newValue = needsNewline
                                   ? `${currentValue}\n${dateString}`
-                                  : dateString;
+                                  : `${currentValue}${dateString}`;
+
                                 form.setFieldValue(
                                   "installation_notes",
                                   newValue,
