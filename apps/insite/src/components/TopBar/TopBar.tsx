@@ -43,10 +43,10 @@ export default function TopBar({
   };
 
   return (
-    <View className="flex-row justify-between items-center px-5 py-3.5 bg-white border-b border-[#E9E8F1] shadow-sm">
+    <View className="flex-row justify-between items-center px-5 py-3.5 bg-white border-b border-slate-200 shadow-sm">
       <View className="flex-row items-center gap-3">
         <View className="relative">
-          <View className="w-10 h-10 rounded-full bg-[#5141A5] justify-center items-center">
+          <View className="w-10 h-10 rounded-full bg-slate-900 justify-center items-center">
             <Text className="text-white font-bold text-xs">{avatarText}</Text>
           </View>
 
@@ -56,8 +56,8 @@ export default function TopBar({
         </View>
 
         <View>
-          <Text className="font-semibold text-[#17152D] text-sm">{name}</Text>
-          <Text className="text-xs text-[#85849A]">{role}</Text>
+          <Text className="font-semibold text-slate-900 text-sm">{name}</Text>
+          <Text className="text-xs text-slate-500">{role}</Text>
         </View>
       </View>
 
@@ -66,7 +66,7 @@ export default function TopBar({
           <Pressable
             onPress={handleRefresh}
             disabled={isRefreshing}
-            className="h-10 w-10 items-center justify-center rounded-2xl bg-[#F1EEFF] active:bg-slate-200"
+            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
             style={{ opacity: isRefreshing ? 0.5 : 1 }}
           >
             <Ionicons name="refresh" size={20} color="#6654D9" />
@@ -74,10 +74,10 @@ export default function TopBar({
         )}
 
         <Pressable
-          className="bg-[#F1EEFF] active:bg-slate-200 px-3.5 py-2 rounded-lg items-center border border-[#E9E8F1]"
+          className="bg-slate-100 active:bg-slate-200 px-3.5 py-2 rounded-lg items-center border border-slate-200"
           onPress={signout}
         >
-          <Text className="text-[#5141A5] font-semibold text-xs">Sign Out</Text>
+          <Text className="text-slate-700 font-semibold text-xs">Sign Out</Text>
         </Pressable>
       </View>
     </View>

@@ -70,18 +70,18 @@ export default function HomeScreen() {
   });
 
   return (
-    <View className="flex-1 bg-[#F1F1F7]">
+    <View className="flex-1 bg-slate-50">
       <ScrollView
         className="flex-1 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text className="mb-1 text-2xl font-extrabold text-[#17152D]">
+        <Text className="mb-1 text-2xl font-bold text-slate-900">
           Dashboard
         </Text>
 
-        <Text className="mb-5 text-sm text-[#85849A]">
+        <Text className="mb-5 text-sm text-slate-500">
           Search for a job or select one assigned to you.
         </Text>
 

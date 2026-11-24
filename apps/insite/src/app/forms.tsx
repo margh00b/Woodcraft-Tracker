@@ -118,6 +118,7 @@ export default function FormsScreen() {
 
   return (
     <View className="flex-1 bg-[#F1F1F7]">
+      <View pointerEvents="none" className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-violet-300/20" />
       <ScrollView
         className="flex-1 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
@@ -130,12 +131,15 @@ export default function FormsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back to dashboard"
           >
+
             <Text className="mr-2 text-base font-semibold text-[#5141A5]">
               ←
             </Text>
+
             <Text className="text-sm font-semibold text-[#5141A5]">Back</Text>
           </Pressable>
-          <Text className="text-xl font-extrabold text-[#17152D] text-center">
+
+          <Text className="text-xl font-extrabold text-[#5141A5] text-center">
             Forms & Details
           </Text>
           <View className="w-12" />
@@ -144,6 +148,7 @@ export default function FormsScreen() {
         <JobFiles selectedJob={selectedJob} category="Procurement" />
 
         <View className="mb-6">
+
           <Text className="mb-3 text-md font-bold uppercase tracking-wider text-[#85849A]">
             Forms
           </Text>
