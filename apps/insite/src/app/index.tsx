@@ -45,7 +45,8 @@ export default function HomeScreen() {
   const isMarkoutsUser = role === "markouts";
   const {
     searchResultJob, matchingJobs, assignedJobs, isAssignedJobsLoading,
-    assignedJobsError, refreshAssignedJobs,
+    assignedJobsError, refreshAssignedJobs, loadMoreAssignedJobs,
+    hasMoreAssignedJobs, isLoadingMoreAssignedJobs,
   } = useJob();
   const { selectActiveJob } = useActiveJobSelection();
   const [markoutTab, setMarkoutTab] = useState<MarkoutTab>("Today");
@@ -74,23 +75,8 @@ export default function HomeScreen() {
 
   const filteredMarkoutJobs = useMemo(() => {
     if (!isMarkoutsUser) return [];
-    return groupedJobs.filter(({ variants }) => {
-      const dates = variants.flatMap(({ sales_orders }) => {
-        const order = Array.isArray(sales_orders) ? sales_orders[0] : sales_orders;
-        return [
-          order?.markout_date ? { date: order.markout_date, label: "First Markout" } : null,
-          order?.second_markout_date ? { date: order.second_markout_date, label: "Second Markout" } : null,
-        ].filter((item): item is { date: string; label: string } => Boolean(item));
-      });
-      return dates.some(({ date }) => {
-        const key = localDateKey(date);
-        if (markoutTab === "All") return true;
-        if (markoutTab === "Today") return key === todayKey;
-        const value = new Date(date);
-        return value >= weekStart && value < weekEnd;
-      });
-    });
-  }, [groupedJobs, isMarkoutsUser, markoutTab, todayKey, weekStart.getTime(), weekEnd.getTime()]);
+    return groupedJobs;
+  }, [groupedJobs, isMarkoutsUser]);
 
   const tabs: MarkoutTab[] = ["All", "Today", "This Week"];
 
@@ -126,7 +112,7 @@ export default function HomeScreen() {
               </Text>
               {!isAssignedJobsLoading && (
                 <Text className="text-sm text-[#85849A]">
-                  {isMarkoutsUser ? filteredMarkoutJobs.length : groupedJobs.length} jobs
+                  {isMarkoutsUser && hasMoreAssignedJobs ? `${filteredMarkoutJobs.length}+ jobs` : `${isMarkoutsUser ? filteredMarkoutJobs.length : groupedJobs.length} jobs`}
                 </Text>
               )}
             </View>
@@ -134,7 +120,7 @@ export default function HomeScreen() {
             {isMarkoutsUser && (
               <View className="mb-4 flex-row rounded-xl bg-[#ECEAF6] p-1">
                 {tabs.map((tab) => (
-                  <Pressable key={tab} onPress={() => setMarkoutTab(tab)}
+                  <Pressable key={tab} onPress={() => { setMarkoutTab(tab); if (isMarkoutsUser) void refreshAssignedJobs(tab); }}
                     className={`flex-1 items-center rounded-lg px-2 py-2.5 ${markoutTab === tab ? "bg-white" : ""}`}>
                     <Text className={`text-sm font-semibold ${markoutTab === tab ? "text-[#5141A5]" : "text-[#85849A]"}`}>
                       {tab}
@@ -223,6 +209,19 @@ export default function HomeScreen() {
                     </Pressable>
                   );
                 })}
+                {isMarkoutsUser && hasMoreAssignedJobs && (
+                  <Pressable
+                    className="mt-2 items-center rounded-xl border border-[#DDD7FA] bg-white px-4 py-3"
+                    onPress={() => void loadMoreAssignedJobs()}
+                    disabled={isLoadingMoreAssignedJobs}
+                  >
+                    {isLoadingMoreAssignedJobs ? (
+                      <ActivityIndicator color="#6654D9" />
+                    ) : (
+                      <Text className="font-semibold text-[#5141A5]">Load More</Text>
+                    )}
+                  </Pressable>
+                )}
               </>
             )}
           </View>
