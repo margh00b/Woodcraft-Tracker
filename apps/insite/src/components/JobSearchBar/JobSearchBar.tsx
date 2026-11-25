@@ -28,7 +28,11 @@ export default function JobSearchBar() {
     const cleanInput = jobNumberInput.trim();
 
     if (cleanInput.length < 5) {
-      if (matchingJobs.length > 0 || searchResultJob !== null) {
+      if (
+        matchingJobs.length > 0 ||
+        searchResultJob !== null ||
+        searchQuery !== ""
+      ) {
         reset();
         clearJobState();
       }
@@ -36,7 +40,7 @@ export default function JobSearchBar() {
       return;
     }
 
-    if (cleanInput === searchQuery && matchingJobs.length > 0) {
+    if (cleanInput === searchQuery) {
       setHasSearched(true);
       return;
     }
@@ -59,18 +63,7 @@ export default function JobSearchBar() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [
-    jobNumberInput,
-    searchJobs,
-    reset,
-    clearJobState,
-    searchQuery,
-    matchingJobs.length,
-    searchResultJob,
-    setMatchingJobs,
-    setSearchResultJob,
-    setSearchQuery,
-  ]);
+  }, [jobNumberInput]);
 
   const cleanLength = jobNumberInput.trim().length;
 
