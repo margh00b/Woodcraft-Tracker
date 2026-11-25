@@ -9,9 +9,24 @@ export async function useAssignedJobs(
   supabase: Supabase,
   user: AuthUser | null,
 ): Promise<JobOption[]> {
-  if (!user) {
-    throw new Error("You must be signed in to view assigned jobs.");
+  if (!user) throw new Error("You must be signed in to view assigned jobs.");
+
+  const role = user.app_metadata?.role;
+
+  if (role === "markouts") {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select(JOB_DETAILS_SELECT)
+      .eq("is_active", true)
+      .or("markout_date.not.is.null,second_markout_date.not.is.null", {
+        referencedTable: "sales_orders",
+      });
+
+    if (error) throw error;
+    return (data ?? []) as unknown as JobOption[];
   }
+
+  if (role !== "installer") return [];
 
   const { data: installer, error: installerError } = await supabase
     .from("installers")
@@ -20,25 +35,17 @@ export async function useAssignedJobs(
     .maybeSingle();
 
   if (installerError) throw installerError;
-
-  if (!installer) {
-    throw new Error("No installer profile is linked to your account.");
-  }
+  if (!installer) throw new Error("No installer profile is linked to your account.");
 
   const { data: assignedJobs, error: assignedError } = await supabase
     .from("jobs")
-    .select(
-      "job_base_number, installation!fk_installation_id!inner(installer_id)",
-    )
+    .select("job_base_number, installation!fk_installation_id!inner(installer_id)")
     .eq("installation.installer_id", installer.installer_id)
     .eq("is_active", true);
 
   if (assignedError) throw assignedError;
 
-  const baseNumbers = [
-    ...new Set(assignedJobs?.map((job) => job.job_base_number) ?? []),
-  ];
-
+  const baseNumbers = [...new Set(assignedJobs?.map((job) => job.job_base_number) ?? [])];
   if (!baseNumbers.length) return [];
 
   const { data: allVariants, error: variantsError } = await supabase
@@ -48,21 +55,14 @@ export async function useAssignedJobs(
     .eq("is_active", true);
 
   if (variantsError) throw variantsError;
-
   if (!allVariants?.length) return [];
 
   const latestDates = new Map<string, number>();
-
   for (const job of allVariants) {
-    const salesOrder = Array.isArray(job.sales_orders)
-      ? job.sales_orders[0]
-      : job.sales_orders;
-
+    const salesOrder = Array.isArray(job.sales_orders) ? job.sales_orders[0] : job.sales_orders;
     if (!salesOrder?.created_at) continue;
-
     const createdAt = new Date(salesOrder.created_at).getTime();
     const currentLatest = latestDates.get(job.job_base_number);
-
     if (currentLatest === undefined || createdAt > currentLatest) {
       latestDates.set(job.job_base_number, createdAt);
     }
@@ -70,18 +70,13 @@ export async function useAssignedJobs(
 
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-  const cutoff = oneYearAgo.getTime();
-
   const qualifyingBaseNumbers = new Set(
     [...latestDates.entries()]
-      .filter(([, latestDate]) => latestDate >= cutoff)
+      .filter(([, latestDate]) => latestDate >= oneYearAgo.getTime())
       .map(([baseNumber]) => baseNumber),
   );
 
   return allVariants
     .filter((job) => qualifyingBaseNumbers.has(job.job_base_number))
-    .sort((a, b) =>
-      a.job_number.localeCompare(b.job_number),
-    ) as unknown as JobOption[];
+    .sort((a, b) => a.job_number.localeCompare(b.job_number)) as unknown as JobOption[];
 }
