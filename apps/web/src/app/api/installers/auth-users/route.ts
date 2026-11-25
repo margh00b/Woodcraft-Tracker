@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (user.app_metadata?.role !== "admin") {
+    const allowedRoles = ["admin", "installation", "service"];
+
+    if (!allowedRoles.includes(user.app_metadata?.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
