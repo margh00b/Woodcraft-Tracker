@@ -38,6 +38,7 @@ import {
   List,
   ThemeIcon,
 } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import {
   FaCopy,
   FaPlus,
@@ -121,6 +122,8 @@ export default function NewSale() {
   const [jobNum, setJobNum] = useState("");
   const [debouncedJobNum] = useDebouncedValue(jobNum, 300);
   const [isVariantAutofilled, setIsVariantAutofilled] = useState(false);
+  const [hasFirstMarkout, setHasFirstMarkout] = useState(false);
+  const [hasSecondMarkout, setHasSecondMarkout] = useState(false);
 
   const [targetProjectName, setTargetProjectName] = useState<string | null>(
     null,
@@ -193,6 +196,8 @@ export default function NewSale() {
       sitesuper_email: "",
       flooring_type: "",
       flooring_clearance: "",
+      markout_date: null,
+      second_markout_date: null,
       cabinet: {
         species: "",
         color: "",
@@ -549,6 +554,9 @@ export default function NewSale() {
         payment_received: payment_received,
         site_prep: site_prep,
         sitesuper_email: sitesuper_email,
+        markout_date: stage === "SOLD" ? values.markout_date || null : null,
+        second_markout_date:
+          stage === "SOLD" ? values.second_markout_date || null : null,
       };
 
       const { data: transactionResult, error: rpcError } = await supabase.rpc(
@@ -564,6 +572,21 @@ export default function NewSale() {
         throw new Error("No order data returned from transaction.");
 
       const { out_job_number, out_sales_order_number } = transactionResult[0];
+
+      if (
+        stage === "SOLD" &&
+        (values.markout_date || values.second_markout_date)
+      ) {
+        const { error: markoutError } = await supabase
+          .from("sales_orders")
+          .update({
+            markout_date: values.markout_date || null,
+            second_markout_date: values.second_markout_date || null,
+          })
+          .eq("sales_order_number", out_sales_order_number);
+
+        if (markoutError) throw markoutError;
+      }
 
       return {
         success: true,
@@ -601,6 +624,8 @@ export default function NewSale() {
       timer = setTimeout(() => {
         form.reset();
         setSelectedClientData(null);
+        setHasFirstMarkout(false);
+        setHasSecondMarkout(false);
         queryClient.invalidateQueries({ queryKey: ["sales_orders"] });
         queryClient.invalidateQueries({ queryKey: ["existing-Job"] });
         queryClient.invalidateQueries({
@@ -624,6 +649,10 @@ export default function NewSale() {
     if (form.values.stage !== "SOLD") {
       form.setFieldValue("manual_job_base", "");
       form.setFieldValue("manual_job_suffix", "");
+      form.setFieldValue("markout_date", null);
+      form.setFieldValue("second_markout_date", null);
+      setHasFirstMarkout(false);
+      setHasSecondMarkout(false);
     }
   }, [form.values.stage]);
 
@@ -801,8 +830,8 @@ export default function NewSale() {
         <Stack gap={5}>
           <Paper withBorder p="md" radius="md" shadow="xl">
             <Grid gutter="xl" align="flex-end" justify="space-between">
-              <Grid.Col span={6}>
-                <Group align="flex-end" wrap="nowrap">
+              <Grid.Col span={{ base: 12, lg: 7 }}>
+                <Group align="flex-end" wrap="wrap">
                   <Select
                     label="Order Type"
                     withAsterisk
@@ -846,7 +875,12 @@ export default function NewSale() {
                   />
 
                   <Collapse in={form.values.stage === "SOLD"}>
-                    <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
+                    <Group
+                      gap="xs"
+                      align="flex-end"
+                      wrap="wrap"
+                      style={{ flex: 1 }}
+                    >
                       <TextInput
                         label="Job Number"
                         placeholder="40000..."
@@ -920,12 +954,126 @@ export default function NewSale() {
                           setIsVariantAutofilled(false);
                         }}
                       />
+                      <Stack
+                        gap={0}
+                        w={135}
+                        style={{
+                          paddingBottom: hasFirstMarkout ? 0 : 8,
+                          transition: "padding-bottom 200ms ease",
+                        }}
+                      >
+                        <Checkbox
+                          label="1st Markout"
+                          color="#4A00E0"
+                          size="xs"
+                          checked={hasFirstMarkout}
+                          onChange={(e) => {
+                            const checked = e.currentTarget.checked;
+                            setHasFirstMarkout(checked);
+                            if (!checked) {
+                              form.setFieldValue("markout_date", null);
+                            }
+                          }}
+                          styles={{
+                            label: {
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              fontSize: "14px",
+                            },
+                            input: {
+                              cursor: "pointer",
+                              width: hasFirstMarkout ? "16px" : "20px",
+                              height: hasFirstMarkout ? "16px" : "20px",
+                              transition: "width 200ms ease, height 200ms ease",
+                            },
+                            inner: {
+                              width: hasFirstMarkout ? "16px" : "20px",
+                              height: hasFirstMarkout ? "16px" : "20px",
+                              transition: "width 200ms ease, height 200ms ease",
+                            },
+                          }}
+                        />
+                        <Collapse
+                          in={hasFirstMarkout}
+                          keepMounted
+                          transitionDuration={200}
+                          transitionTimingFunction="ease"
+                        >
+                          <div style={{ paddingTop: 4 }}>
+                            <DatePickerInput
+                              placeholder="Scheduled Date..."
+                              clearable
+                              size="sm"
+                              valueFormat="YYYY-MM-DD"
+                              {...form.getInputProps("markout_date")}
+                              style={{ width: 135 }}
+                            />
+                          </div>
+                        </Collapse>
+                      </Stack>
+                      <Stack
+                        gap={0}
+                        w={135}
+                        style={{
+                          paddingBottom: hasSecondMarkout ? 0 : 8,
+                          transition: "padding-bottom 200ms ease",
+                        }}
+                      >
+                        <Checkbox
+                          label="2nd Markout"
+                          color="#4A00E0"
+                          size="xs"
+                          checked={hasSecondMarkout}
+                          onChange={(e) => {
+                            const checked = e.currentTarget.checked;
+                            setHasSecondMarkout(checked);
+                            if (!checked) {
+                              form.setFieldValue("second_markout_date", null);
+                            }
+                          }}
+                          styles={{
+                            label: {
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              fontSize: "14px",
+                            },
+                            input: {
+                              cursor: "pointer",
+                              width: hasSecondMarkout ? "16px" : "20px",
+                              height: hasSecondMarkout ? "16px" : "20px",
+                              transition: "width 200ms ease, height 200ms ease",
+                            },
+                            inner: {
+                              width: hasSecondMarkout ? "16px" : "20px",
+                              height: hasSecondMarkout ? "16px" : "20px",
+                              transition: "width 200ms ease, height 200ms ease",
+                            },
+                          }}
+                        />
+                        <Collapse
+                          in={hasSecondMarkout}
+                          keepMounted
+                          transitionDuration={200}
+                          transitionTimingFunction="ease"
+                        >
+                          <div style={{ paddingTop: 4 }}>
+                            <DatePickerInput
+                              placeholder="Scheduled Date..."
+                              clearable
+                              size="sm"
+                              valueFormat="YYYY-MM-DD"
+                              {...form.getInputProps("second_markout_date")}
+                              style={{ width: 135 }}
+                            />
+                          </div>
+                        </Collapse>
+                      </Stack>
                     </Group>
                   </Collapse>
                 </Group>
               </Grid.Col>
 
-              <Grid.Col span={5}>
+              <Grid.Col span={{ base: 12, lg: 5 }}>
                 <Group align="flex-end" w="100%">
                   <Select
                     label="Client"

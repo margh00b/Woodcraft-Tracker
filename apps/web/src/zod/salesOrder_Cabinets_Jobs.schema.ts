@@ -63,6 +63,8 @@ export const MasterOrderSchema = z
     payment_received: z.boolean().nullable().optional(),
     sitesuper_email: z.string().optional(),
     site_prep: z.boolean().nullable().optional(),
+    markout_date: z.string().nullable().optional(),
+    second_markout_date: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.order_type !== "Multi Fam") {
