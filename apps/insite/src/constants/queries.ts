@@ -8,6 +8,8 @@ export const JOB_DETAILS_SELECT = `
     shipping_street,
     shipping_city,
     sitesuper_email,
-    created_at
+    created_at,
+    markout_date,
+    second_markout_date
   )
 `;
