@@ -5,6 +5,10 @@ import {
   Modal,
   Pressable,
   ScrollView,
+<<<<<<< HEAD
+=======
+  Switch,
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
   Text,
   TextInput,
   View,
@@ -65,6 +69,10 @@ function formatTimestamp(value: string) {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+<<<<<<< HEAD
+=======
+    second: "2-digit",
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
   });
 }
 
@@ -427,6 +435,7 @@ export default function InspectionReportForm() {
                 Inspection Areas
               </Text>
               {areas.map((area) => (
+<<<<<<< HEAD
                 <View key={area.id} className="mb-3 rounded-2xl border border-[#E9E8F1] bg-white p-4 shadow-sm">
                   <View className="mb-3 flex-row items-center justify-between">
                     <Text className="flex-1 text-base font-bold text-[#302D4B]">{area.name}</Text>
@@ -447,26 +456,80 @@ export default function InspectionReportForm() {
                   </Pressable>
                   {!area.is_na && (
                     <>
+=======
+                <View
+                  key={area.id}
+                  className={`mb-3 rounded-xl border p-4 shadow-sm ${area.is_na ? "border-[#E9E8F1] bg-[#F1EEFF]" : "border-[#E9E8F1] bg-white"}`}
+                >
+                  <View className="mb-4 flex-row items-center justify-between">
+                    <Text className="mr-2 flex-1 text-sm font-bold text-[#17152D]">{area.name}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-xs font-medium text-[#85849A]">N/A</Text>
+                      <Switch
+                        value={area.is_na}
+                        onValueChange={(value) => updateArea(area.id, { is_na: value })}
+                        disabled={isSubmitting}
+                        trackColor={{ false: "#cbd5e1", true: "#64748b" }}
+                        thumbColor="#ffffff"
+                      />
+                      {!DEFAULT_AREAS.some((item) => item.id === area.id) && (
+                        <Pressable onPress={() => removeArea(area.id)} disabled={isSubmitting} className="ml-1">
+                          <Text className="text-xs font-bold text-rose-500">Remove</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  </View>
+
+                  <View className="relative">
+                    <View
+                      className={area.is_na ? "opacity-30" : ""}
+                      pointerEvents={area.is_na ? "none" : "auto"}
+                    >
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                       <Text className="mb-1 text-xs font-semibold uppercase text-[#85849A]">Notes</Text>
                       <TextInput
                         value={area.notes}
                         onChangeText={(value) => updateArea(area.id, { notes: value })}
+<<<<<<< HEAD
                         editable={!isSubmitting}
+=======
+                        editable={!isSubmitting && !area.is_na}
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                         multiline
                         textAlignVertical="top"
                         placeholder={`Enter notes for ${area.name.toLowerCase()}...`}
                         placeholderTextColor="#A5A3B8"
+<<<<<<< HEAD
                         className="mb-3 min-h-[88px] rounded-xl border border-[#E9E8F1] bg-[#FAFAFD] p-3 text-sm text-[#302D4B]"
                       />
                       <Text className="mb-2 text-xs font-semibold uppercase text-[#85849A]">Area Photos</Text>
+=======
+                        className="mb-3 min-h-[88px] rounded-xl border border-[#E9E8F1] bg-[#F1F1F7] p-3 text-sm text-[#17152D]"
+                      />
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                       <PhotoGrid
                         photos={area.photos}
                         onAdd={() => setPhotoTarget(area.id)}
                         onRemove={(index) => removePhoto(area.id, index)}
+<<<<<<< HEAD
                         disabled={isSubmitting}
                       />
                     </>
                   )}
+=======
+                        disabled={isSubmitting || area.is_na}
+                      />
+                    </View>
+
+                    {area.is_na && (
+                      <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+                        <View className="rounded-lg border border-slate-300 bg-[#F1EEFF]/95 px-4 py-2">
+                          <Text className="text-sm font-semibold text-[#68677D]">Not applicable</Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+>>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                 </View>
               ))}
               <Pressable

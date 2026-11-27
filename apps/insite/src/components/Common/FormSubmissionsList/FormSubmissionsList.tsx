@@ -123,12 +123,13 @@ export function FormSubmissionsList({
                   Started
                 </Text>
                 <Text className="text-sm font-medium text-[#68677D]">
-                  {new Date(item.started_at!).toLocaleDateString(undefined, {
+                  {new Date(item.started_at!).toLocaleString(undefined, {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
                     hour: "numeric",
                     minute: "2-digit",
+                    second: "2-digit",
                   })}
                 </Text>
               </View>
