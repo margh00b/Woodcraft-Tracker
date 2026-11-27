@@ -14,6 +14,8 @@ export function useJobSearch(selectedId?: string | null) {
       let query = supabase
         .from("jobs")
         .select("id, job_number")
+        .eq("is_active", true)
+        .eq("in_prod", true)
         .order("job_number", { ascending: false })
         .limit(10);
 

@@ -71,6 +71,7 @@ export const linearGradients = {
   serviceparts: `linear-gradient(135deg, ${colors.gray.service} 0%,  ${colors.gray.borderLight} 100%)`,
   lightViolet: `linear-gradient(135deg, #f0edff 0%, #e4dbff 100%)`,
   pageBackground: `linear-gradient(135deg, #DDE6F5 0%, #E7D9F0 100%)`,
+  richPageBackground: `linear-gradient(135deg, #eef2f9 0%, #f2effa 100%)`,
 } as const;
 
 export const serviceStatusGradients = {

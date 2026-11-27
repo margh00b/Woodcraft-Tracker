@@ -45,7 +45,7 @@ CREATE VIEW "public"."plant_table_view" AS  SELECT j.id AS job_id,
      LEFT JOIN public.colors col ON ((c.color_id = col."Id")))
      JOIN public.installation i ON ((j.installation_id = i.installation_id)))
      LEFT JOIN public.production_schedule ps ON ((j.prod_id = ps.prod_id)))
-  WHERE (j.is_active = true);
+  WHERE (j.is_active = true AND j.in_prod = true);
 
 GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."plant_table_view" TO "anon", "authenticated";
 

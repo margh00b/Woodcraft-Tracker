@@ -36,6 +36,7 @@ JOIN public.installation i
 
 WHERE
     j.is_active = true
+    AND j.in_prod = true
     AND i.has_shipped = false
     AND (
         ps.cut_melamine_completed_actual IS NOT NULL

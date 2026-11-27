@@ -184,6 +184,8 @@ export default function InstallationEditor({ jobId }: { jobId: number }) {
         `,
         )
         .eq("id", jobId)
+        .eq("is_active", true)
+        .eq("in_prod", true)
         .single();
       if (error) throw error;
       return data as unknown as JobData;

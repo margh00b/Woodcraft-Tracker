@@ -9,6 +9,7 @@ CREATE TABLE "public"."jobs" (
   "prod_id"         bigint,
   "installation_id" bigint,
   "is_active"       boolean                  NOT NULL DEFAULT true,
+  "in_prod"       boolean                  NOT NULL DEFAULT true,
   CONSTRAINT "fk_installation_id" FOREIGN KEY (installation_id) REFERENCES public.installation(installation_id) ON DELETE SET NULL,
   CONSTRAINT "jobs_installation_id_key" UNIQUE (installation_id),
   CONSTRAINT "jobs_job_number_key" UNIQUE (job_number),

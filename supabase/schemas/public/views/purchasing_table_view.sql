@@ -25,7 +25,7 @@ CREATE VIEW "public"."purchasing_table_view" AS  SELECT pt.purchase_check_id,
      LEFT JOIN public.cabinets c ON ((so.cabinet_id = c.id)))
      LEFT JOIN public.door_styles ds ON ((c.door_style_id = ds.id)))
      LEFT JOIN public.production_schedule ps ON ((j.prod_id = ps.prod_id)))
-  WHERE (j.is_active = true);
+  WHERE (j.is_active = true AND j.in_prod = true);
 
 GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."purchasing_table_view" TO "anon", "authenticated";
 

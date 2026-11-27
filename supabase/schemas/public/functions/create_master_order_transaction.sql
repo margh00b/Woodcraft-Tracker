@@ -96,13 +96,14 @@ BEGIN
                 COALESCE(p_payload->>'manual_job_suffix', '(No Suffix)');
         END IF;
 
-        INSERT INTO public.jobs (sales_order_id, job_base_number, job_suffix)
-        VALUES (
-            v_sales_order_id, 
-            (p_payload->>'manual_job_base'), 
-            p_payload->>'manual_job_suffix'
-        )
-        RETURNING job_number INTO v_job_number;
+       INSERT INTO public.jobs (sales_order_id, job_base_number, job_suffix, in_prod)
+VALUES (
+    v_sales_order_id,
+    p_payload->>'manual_job_base',
+    p_payload->>'manual_job_suffix',
+    (p_payload->>'in_prod')::boolean
+)
+RETURNING job_number INTO v_job_number;
         
         out_job_number := v_job_number;
     ELSE

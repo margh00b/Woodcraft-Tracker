@@ -74,6 +74,7 @@ export default function BoxCountReport() {
     `,
         )
         .eq("is_active", true)
+        .eq("in_prod", true)
         .gte("production_schedule.ship_schedule", startDate)
         .lte("production_schedule.ship_schedule", endDate)
         .order("ship_schedule", {

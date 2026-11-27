@@ -590,14 +590,14 @@ isOneToOne: false
                   ]
                 },"jobs": {
                   Row: {
-                    "created_at": string,"id": number,"installation_id": number | null,"is_active": boolean,"job_base_number": string,"job_number": string,"job_suffix": string | null,"prod_id": number | null,"sales_order_id": number | null,"updated_at": string
+                    "created_at": string,"id": number,"in_prod": boolean,"installation_id": number | null,"is_active": boolean,"job_base_number": string,"job_number": string,"job_suffix": string | null,"prod_id": number | null,"sales_order_id": number | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: number,"installation_id"?: number | null,"is_active"?: boolean,"job_base_number": string,"job_number"?: never,"job_suffix"?: string | null,"prod_id"?: number | null,"sales_order_id"?: number | null,"updated_at"?: string
+                    "created_at"?: string,"id"?: number,"in_prod"?: boolean,"installation_id"?: number | null,"is_active"?: boolean,"job_base_number": string,"job_number"?: never,"job_suffix"?: string | null,"prod_id"?: number | null,"sales_order_id"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: number,"installation_id"?: number | null,"is_active"?: boolean,"job_base_number"?: string,"job_number"?: never,"job_suffix"?: string | null,"prod_id"?: number | null,"sales_order_id"?: number | null,"updated_at"?: string
+                    "created_at"?: string,"id"?: number,"in_prod"?: boolean,"installation_id"?: number | null,"is_active"?: boolean,"job_base_number"?: string,"job_number"?: never,"job_suffix"?: string | null,"prod_id"?: number | null,"sales_order_id"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {

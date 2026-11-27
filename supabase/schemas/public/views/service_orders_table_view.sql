@@ -20,7 +20,7 @@ CREATE VIEW "public"."service_orders_table_view" AS  SELECT so.service_order_id,
      LEFT JOIN public.cabinets c ON s.cabinet_id = c.id
      LEFT JOIN public.colors col ON c.color_id = col."Id"
      LEFT JOIN public.installers i ON ((so.installer_id = i.installer_id)))
-  WHERE (j.is_active = true);
+  WHERE (j.is_active = true AND j.in_prod = true);
 
 GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."service_orders_table_view" TO "anon", "authenticated";
 
