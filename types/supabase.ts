@@ -19,6 +19,20 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"inspection_reports": {
+                  Row: {
+                    "created_at": string,"details": NonNullable<Json>,"id": number,"idempotency_key": string | null,"job_id": number,"started_at": string,"submitted_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"idempotency_key"?: string | null,"job_id": number,"started_at"?: string,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"details"?: NonNullable<Json>,"id"?: number,"idempotency_key"?: string | null,"job_id"?: number,"started_at"?: string,"submitted_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"install_reports": {
                   Row: {
                     "created_at": string,"details": NonNullable<Json>,"id": number,"idempotency_key": string | null,"job_id": number,"submitted_by": string | null,"updated_at": string
@@ -73,11 +87,17 @@ isOneToOne: true
             [_ in never]: never
           }
           Functions: {
-            "submit_install_report":
+            "submit_inspection_report":
+{ Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_started_at": string,"p_submitted_by": string }; Returns: number
+                           },
+"submit_install_report":
 { Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_submitted_by": string }; Returns: number
                            },
 "submit_markout":
 { Args: { "p_attachments": Json,"p_details": Json,"p_idempotency_key": string,"p_job_id": number,"p_sitesuper_email"?: string,"p_submitted_by": string }; Returns: number
+                           },
+"update_inspection_report":
+{ Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_new_attachments": Json,"p_report_id": number }; Returns: undefined
                            },
 "update_install_report":
 { Args: { "p_deleted_attachment_ids": (number)[],"p_details": Json,"p_new_attachments": Json,"p_report_id": number }; Returns: undefined
@@ -498,14 +518,14 @@ isOneToOne: false
                   ]
                 },"job_attachments": {
                   Row: {
-                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_tag": string | null,"file_type": string,"id": number,"install_report_id": number | null,"job_id": number,"markout_id": number | null,"updated_at": string,"uploaded_by": string | null
+                    "category": string,"created_at": string,"file_name": string,"file_path": string,"file_size": number | null,"file_tag": string | null,"file_type": string,"id": number,"inspection_report_id": number | null,"install_report_id": number | null,"job_id": number,"markout_id": number | null,"updated_at": string,"uploaded_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_tag"?: string | null,"file_type": string,"id"?: never,"install_report_id"?: number | null,"job_id": number,"markout_id"?: number | null,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name": string,"file_path": string,"file_size"?: number | null,"file_tag"?: string | null,"file_type": string,"id"?: never,"inspection_report_id"?: number | null,"install_report_id"?: number | null,"job_id": number,"markout_id"?: number | null,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Update: {
-                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_tag"?: string | null,"file_type"?: string,"id"?: never,"install_report_id"?: number | null,"job_id"?: number,"markout_id"?: number | null,"updated_at"?: string,"uploaded_by"?: string | null
+                    "category"?: string,"created_at"?: string,"file_name"?: string,"file_path"?: string,"file_size"?: number | null,"file_tag"?: string | null,"file_type"?: string,"id"?: never,"inspection_report_id"?: number | null,"install_report_id"?: number | null,"job_id"?: number,"markout_id"?: number | null,"updated_at"?: string,"uploaded_by"?: string | null
                   }
                   Relationships: [
                     {

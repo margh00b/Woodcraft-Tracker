@@ -1,3 +1,4 @@
+
 CREATE OR REPLACE FUNCTION public.cleanup_insite_attachment_files()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -10,20 +11,35 @@ DECLARE
   v_secret text;
 BEGIN
   IF TG_TABLE_SCHEMA <> 'insite'
-     OR TG_TABLE_NAME NOT IN ('install_reports', 'markouts') THEN
+     OR TG_TABLE_NAME NOT IN (
+       'install_reports',
+       'markouts',
+       'inspection_reports'
+     ) THEN
     RAISE EXCEPTION 'Unsupported table for attachment cleanup';
   END IF;
 
   IF TG_TABLE_NAME = 'install_reports' THEN
+
     SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
     INTO v_paths
     FROM public.job_attachments
     WHERE install_report_id = OLD.id;
-  ELSE
+
+  ELSIF TG_TABLE_NAME = 'markouts' THEN
+
     SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
     INTO v_paths
     FROM public.job_attachments
     WHERE markout_id = OLD.id;
+
+  ELSE
+
+    SELECT COALESCE(jsonb_agg(file_path), '[]'::jsonb)
+    INTO v_paths
+    FROM public.job_attachments
+    WHERE inspection_report_id = OLD.id;
+
   END IF;
 
   IF jsonb_array_length(v_paths) = 0 THEN
