@@ -186,9 +186,11 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
               colors(Name)
             )
           )
-        `
+        `,
         )
         .eq("id", jobId)
+        .eq("is_active", true)
+        .eq("in_prod", true)
         .single();
       if (error) throw error;
       return data as unknown as JobData;
@@ -384,7 +386,7 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
                             >
                               {prod[step.key]
                                 ? dayjs(prod[step.key] as string).format(
-                                    "YYYY-MM-DD"
+                                    "YYYY-MM-DD",
                                   )
                                 : "—"}
                             </Text>
@@ -451,8 +453,8 @@ export default function ReadOnlyInstallation({ jobId }: { jobId: number }) {
                           prod?.ship_status === "confirmed"
                             ? "green"
                             : prod?.ship_status === "tentative"
-                            ? "orange"
-                            : "gray"
+                              ? "orange"
+                              : "gray"
                         }
                         variant="light"
                       >

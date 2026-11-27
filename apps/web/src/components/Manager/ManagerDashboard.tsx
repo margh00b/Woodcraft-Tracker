@@ -378,6 +378,7 @@ export default function ManagerDashboardClient() {
                 "job_base_number, installation!inner(wrap_completed, wrap_date)",
               )
               .eq("is_active", true)
+              .eq("in_prod", true)
               .not("installation.wrap_date", "is", null)
               .is("installation.wrap_completed", null),
 
@@ -492,6 +493,7 @@ export default function ManagerDashboardClient() {
                 "job_base_number, installation!inner(wrap_completed, wrap_date)",
               )
               .eq("is_active", true)
+              .eq("in_prod", true)
               .not("installation.wrap_date", "is", null)
               .is("installation.wrap_completed", null),
 

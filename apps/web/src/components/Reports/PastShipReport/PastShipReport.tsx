@@ -84,6 +84,8 @@ export default function PastShipReport() {
         )
         .gte("production_schedule.ship_schedule", startDate)
         .lte("production_schedule.ship_schedule", endDate)
+        .eq("is_active", true)
+        .eq("in_prod", true)
         .or("has_shipped.eq.true,partially_shipped.eq.true", {
           referencedTable: "installation",
         })

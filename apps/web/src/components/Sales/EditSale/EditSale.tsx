@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "@/utils/zodResolver/zodResolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import utc from "dayjs/plugin/utc";
 import {
   Container,
@@ -16,31 +16,53 @@ import {
   TextInput,
   NumberInput,
   Select,
-  Text,
   SimpleGrid,
-  Fieldset,
   Paper,
   Switch,
   Loader,
   Center,
-  Divider,
+  Badge,
+  Title,
   Autocomplete,
   Modal,
-  Checkbox,
   Collapse,
+  Checkbox,
   Radio,
   Textarea,
+  Text,
+  Divider,
   Grid,
   GridCol,
+  Popover,
+  List,
+  ThemeIcon,
+  Box,
+  Chip,
 } from "@mantine/core";
+import {
+  User,
+  Truck,
+  Layers,
+  DollarSign,
+  FileText,
+  CheckSquare,
+} from "lucide-react";
 import { DatePickerInput } from "@mantine/dates";
-import { FaCopy, FaPlus, FaCheckCircle, FaCircle } from "react-icons/fa";
+import {
+  FaCopy,
+  FaPlus,
+  FaCheckCircle,
+  FaCircle,
+  FaInfoCircle,
+} from "react-icons/fa";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   MasterOrderInput,
   MasterOrderSchema,
 } from "@/zod/salesOrder_Cabinets_Jobs.schema";
 import { Tables } from "@/types/db";
+import AddClient from "@/components/Clients/AddClient/AddClient";
+import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
 import {
   DeliveryTypeOptions,
   DrawerBoxOptions,
@@ -51,21 +73,56 @@ import {
   OrderTypeOptions,
   TopDrawerFrontOptions,
 } from "@/dropdowns/dropdownOptions";
-import RelatedServiceOrders from "@/components/Shared/RelatedServiceOrders/RelatedServiceOrders";
-import AddClient from "@/components/Clients/AddClient/AddClient";
 import { useNavigationGuard } from "@/providers/NavigationGuardProvider";
 
 import { useClientSearch } from "@/hooks/useClientSearch";
 import { useSpeciesSearch } from "@/hooks/useSpeciesSearch";
 import { useColorSearch } from "@/hooks/useColorSearch";
 import { useDoorStyleSearch } from "@/hooks/useDoorStyleSearch";
+import { useClientProjects } from "@/hooks/useClientProjects";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
 import dayjs from "dayjs";
 import { handleTabSelect } from "@/utils/handleTabSelect";
+import { colors, linearGradients } from "@/theme";
 dayjs.extend(utc);
 
 type EditSaleProps = {
   salesOrderId: number;
 };
+
+function getNextVariant(existingSuffixes: (string | null)[]): string | null {
+  if (existingSuffixes.length === 1 && existingSuffixes[0] === null) {
+    return null;
+  }
+  const clean = existingSuffixes
+    .filter((s): s is string => !!s && s.trim() !== "")
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => s.length === 1 && /^[A-Z]$/.test(s))
+    .sort((a, b) => a.localeCompare(b));
+
+  if (clean.length === 0) return "A";
+
+  const last = clean[clean.length - 1];
+
+  if (last === "Z") return "AA";
+
+  return String.fromCharCode(last.charCodeAt(0) + 1);
+}
+
+function splitUnitAndStreet(rawStreet?: string | null): {
+  unit: string;
+  street: string;
+} {
+  const trimmed = (rawStreet || "").trim();
+  if (!trimmed) return { unit: "", street: "" };
+  const match = trimmed.match(
+    /^([A-Za-z0-9#]+(?:\s+[A-Za-z0-9#]+)?)\s*-\s*(.+)$/,
+  );
+  if (match) {
+    return { unit: match[1].trim(), street: match[2].trim() };
+  }
+  return { unit: "", street: trimmed };
+}
 
 interface ExtendedMasterOrderInput extends MasterOrderInput {
   manual_job_base?: string;
@@ -85,28 +142,42 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const {
     supabase,
     isAuthenticated,
-    user,
     isLoading: isAuthLoading,
+    user,
   } = useSupabase();
-
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [selectedClientData, setSelectedClientData] =
     useState<Tables<"client"> | null>(null);
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [unitNumber, setUnitNumber] = useState("");
   const [initialUnitNumber, setInitialUnitNumber] = useState("");
+
+  const [jobNum, setJobNum] = useState("");
+  const [isJobBaseDirty, setIsJobBaseDirty] = useState(false);
+  const [debouncedJobNum] = useDebouncedValue(jobNum, 300);
+  const [isVariantAutofilled, setIsVariantAutofilled] = useState(false);
+
+  const [targetProjectName, setTargetProjectName] = useState<string | null>(
+    null,
+  );
+  const [autofilledSourceJob, setAutofilledSourceJob] = useState<string | null>(
+    null,
+  );
+  const [popoverOpened, setPopoverOpened] = useState(false);
+
   const [newItemValue, setNewItemValue] = useState("");
-  const [hasFirstMarkout, setHasFirstMarkout] = useState(false);
-  const [hasSecondMarkout, setHasSecondMarkout] = useState(false);
+  const [highlightedFields, setHighlightedFields] = useState<string[]>([]);
+  const skipClientAutofillRef = useRef(false);
+  const isHydratedRef = useRef(false);
+  const focusValues = useRef<Record<string, any>>({});
 
   const [newDoorStyle, setNewDoorStyle] = useState<NewDoorStyleState>({
     name: "",
     is_pre_manufactured: false,
     is_made_in_house: false,
   });
-
   const [viewGst, setViewGst] = useState(true);
   const [viewPst, setViewPst] = useState(false);
 
@@ -156,6 +227,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       payment_received: false,
       site_prep: false,
       sitesuper_email: "",
+      in_prod: undefined as unknown as boolean,
       flooring_type: "",
       flooring_clearance: "",
       markout_date: null,
@@ -202,7 +274,15 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     return options;
   };
 
-  const focusValues = useRef<Record<string, any>>({});
+  const getAutofillStyles = (fieldName: string) => {
+    const isHighlighted = highlightedFields.includes(fieldName);
+    return {
+      input: {
+        transition: "background-color 0.8s ease",
+        backgroundColor: isHighlighted ? "#e9ffebff" : undefined,
+      },
+    };
+  };
 
   const {
     options: clientOptions,
@@ -211,22 +291,99 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     search: clientSearch,
   } = useClientSearch(form.values.client_id || null);
 
+  const selectData = useMemo(() => {
+    const items: any[] = [...clientOptions];
+
+    if (items.length === 0) {
+      if (clientsLoading) {
+        items.push({
+          value: "STATUS_SEARCHING",
+          label: "Searching...",
+          disabled: true,
+        });
+      } else {
+        items.push({
+          value: "STATUS_NOTHING_FOUND",
+          label: "No matching clients found.",
+          disabled: true,
+        });
+      }
+    }
+
+    items.push({
+      value: "ADD_NEW_CLIENT_OPTION",
+      label: "Add New Client",
+    });
+    return items;
+  }, [clientOptions, clientsLoading]);
+
+  const { data: projectOptions, isLoading: projectsLoading } =
+    useClientProjects(form.values.client_id || null);
+
+  const { data: projectDetails, isLoading: isLoadingProjectDetails } =
+    useProjectDetails(form.values.client_id || null, targetProjectName);
+
+  useEffect(() => {
+    if (!isHydratedRef.current) return;
+
+    if (projectDetails && targetProjectName) {
+      const job = Array.isArray(projectDetails.jobs)
+        ? projectDetails.jobs[0]
+        : projectDetails.jobs;
+      if (job?.job_number) {
+        setAutofilledSourceJob(`Job: ${job.job_number}`);
+      }
+
+      const { unit, street } = splitUnitAndStreet(
+        projectDetails.shipping_street,
+      );
+      setUnitNumber(unit);
+
+      form.setFieldValue("shipping", {
+        ...form.values.shipping,
+        shipping_client_name:
+          projectDetails.shipping_client_name ||
+          form.values.shipping.shipping_client_name,
+        shipping_street: street,
+        shipping_city: projectDetails.shipping_city || "",
+        shipping_province: projectDetails.shipping_province || "",
+        shipping_zip: projectDetails.shipping_zip || "",
+        shipping_phone_1: projectDetails.shipping_phone_1 || "",
+        shipping_phone_2: projectDetails.shipping_phone_2 || "",
+        shipping_email_1: projectDetails.shipping_email_1 || "",
+        shipping_email_2: projectDetails.shipping_email_2 || "",
+      });
+
+      setHighlightedFields([
+        "shipping.shipping_client_name",
+        "shipping.shipping_street",
+        "shipping.shipping_city",
+        "shipping.shipping_province",
+        "shipping.shipping_zip",
+        "shipping.shipping_phone_1",
+        "shipping.shipping_phone_2",
+        "shipping.shipping_email_1",
+        "shipping.shipping_email_2",
+      ]);
+    }
+  }, [projectDetails, targetProjectName]);
+
   const {
     options: speciesOptions,
     setSearch: setSpeciesSearch,
-    search: speciesSearch,
+    search: speciesSearchValue,
   } = useSpeciesSearch(form.values.cabinet.species || null);
 
   const {
     options: colorOptions,
     setSearch: setColorSearch,
-    search: colorSearch,
+    search: colorSearchValue,
   } = useColorSearch(form.values.cabinet.color || null);
 
   const {
     options: doorStyleOptions,
     setSearch: setDoorStyleSearch,
-    search: doorStyleSearch,
+    search: doorStyleSearchValue,
   } = useDoorStyleSearch(form.values.cabinet.door_style || null);
 
   const addSpeciesMutation = useMutation({
@@ -333,7 +490,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
           `
             *, 
             client: client(*), 
-            job: jobs(id, job_number, job_base_number, job_suffix, is_active),
+            job: jobs(id, job_number, job_base_number, job_suffix, is_active, in_prod),
             cabinet: cabinets(
                 *, 
                 species_name:species(Species), 
@@ -358,7 +515,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   const jobId = salesOrderData?.job?.id;
 
   const { setIsDirty } = useNavigationGuard();
-  const isDirty = form.isDirty();
+  const isDirty = form.isDirty() || unitNumber !== initialUnitNumber;
   useEffect(() => {
     setIsDirty(isDirty);
     return () => setIsDirty(false);
@@ -367,16 +524,11 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
   useEffect(() => {
     if (salesOrderData) {
       const cabinet = salesOrderData.cabinet;
-      let loadedStreet = salesOrderData.shipping_street || "";
-      const unitMatch = loadedStreet.match(/^([a-zA-Z0-9]+)\s*-\s*(.*)$/);
-      if (unitMatch) {
-        setUnitNumber(unitMatch[1]);
-        setInitialUnitNumber(unitMatch[1]);
-        loadedStreet = unitMatch[2];
-      } else {
-        setUnitNumber("");
-        setInitialUnitNumber("");
-      }
+      const { unit, street } = splitUnitAndStreet(
+        salesOrderData.shipping_street,
+      );
+      setUnitNumber(unit);
+      setInitialUnitNumber(unit);
 
       const loadedMarkoutDate = salesOrderData.markout_date
         ? dayjs.utc(salesOrderData.markout_date).format("YYYY-MM-DD")
@@ -384,8 +536,14 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       const loadedSecondMarkoutDate = salesOrderData.second_markout_date
         ? dayjs.utc(salesOrderData.second_markout_date).format("YYYY-MM-DD")
         : null;
-      setHasFirstMarkout(Boolean(loadedMarkoutDate));
-      setHasSecondMarkout(Boolean(loadedSecondMarkoutDate));
+
+      const loadedJobBase = salesOrderData.job?.job_base_number || "";
+      setJobNum(loadedJobBase);
+      setIsJobBaseDirty(false);
+      setIsVariantAutofilled(false);
+      setTargetProjectName(null);
+      setAutofilledSourceJob(null);
+      setHighlightedFields([]);
 
       form.initialize({
         date_sold: salesOrderData.date_sold,
@@ -398,10 +556,10 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         comments: salesOrderData.comments || "",
         order_type: salesOrderData.order_type,
         delivery_type: salesOrderData.delivery_type,
-        manual_job_base: salesOrderData.job?.job_base_number || "",
+        manual_job_base: loadedJobBase,
         manual_job_suffix: salesOrderData.job?.job_suffix || "",
-        is_active: salesOrderData.job?.is_active || true,
-        is_memo: salesOrderData.is_memo,
+        is_active: salesOrderData.job?.is_active ?? true,
+        is_memo: salesOrderData.is_memo ?? false,
         is_canopy_required: salesOrderData.is_canopy_required ?? false,
         is_woodtop_required: salesOrderData.is_woodtop_required ?? false,
         is_custom_cab_required: salesOrderData.is_custom_cab_required ?? false,
@@ -409,6 +567,10 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         payment_received: salesOrderData.payment_received ?? false,
         site_prep: salesOrderData.site_prep ?? false,
         sitesuper_email: salesOrderData.sitesuper_email || "",
+        in_prod:
+          typeof salesOrderData.job?.in_prod === "boolean"
+            ? salesOrderData.job.in_prod
+            : (undefined as unknown as boolean),
         flooring_type: salesOrderData.flooring_type || "",
         flooring_clearance: salesOrderData.flooring_clearance || "",
         markout_date: loadedMarkoutDate,
@@ -432,7 +594,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         shipping: {
           shipping_client_name: salesOrderData.shipping_client_name || "",
           project_name: salesOrderData.project_name || "",
-          shipping_street: loadedStreet,
+          shipping_street: street,
           shipping_city: salesOrderData.shipping_city || "",
           shipping_province: salesOrderData.shipping_province || "",
           shipping_zip: salesOrderData.shipping_zip || "",
@@ -443,11 +605,117 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
         },
       });
       setSelectedClientData(salesOrderData.client);
+      isHydratedRef.current = true;
     }
   }, [salesOrderData]);
 
+  const { data: existingJobs } = useQuery({
+    queryKey: ["existing-Job", debouncedJobNum, salesOrderData?.job?.id],
+    queryFn: async () => {
+      if (!debouncedJobNum) return [];
+
+      let query = supabase
+        .from("jobs")
+        .select(
+          "id, job_base_number, job_suffix, created_at, sales_orders!fk_jobs_sales_order_id( *, client:client_id(*) )",
+        )
+        .eq("job_base_number", debouncedJobNum)
+        .order("job_suffix", { ascending: false });
+
+      if (salesOrderData?.job?.id) {
+        query = query.neq("id", salesOrderData.job.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error checking jobs:", error);
+        return [];
+      }
+      return data;
+    },
+    enabled:
+      isHydratedRef.current &&
+      isJobBaseDirty &&
+      !!debouncedJobNum &&
+      debouncedJobNum.length > 2,
+  });
+
+  useEffect(() => {
+    if (!isHydratedRef.current || !isJobBaseDirty) return;
+
+    if (existingJobs && existingJobs.length > 0) {
+      const suffixes = existingJobs.map((j) => j.job_suffix);
+      const next = getNextVariant(suffixes);
+
+      if (!form.values.manual_job_suffix && next) {
+        form.setFieldValue("manual_job_suffix", next);
+        setIsVariantAutofilled(true);
+      }
+
+      const latestJob = existingJobs[0];
+      if (latestJob?.sales_orders) {
+        const rawSo = latestJob.sales_orders;
+        const so: any = Array.isArray(rawSo) ? rawSo[0] : rawSo;
+        const client = so?.client;
+
+        if (client) {
+          skipClientAutofillRef.current = true;
+          setSelectedClientData(client);
+          form.setFieldValue("client_id", Number(client.id));
+
+          const { unit, street } = splitUnitAndStreet(so.shipping_street);
+          setUnitNumber(unit);
+
+          form.setFieldValue("shipping", {
+            ...form.values.shipping,
+            shipping_client_name: client.lastName || "",
+            project_name: so.project_name || "",
+            shipping_street: street,
+            shipping_city: so.shipping_city || "",
+            shipping_province: so.shipping_province || "",
+            shipping_zip: so.shipping_zip || "",
+            shipping_phone_1: so.shipping_phone_1 || "",
+            shipping_phone_2: so.shipping_phone_2 || "",
+            shipping_email_1: so.shipping_email_1 || "",
+            shipping_email_2: so.shipping_email_2 || "",
+          });
+
+          setAutofilledSourceJob(
+            `Job: ${latestJob.job_base_number}${
+              latestJob.job_suffix ? `-${latestJob.job_suffix}` : ""
+            }`,
+          );
+          setHighlightedFields([
+            "shipping.shipping_client_name",
+            "shipping.shipping_street",
+            "shipping.shipping_city",
+            "shipping.shipping_province",
+            "shipping.shipping_zip",
+            "shipping.shipping_phone_1",
+            "shipping.shipping_phone_2",
+            "shipping.shipping_email_1",
+            "shipping.shipping_email_2",
+          ]);
+          queryClient.invalidateQueries({
+            queryKey: ["client-lookup", client.id],
+          });
+        }
+      }
+    } else {
+      setIsVariantAutofilled(false);
+    }
+  }, [existingJobs, isJobBaseDirty]);
+
   const copyClientToShipping = () => {
-    if (!selectedClientData) return;
+    if (!selectedClientData) {
+      notifications.show({
+        message: "Please select a client first",
+        color: "orange",
+      });
+      return;
+    }
+
     form.setFieldValue("shipping", {
       shipping_client_name: `${selectedClientData.lastName}`,
       project_name: form.values.shipping.project_name,
@@ -598,6 +866,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 job_base_number: manual_job_base,
                 job_suffix: suffixStr,
                 is_active: values.is_active,
+                in_prod: values.in_prod ?? false,
               })
               .eq("id", currentJobId);
 
@@ -610,6 +879,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
                 job_base_number: manual_job_base,
                 job_suffix: suffixStr,
                 is_active: values.is_active,
+                in_prod: values.in_prod ?? false,
               });
 
             if (jobInsertError) throw jobInsertError;
@@ -627,6 +897,8 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
       queryClient.invalidateQueries({
         queryKey: ["sales-order", salesOrderId],
       });
+      queryClient.invalidateQueries({ queryKey: ["sales_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["existing-Job"] });
       queryClient.invalidateQueries({ queryKey: ["sales_table"] });
       router.push("/dashboard/sales");
     },
@@ -641,16 +913,16 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   if (isAuthLoading || salesOrderLoading) {
     return (
-      <Center style={{ height: "100vh" }}>
+      <Center style={{ height: "100vh", width: "100%" }}>
         <Loader />
         <Text ml="md">Loading...</Text>
       </Center>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return (
-      <Center style={{ height: "100vh" }}>
+      <Center style={{ height: "100vh", width: "100%" }}>
         <Text>You must be signed in to view this sales order.</Text>
       </Center>
     );
@@ -658,7 +930,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
 
   if (salesOrderError || !salesOrderData) {
     return (
-      <Center style={{ height: "100vh" }}>
+      <Center style={{ height: "100vh", width: "100%" }}>
         <Text c="red">
           {salesOrderError instanceof Error
             ? salesOrderError.message
@@ -682,7 +954,7 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     if (unitNumber.trim()) {
       payload.shipping = {
         ...payload.shipping,
-        shipping_street: `${unitNumber.trim()}-${
+        shipping_street: `${unitNumber.trim()} - ${
           payload.shipping.shipping_street
         }`,
       };
@@ -691,1284 +963,1966 @@ export default function EditSale({ salesOrderId }: EditSaleProps) {
     updateMutation.mutate(payload);
   };
 
+  const isUpdateDisabled =
+    (!form.isDirty() && unitNumber === initialUnitNumber) ||
+    updateMutation.isPending;
+
   return (
-    <Container
-      size="100%"
-      pl={10}
-      w={"100%"}
+    <Box
+      className="new-sale-glass"
       style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        paddingRight: 0,
-        background: "linear-gradient(135deg, #DDE6F5 0%, #E7D9F0 100%)",
+        minHeight: "100vh",
+        background: linearGradients.richPageBackground,
       }}
     >
-      <form
-        noValidate
-        onSubmit={form.onSubmit(handleSubmit)}
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-        }}
-      >
-        <Stack gap={5}>
-          <Paper p="md" radius="md" shadow="xl" withBorder>
-            <Grid gutter="xl" align="flex-end" justify="space-between">
-              <Grid.Col span={{ base: 12, lg: 7 }}>
-                <Group align="flex-end" wrap="wrap">
-                  <Select
-                    label="Order Type"
-                    withAsterisk
-                    placeholder="Type"
-                    data={OrderTypeOptions}
-                    {...form.getInputProps(`order_type`)}
-                    style={{ width: 180 }}
-                  />
-                  <Switch
-                    offLabel="Quote"
-                    onLabel="Sold"
-                    size="xl"
-                    thumbIcon={<FaCheckCircle />}
-                    styles={{
-                      track: {
-                        cursor: "pointer",
-                        background:
-                          form.values.stage === "SOLD"
-                            ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                            : "linear-gradient(135deg, #6c63ff 0%, #4a00e0 100%)",
-                        color: "white",
-                        border: "none",
-                        padding: "0 0.2rem",
-                        width: "6rem",
-                      },
-                      thumb: {
-                        background:
-                          form.values.stage === "SOLD" ? "#218838" : "#4a00e0",
-                      },
-                    }}
-                    checked={form.values.stage === "SOLD"}
-                    onChange={(e) =>
-                      form.setFieldValue(
-                        "stage",
-                        e.currentTarget.checked ? "SOLD" : "QUOTE",
-                      )
-                    }
-                  />
+      <style>{`
+  .new-sale-glass {
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    overflow: clip;
+    background:
+      radial-gradient(ellipse at 12% 8%, rgba(196, 181, 253, .34), transparent 38%),
+      radial-gradient(ellipse at 88% 22%, rgba(165, 180, 252, .30), transparent 36%),
+      radial-gradient(ellipse at 55% 82%, rgba(216, 180, 254, .32), transparent 42%),
+      linear-gradient(145deg, #ffffff 0%, #f8f7ff 48%, #f4f7ff 100%) !important;
+    background-size: 220% 220%;
+    animation: new-sale-bg-drift 12s ease-in-out infinite alternate;
+  }
 
-                  <Collapse in={form.values.stage === "SOLD"}>
-                    <Group
-                      gap="xs"
-                      align="flex-end"
-                      wrap="wrap"
-                      style={{ flex: 1 }}
-                    >
-                      <TextInput
-                        label="Job Number"
-                        placeholder="40000..."
-                        {...form.getInputProps("manual_job_base")}
-                        style={{ width: 120 }}
-                        withAsterisk
-                      />
-                      <TextInput
-                        label="Variant"
-                        placeholder="A, B..."
-                        {...form.getInputProps("manual_job_suffix")}
-                        onChange={(event) => {
-                          const value = event.currentTarget.value;
-                          form.setFieldValue("manual_job_suffix", value);
-                        }}
-                        style={{ width: 80 }}
-                        maxLength={10}
-                      />
-                      <Stack
-                        gap={0}
-                        w={135}
-                        style={{
-                          paddingBottom: hasFirstMarkout ? 0 : 8,
-                          transition: "padding-bottom 200ms ease",
-                        }}
-                      >
-                        <Checkbox
-                          label="1st Markout"
-                          color="#4A00E0"
-                          size="xs"
-                          checked={hasFirstMarkout}
-                          onChange={(e) => {
-                            const checked = e.currentTarget.checked;
-                            setHasFirstMarkout(checked);
-                            if (!checked) {
-                              form.setFieldValue("markout_date", null);
-                            }
-                          }}
-                          styles={{
-                            label: {
-                              fontWeight: 500,
-                              cursor: "pointer",
-                              fontSize: "14px",
-                            },
-                            input: {
-                              cursor: "pointer",
-                              width: hasFirstMarkout ? "16px" : "20px",
-                              height: hasFirstMarkout ? "16px" : "20px",
-                              transition: "width 200ms ease, height 200ms ease",
-                            },
-                            inner: {
-                              width: hasFirstMarkout ? "16px" : "20px",
-                              height: hasFirstMarkout ? "16px" : "20px",
-                              transition: "width 200ms ease, height 200ms ease",
-                            },
-                          }}
-                        />
-                        <Collapse
-                          in={hasFirstMarkout}
-                          keepMounted
-                          transitionDuration={200}
-                          transitionTimingFunction="ease"
-                        >
-                          <div style={{ paddingTop: 4 }}>
-                            <DatePickerInput
-                              placeholder="Scheduled Date..."
-                              clearable
-                              size="sm"
-                              valueFormat="YYYY-MM-DD"
-                              {...form.getInputProps("markout_date")}
-                              style={{ width: 135 }}
-                            />
-                          </div>
-                        </Collapse>
-                      </Stack>
-                      <Stack
-                        gap={0}
-                        w={135}
-                        style={{
-                          paddingBottom: hasSecondMarkout ? 0 : 8,
-                          transition: "padding-bottom 200ms ease",
-                        }}
-                      >
-                        <Checkbox
-                          label="2nd Markout"
-                          color="#4A00E0"
-                          size="xs"
-                          checked={hasSecondMarkout}
-                          onChange={(e) => {
-                            const checked = e.currentTarget.checked;
-                            setHasSecondMarkout(checked);
-                            if (!checked) {
-                              form.setFieldValue("second_markout_date", null);
-                            }
-                          }}
-                          styles={{
-                            label: {
-                              fontWeight: 500,
-                              cursor: "pointer",
-                              fontSize: "14px",
-                            },
-                            input: {
-                              cursor: "pointer",
-                              width: hasSecondMarkout ? "16px" : "20px",
-                              height: hasSecondMarkout ? "16px" : "20px",
-                              transition: "width 200ms ease, height 200ms ease",
-                            },
-                            inner: {
-                              width: hasSecondMarkout ? "16px" : "20px",
-                              height: hasSecondMarkout ? "16px" : "20px",
-                              transition: "width 200ms ease, height 200ms ease",
-                            },
-                          }}
-                        />
-                        <Collapse
-                          in={hasSecondMarkout}
-                          keepMounted
-                          transitionDuration={200}
-                          transitionTimingFunction="ease"
-                        >
-                          <div style={{ paddingTop: 4 }}>
-                            <DatePickerInput
-                              placeholder="Scheduled Date..."
-                              clearable
-                              size="sm"
-                              valueFormat="YYYY-MM-DD"
-                              {...form.getInputProps("second_markout_date")}
-                              style={{ width: 135 }}
-                            />
-                          </div>
-                        </Collapse>
-                      </Stack>
-                    </Group>
-                  </Collapse>
-                </Group>
-              </Grid.Col>
+  .new-sale-glass::before,
+  .new-sale-glass::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: clamp(440px, 55vw, 850px);
+    height: clamp(440px, 55vw, 850px);
+    border-radius: 50%;
+    filter: blur(75px);
+    opacity: .68;
+    pointer-events: none;
+    will-change: transform;
+  }
 
-              <Grid.Col span={{ base: 12, lg: 5 }}>
-                <Group align="flex-end" w="100%">
-                  <Select
-                    label="Switch Client"
-                    placeholder="Search clients..."
-                    clearable
-                    comboboxProps={{
-                      position: "bottom",
-                      middlewares: { flip: false, shift: false },
-                      offset: 0,
-                    }}
-                    data={clientOptions}
-                    searchable
-                    searchValue={clientSearch}
-                    onSearchChange={setClientSearch}
-                    nothingFoundMessage={
-                      clientsLoading ? (
-                        "Searching..."
-                      ) : (
-                        <Stack align="center" p="xs" gap="xs">
-                          <Text size="sm" c="dimmed">
-                            No matching clients found.
-                          </Text>
-                          <Button
-                            variant="filled"
-                            size="xs"
-                            onClick={() => setIsAddClientModalOpen(true)}
-                            leftSection={<FaPlus size={12} />}
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
-                              color: "white",
-                              border: "none",
-                            }}
-                          >
-                            Add New Client
-                          </Button>
-                        </Stack>
-                      )
-                    }
-                    disabled={clientsLoading}
-                    style={{ flex: 1 }}
-                    styles={{
-                      dropdown: {
-                        boxShadow: "var(--mantine-shadow-xl)",
-                        borderColor: "var(--mantine-color-gray-4)",
-                        borderWidth: "1px",
-                        borderStyle: "solid",
-                      },
-                      root: { width: "100%" },
-                    }}
-                    {...form.getInputProps("client_id")}
-                    value={String(form.values.client_id)}
-                    onChange={(val) => {
-                      form.setFieldValue("client_id", Number(val));
-                      const fullObj = clientOptions.find(
-                        (c: any) => c.value === val,
-                      )?.original;
-                      setSelectedClientData(fullObj as Tables<"client">);
-                      form.setFieldValue("shipping", {
-                        shipping_client_name: "",
-                        project_name: "",
-                        shipping_street: "",
-                        shipping_city: "",
-                        shipping_province: "",
-                        shipping_zip: "",
-                        shipping_phone_1: "",
-                        shipping_phone_2: "",
-                        shipping_email_1: "",
-                        shipping_email_2: "",
-                      });
-                    }}
-                  />
-                  <Stack
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Group>
-                      {salesOrderData?.date_sold && (
-                        <Text size="xs" c="dimmed">
-                          Date Sold:{" "}
-                          {dayjs
-                            .utc(salesOrderData?.date_sold)
-                            .format("DD-MM-YYYY")}
-                        </Text>
-                      )}
+  .new-sale-glass::before {
+    top: 80px;
+    left: -300px;
+    background: radial-gradient(
+      circle,
+      rgba(196, 181, 253, .95) 0%,
+      rgba(167, 139, 250, .58) 35%,
+      rgba(167, 139, 250, 0) 72%
+    );
+    animation: new-sale-orb-one 3s ease-in-out infinite alternate;
+  }
 
-                      <Text size="xs" c="dimmed">
-                        Created By: {salesOrderData?.designer}
-                      </Text>
-                    </Group>
-                    <Group>
-                      <Switch
-                        onLabel="Memo"
-                        offLabel="Memo"
-                        size="xl"
-                        thumbIcon={
-                          form.values.is_memo ? <FaCheckCircle /> : <FaCircle />
-                        }
-                        checked={form.values.is_memo}
-                        onChange={(e) =>
-                          form.setFieldValue("is_memo", e.currentTarget.checked)
-                        }
-                        styles={{
-                          track: {
-                            cursor: "pointer",
-                            background: form.values.is_memo
-                              ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                              : "linear-gradient(135deg, #ddddddff 0%, #dadadaff 100%)",
-                            color: form.values.is_memo ? "white" : "black",
-                            border: "none",
-                            padding: "0 0.2rem",
-                            width: "6rem",
-                          },
-                          thumb: {
-                            background: form.values.is_memo
-                              ? "#218838"
-                              : "#ffffffff",
-                          },
-                        }}
-                      />
-                      {form.values.stage === "SOLD" && (
-                        <Switch
-                          onLabel="Active"
-                          offLabel="Dead"
-                          size="xl"
-                          thumbIcon={
-                            form.values.is_active ? (
-                              <FaCheckCircle />
-                            ) : (
-                              <FaCircle />
-                            )
-                          }
-                          checked={form.values.is_active}
-                          onChange={(e) =>
-                            form.setFieldValue(
-                              "is_active",
-                              e.currentTarget.checked,
-                            )
-                          }
-                          styles={{
-                            track: {
-                              cursor: "pointer",
-                              background: form.values.is_active
-                                ? "linear-gradient(135deg, #28a745 0%, #218838 100%)"
-                                : "linear-gradient(135deg, #ff0000ff 0%, #ff6363ff 100%)",
-                              color: form.values.is_active ? "white" : "white",
-                              border: "none",
-                              padding: "0 0.2rem",
-                              width: "6rem",
-                            },
-                            thumb: {
-                              background: form.values.is_active
-                                ? "#218838"
-                                : "#cf0000ff",
-                            },
-                          }}
-                        />
-                      )}
-                    </Group>
-                  </Stack>
-                </Group>
-              </Grid.Col>
-            </Grid>
-          </Paper>
+  .new-sale-glass::after {
+    top: 420px;
+    right: -340px;
+    background: radial-gradient(
+      circle,
+      rgba(165, 180, 252, .95) 0%,
+      rgba(129, 140, 248, .55) 38%,
+      rgba(129, 140, 248, 0) 72%
+    );
+    animation: new-sale-orb-two 17s ease-in-out infinite alternate;
+  }
 
-          {selectedClientData ? (
-            <SimpleGrid
-              cols={{ base: 1, lg: 2 }}
-              spacing="md"
-              bg={"gray.1"}
-              p="10px"
+  @keyframes new-sale-bg-drift {
+    0% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 65% 55%;
+    }
+    100% {
+      background-position: 100% 100%;
+    }
+  }
+
+  @keyframes new-sale-orb-one {
+    0% {
+      transform: translate3d(0, 0, 0) scale(.9);
+    }
+    50% {
+      transform: translate3d(28vw, 18vh, 0) scale(1.18);
+    }
+    100% {
+      transform: translate3d(12vw, 42vh, 0) scale(1.05);
+    }
+  }
+
+  @keyframes new-sale-orb-two {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(-27vw, -20vh, 0) scale(1.2);
+    }
+    100% {
+      transform: translate3d(-12vw, -42vh, 0) scale(.95);
+    }
+  }
+
+  .new-sale-glass .mantine-Paper-root {
+    background: rgba(255, 255, 255, .84) !important;
+    border: 1px solid rgba(255, 255, 255, .98) !important;
+    border-radius: 20px !important;
+    box-shadow:
+      0 10px 30px rgba(58, 42, 105, .045),
+      0 2px 8px rgba(58, 42, 105, .025),
+      inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(165%);
+    backdrop-filter: blur(26px) saturate(165%);
+    transition:
+      box-shadow .2s ease,
+      border-color .2s ease,
+      transform .2s ease;
+  }
+
+  .new-sale-glass .new-sale-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        112deg,
+        rgba(255, 255, 255, .97),
+        rgba(250, 248, 255, .91) 58%,
+        rgba(244, 242, 255, .90)
+      ) !important;
+    border: 1px solid rgba(255, 255, 255, 1) !important;
+    border-top: 1px solid rgba(255, 255, 255, 1) !important;
+    box-shadow:
+      0 14px 38px rgba(88, 56, 150, .065),
+      inset 0 1px 0 #fff !important;
+  }
+
+  .new-sale-glass .new-sale-hero::after {
+    content: "";
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    top: -220px;
+    right: 8%;
+    border-radius: 50%;
+    background: rgba(196, 181, 253, .25);
+    filter: blur(18px);
+    pointer-events: none;
+  }
+
+  .new-sale-glass .mantine-Input-label,
+  .new-sale-glass .mantine-RadioGroup-label,
+  .new-sale-glass .mantine-Checkbox-label {
+    color: #39334f;
+    font-size: 12px;
+    font-weight: 650;
+    letter-spacing: .015em;
+    margin-bottom: 6px;
+  }
+
+  .new-sale-glass .mantine-Input-input,
+  .new-sale-glass .mantine-Textarea-input {
+    min-height: 44px;
+    color: #29243b;
+    background: rgba(255, 255, 255, .94) !important;
+    border: 1px solid rgba(116, 93, 164, .13) !important;
+    border-radius: 12px !important;
+    box-shadow: inset 0 1px 2px rgba(39, 25, 72, .018);
+    transition:
+      border-color .18s ease,
+      box-shadow .18s ease,
+      background .18s ease;
+  }
+
+  .new-sale-glass .mantine-Textarea-input {
+    min-height: 96px;
+    padding-top: 12px;
+  }
+
+  .new-sale-glass .mantine-Input-input:hover,
+  .new-sale-glass .mantine-Textarea-input:hover {
+    border-color: rgba(139, 92, 246, .35) !important;
+    background: #fff !important;
+  }
+
+  .new-sale-glass .mantine-Input-input:focus,
+  .new-sale-glass .mantine-Textarea-input:focus {
+    border-color: rgba(124, 58, 237, .65) !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, .10) !important;
+    background: #fff !important;
+  }
+
+  .new-sale-glass .mantine-Input-input::placeholder,
+  .new-sale-glass .mantine-Textarea-input::placeholder {
+    color: #a09aae;
+  }
+
+  .new-sale-glass .mantine-Input-section {
+    color: #8b7aa9;
+  }
+
+  .new-sale-glass .mantine-Select-dropdown,
+  .new-sale-glass .mantine-Autocomplete-dropdown,
+  .new-sale-glass .mantine-Popover-dropdown {
+    background: rgba(255, 255, 255, .97);
+    border: 1px solid rgba(139, 92, 246, .14);
+    border-radius: 14px;
+    box-shadow: 0 18px 44px rgba(44, 26, 85, .10);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+
+  .new-sale-glass .mantine-Button-root {
+    border-radius: 12px;
+    font-weight: 650;
+    letter-spacing: .005em;
+    transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      filter .18s ease;
+  }
+
+  .new-sale-glass .mantine-Button-root:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.025);
+  }
+
+  .new-sale-glass .mantine-Switch-track,
+  .new-sale-glass .mantine-Chip-label {
+    border-radius: 999px;
+  }
+
+  .new-sale-glass .mantine-Divider-root {
+    border-color: rgba(115, 91, 158, .11);
+  }
+
+  .new-sale-glass .mantine-ThemeIcon-root {
+    box-shadow: 0 5px 12px rgba(112, 73, 190, .14);
+  }
+
+  .new-sale-glass .new-sale-billing-summary {
+    background:
+      linear-gradient(
+        135deg,
+        rgba(250, 248, 255, .96),
+        rgba(245, 247, 255, .94)
+      ) !important;
+    border: 1px solid rgba(139, 92, 246, .12) !important;
+    border-radius: 16px !important;
+  }
+
+  .new-sale-glass .new-sale-action-bar {
+    position: sticky;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      linear-gradient(
+        115deg,
+        rgba(255, 255, 255, .94),
+        rgba(250, 247, 255, .91) 52%,
+        rgba(244, 246, 255, .93)
+      ) !important;
+    border: 1px solid rgba(255, 255, 255, 1) !important;
+    box-shadow:
+      0 14px 38px rgba(53, 37, 93, .09),
+      0 3px 10px rgba(99, 72, 150, .045),
+      inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    backdrop-filter: blur(32px) saturate(180%);
+  }
+
+  .new-sale-glass .new-sale-action-bar::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse at 12% 0%,
+        rgba(196, 181, 253, .24),
+        transparent 48%
+      ),
+      linear-gradient(
+        105deg,
+        transparent 20%,
+        rgba(255, 255, 255, .55) 48%,
+        transparent 72%
+      );
+    background-size: 100% 100%, 220% 100%;
+    background-position: center, 180% 0;
+    animation: new-sale-bar-sheen 8s ease-in-out infinite;
+  }
+
+  @keyframes new-sale-bar-sheen {
+    0%, 35% {
+      background-position: center, 180% 0;
+    }
+    75%, 100% {
+      background-position: center, -80% 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .new-sale-glass .mantine-Paper-root {
+      border-radius: 16px !important;
+    }
+
+    .new-sale-glass .new-sale-hero {
+      padding: 18px !important;
+    }
+
+    .new-sale-glass::before,
+    .new-sale-glass::after {
+      opacity: .48;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .new-sale-glass,
+    .new-sale-glass *,
+    .new-sale-glass *::before,
+    .new-sale-glass *::after {
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+`}</style>
+      <Container size="100%" py="md" px={{ base: "sm", md: "lg" }}>
+        <form
+          noValidate
+          onSubmit={form.onSubmit(handleSubmit)}
+          id="edit-order-form"
+        >
+          <Stack gap="lg">
+            {/* HERO HEADER */}
+            <Paper
+              className="new-sale-hero"
+              withBorder
+              p="lg"
+              radius="lg"
+              style={{
+                borderColor: colors.gray.border,
+                borderTop: `4px solid ${colors.violet.lighter}`,
+                boxShadow: "0 2px 12px rgba(0, 67, 192, 0.07)",
+              }}
             >
-              <Fieldset
-                legend="Billing Details"
-                variant="filled"
-                bg={"white"}
-                styles={{
-                  legend: { fontWeight: "bold" },
-                }}
+              <Group
+                justify="space-between"
+                align="flex-end"
+                wrap="wrap"
+                gap="sm"
               >
-                <Stack gap="sm">
-                  <Stack gap={0}>
-                    <Text size="xs" c="dimmed">
-                      Client Name
-                    </Text>
-                    <Text fw={600} size="sm">
-                      {selectedClientData.lastName}
-                    </Text>
-                  </Stack>
-                  <SimpleGrid cols={2} spacing="md">
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        Phone 1
-                      </Text>
-                      <Text fw={500} size="sm">
-                        {selectedClientData.phone1 || "N/A"}
-                      </Text>
-                    </Stack>
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        Email 1
-                      </Text>
-                      <Text fw={500} size="sm">
-                        {selectedClientData.email1 || "N/A"}
-                      </Text>
-                    </Stack>
-                  </SimpleGrid>
-                  <SimpleGrid cols={2} spacing="md">
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        Phone 2
-                      </Text>
-                      <Text fw={500} size="sm">
-                        {selectedClientData.phone2 || "—"}
-                      </Text>
-                    </Stack>
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        Email 2
-                      </Text>
-                      <Text fw={500} size="sm">
-                        {selectedClientData.email2 || "—"}
-                      </Text>
-                    </Stack>
-                  </SimpleGrid>
-                  <Divider my={2} />
-                  <Stack gap="xs">
-                    <Text size="xs" c="dimmed">
-                      Billing Address
-                    </Text>
-                    <Text fw={500} size="sm" mt={-5}>
-                      {`${selectedClientData.street || "—"}, ${
-                        selectedClientData.city || "—"
-                      }, ${selectedClientData.province || "—"} ${
-                        selectedClientData.zip || "—"
-                      }`}
-                    </Text>
-                  </Stack>
-                </Stack>
-              </Fieldset>
-
-              <Fieldset
-                legend="Shipping Details"
-                variant="filled"
-                bg={"white"}
-                styles={{
-                  legend: { fontWeight: "bold" },
-                }}
-              >
-                <Stack gap="sm">
-                  <Group justify="space-between">
-                    <Button
-                      size="xs"
-                      variant="light"
-                      leftSection={<FaCopy />}
-                      onClick={copyClientToShipping}
-                      disabled={!selectedClientData}
+                <Stack gap={4} style={{ minWidth: "15%" }}>
+                  <Group gap="sm" align="center">
+                    <Title order={2} fw={700} c={colors.violet.primary}>
+                      {form.values.stage === "SOLD"
+                        ? "Edit Order"
+                        : "Edit Quote"}
+                    </Title>
+                    <Badge
+                      radius="sm"
+                      size="md"
                       style={{
                         background:
-                          "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+                          form.values.stage === "SOLD"
+                            ? linearGradients.success
+                            : linearGradients.primary,
                         color: "white",
                         border: "none",
                       }}
                     >
-                      Copy from Billing
-                    </Button>
+                      {form.values.stage === "SOLD" ? "Sold" : "Quote"}
+                    </Badge>
                   </Group>
-                  <SimpleGrid cols={2} spacing="sm">
-                    <TextInput
-                      label="Client Name"
-                      placeholder="Builder/Client Name...."
-                      {...form.getInputProps(`shipping.shipping_client_name`)}
-                    />
-                    <TextInput
-                      label="Project Name"
-                      placeholder="Project Name for Multi-fams..."
-                      {...form.getInputProps(`shipping.project_name`)}
-                    />
-                  </SimpleGrid>
-                  <Grid>
-                    <GridCol span={2}>
-                      <TextInput
-                        label="Unit #"
-                        placeholder="123.."
-                        value={unitNumber}
-                        onChange={(e) => setUnitNumber(e.currentTarget.value)}
-                      />
-                    </GridCol>
-                    <GridCol span={4}>
-                      <TextInput
-                        label="Street Address"
-                        placeholder="123 Main St"
-                        {...form.getInputProps(`shipping.shipping_street`)}
-                      />
-                    </GridCol>
-                    <GridCol span={2}>
-                      <TextInput
-                        label="City"
-                        placeholder="Calgary..."
-                        {...form.getInputProps(`shipping.shipping_city`)}
-                      />
-                    </GridCol>
-                    <GridCol span={2}>
-                      <TextInput
-                        label="Province"
-                        placeholder="AB..."
-                        {...form.getInputProps(`shipping.shipping_province`)}
-                      />
-                    </GridCol>
-                    <GridCol span={2}>
-                      <TextInput
-                        label="Zip"
-                        placeholder="A1B 2C3..."
-                        {...form.getInputProps(`shipping.shipping_zip`)}
-                      />
-                    </GridCol>
-                  </Grid>
-                  <SimpleGrid cols={2} spacing="sm">
-                    <TextInput
-                      label="Phone 1"
-                      {...form.getInputProps(`shipping.shipping_phone_1`)}
-                    />
-                    <TextInput
-                      label="Phone 2"
-                      {...form.getInputProps(`shipping.shipping_phone_2`)}
-                    />
-                  </SimpleGrid>
-                  <SimpleGrid cols={2} spacing="sm">
-                    <TextInput
-                      label="Email 1"
-                      {...form.getInputProps(`shipping.shipping_email_1`)}
-                    />
-                    <TextInput
-                      label="Email 2"
-                      {...form.getInputProps(`shipping.shipping_email_2`)}
-                    />
-                  </SimpleGrid>
-                </Stack>
-              </Fieldset>
-            </SimpleGrid>
-          ) : (
-            <Center style={{ height: "100px" }} bg={"white"}>
-              <Text c="dimmed" size="sm">
-                Please select a Client to view billing details.
-              </Text>
-            </Center>
-          )}
-
-          <Paper p="md" withBorder bg={"gray.1"}>
-            <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={30}>
-              <Stack>
-                <Fieldset
-                  legend="Basic Information"
-                  variant="filled"
-                  bg={"white"}
-                  styles={{
-                    legend: { fontWeight: "bold" },
-                  }}
-                >
-                  <Stack mt="sm" gap="md">
-                    {form.values.order_type === "Reno" && (
-                      <Radio.Group
-                        label="Site Expectations Document is signed by the customer"
-                        withAsterisk
-                        value={
-                          form.values.site_prep === true
-                            ? "true"
-                            : form.values.site_prep === false
-                              ? "false"
-                              : ""
-                        }
-                        onChange={(val) =>
-                          form.setFieldValue("site_prep", val === "true")
-                        }
-                        error={form.errors.site_prep}
-                      >
-                        <Group mt="xs" style={{ marginBottom: 10 }}>
-                          <Radio value="true" label="Yes" color="#4a00e0" />
-                          <Radio value="false" label="No" color="#4a00e0" />
-                        </Group>
-                      </Radio.Group>
+                  <Group gap="md">
+                    {salesOrderData?.date_sold && (
+                      <Text size="xs" c="dimmed">
+                        Date Sold:{" "}
+                        {dayjs
+                          .utc(salesOrderData.date_sold)
+                          .format("DD-MM-YYYY")}
+                      </Text>
                     )}
-                    <SimpleGrid cols={2}>
-                      <Select
-                        label="Delivery Type"
-                        withAsterisk
-                        rightSection
-                        placeholder="Pickup, Delivery..."
-                        data={DeliveryTypeOptions}
-                        searchable
-                        nothingFoundMessage="No delivery type found"
-                        {...form.getInputProps("delivery_type")}
-                      />
-                      <Radio.Group
-                        label="Installation Required"
-                        withAsterisk
-                        value={
-                          form.values.install === true
-                            ? "true"
-                            : form.values.install === false
-                              ? "false"
-                              : ""
-                        }
-                        onChange={(val) =>
-                          form.setFieldValue("install", val === "true")
-                        }
-                        error={form.errors.install}
-                      >
-                        <Group mt="xs">
-                          <Radio value="true" label="Yes" color="#4a00e0" />
-                          <Radio value="false" label="No" color="#4a00e0" />
-                        </Group>
-                      </Radio.Group>
-                    </SimpleGrid>
-                  </Stack>
-                </Fieldset>
+                    {salesOrderData?.designer && (
+                      <Text size="xs" c="dimmed">
+                        Created By: {salesOrderData.designer}
+                      </Text>
+                    )}
+                  </Group>
+                </Stack>
 
-                <Fieldset
-                  legend="Cabinet Specifications"
-                  variant="filled"
-                  bg={"white"}
-                  styles={{
-                    legend: { fontWeight: "bold" },
+                <Group
+                  gap="xl"
+                  align="flex-end"
+                  wrap="wrap"
+                  style={{
+                    opacity: form.values.stage === "SOLD" ? 1 : 0.5,
+                    pointerEvents:
+                      form.values.stage === "SOLD" ? "auto" : "none",
+                    transition: "opacity 150ms ease",
+                    flex: 1,
+                    justifyContent: "center",
                   }}
                 >
-                  <SimpleGrid cols={3}>
-                    <Select
-                      label="Species"
-                      placeholder="Select Species"
-                      data={speciesOptions}
-                      searchable
-                      allowDeselect
-                      clearable
-                      rightSection
-                      searchValue={speciesSearch}
-                      onSearchChange={setSpeciesSearch}
-                      onKeyDown={(e) => {
-                        handleTabSelect(
-                          e,
-                          speciesOptions,
-                          "cabinet.species",
-                          setSpeciesSearch,
-                          form,
-                        );
+                  <Box style={{ width: 180 }}>
+                    <Radio.Group
+                      label="Send to Production"
+                      styles={{
+                        label: {
+                          fontSize: "var(--mantine-font-size-sm)",
+                          fontWeight: 500,
+                          color: "var(--mantine-color-text)",
+                          marginBottom: 8,
+                          lineHeight: "20px",
+                          height: 20,
+                        },
                       }}
-                      nothingFoundMessage={
-                        speciesSearch.trim().length > 0 && (
-                          <Button
-                            fullWidth
-                            variant="light"
-                            size="xs"
-                            onClick={() => {
-                              setNewItemValue(speciesSearch);
-                              openSpeciesModal();
-                            }}
-                          >
-                            + Add "{speciesSearch}"
-                          </Button>
-                        )
+                      withAsterisk={form.values.stage === "SOLD"}
+                      value={
+                        form.values.in_prod === true
+                          ? "true"
+                          : form.values.in_prod === false
+                            ? "false"
+                            : ""
                       }
-                      {...form.getInputProps(`cabinet.species`)}
-                    />
-                    <Select
-                      label="Color"
-                      placeholder="Select Color"
-                      data={colorOptions}
-                      searchable
-                      clearable
-                      rightSection
-                      searchValue={colorSearch}
-                      onSearchChange={setColorSearch}
-                      onKeyDown={(e) =>
-                        handleTabSelect(
-                          e,
-                          colorOptions,
-                          "cabinet.color",
-                          setColorSearch,
-                          form,
-                        )
+                      onChange={(val) =>
+                        form.setFieldValue("in_prod", val === "true")
                       }
-                      nothingFoundMessage={
-                        colorSearch.trim().length > 0 && (
-                          <Button
-                            fullWidth
-                            variant="light"
-                            size="xs"
-                            onClick={() => {
-                              setNewItemValue(colorSearch);
-                              openColorModal();
-                            }}
-                          >
-                            + Add "{colorSearch}"
-                          </Button>
-                        )
-                      }
-                      {...form.getInputProps(`cabinet.color`)}
-                    />
-                    <Select
-                      label="Door Style"
-                      placeholder="Select Door Style"
-                      data={doorStyleOptions}
-                      searchable
-                      clearable
-                      rightSection
-                      searchValue={doorStyleSearch}
-                      onSearchChange={setDoorStyleSearch}
-                      onKeyDown={(e) =>
-                        handleTabSelect(
-                          e,
-                          doorStyleOptions,
-                          "cabinet.door_style",
-                          setDoorStyleSearch,
-                          form,
-                        )
-                      }
-                      nothingFoundMessage={
-                        doorStyleSearch.trim().length > 0 && (
-                          <Button
-                            fullWidth
-                            variant="light"
-                            size="xs"
-                            onClick={() => {
-                              setNewDoorStyle((prev) => ({
-                                ...prev,
-                                name: doorStyleSearch,
-                              }));
-                              openDoorStyleModal();
-                            }}
-                          >
-                            + Add "{doorStyleSearch}"
-                          </Button>
-                        )
-                      }
-                      {...form.getInputProps(`cabinet.door_style`)}
-                    />
+                      error={form.errors.in_prod}
+                    >
+                      <Group gap="lg" h={36} align="center">
+                        <Radio
+                          value="true"
+                          label="Yes"
+                          color={colors.violet.primary}
+                          disabled={form.values.stage !== "SOLD"}
+                        />
+                        <Radio
+                          value="false"
+                          label="No"
+                          color={colors.violet.primary}
+                          disabled={form.values.stage !== "SOLD"}
+                        />
+                      </Group>
+                    </Radio.Group>
+                  </Box>
 
-                    <Autocomplete
-                      label="Top Drawer Front"
-                      placeholder="Matching"
-                      data={TopDrawerFrontOptions}
-                      {...form.getInputProps("cabinet.top_drawer_front")}
-                      onFocus={(e) => {
-                        form
-                          .getInputProps("cabinet.top_drawer_front")
-                          .onFocus?.(e);
-                        focusValues.current["cabinet.top_drawer_front"] =
-                          form.values.cabinet.top_drawer_front;
-                      }}
-                      onBlur={(e) => {
-                        form
-                          .getInputProps("cabinet.top_drawer_front")
-                          .onBlur(e);
-                        const wasEmpty =
-                          !focusValues.current["cabinet.top_drawer_front"];
-                        const isEmpty = !form.values.cabinet.top_drawer_front;
-                        if (wasEmpty && isEmpty) {
-                          form.setFieldValue(
-                            "cabinet.top_drawer_front",
-                            "Matching",
-                          );
-                        }
-                      }}
-                    />
-                    <Select
-                      label="Interior Material"
-                      placeholder="White Mel"
-                      searchable
-                      clearable
-                      rightSection
-                      data={getSafeOptions(
-                        InteriorOptions,
-                        form.values.cabinet.interior,
-                      )}
-                      {...form.getInputProps("cabinet.interior")}
-                      onFocus={(e) => {
-                        form.getInputProps("cabinet.interior").onFocus?.(e);
-                        focusValues.current["cabinet.interior"] =
-                          form.values.cabinet.interior;
-                      }}
-                      onBlur={(e) => {
-                        form.getInputProps("cabinet.interior").onBlur(e);
-                        const wasEmpty =
-                          !focusValues.current["cabinet.interior"];
-                        const isEmpty = !form.values.cabinet.interior;
-                        if (wasEmpty && isEmpty) {
-                          form.setFieldValue("cabinet.interior", "WHITE MEL");
-                        }
-                      }}
-                    />
-                    <NumberInput
-                      label="Box"
-                      min={0}
-                      allowDecimal={false}
-                      {...form.getInputProps("cabinet.box")}
-                    />
-                  </SimpleGrid>
-
-                  <SimpleGrid cols={4} mt="md">
-                    <Select
-                      label="Drawer Box"
-                      data={getSafeOptions(
-                        DrawerBoxOptions,
-                        form.values.cabinet.drawer_box,
-                      )}
-                      rightSection
-                      {...form.getInputProps("cabinet.drawer_box")}
-                      onChange={(val) => {
-                        form.setFieldValue("cabinet.drawer_box", val || "");
-                        form.setFieldValue("cabinet.drawer_hardware", "");
-                      }}
-                      allowDeselect={false}
-                    />
-
-                    <Select
-                      label="Drawer Hardware"
-                      rightSection
-                      key={form.values.cabinet.drawer_box}
-                      placeholder={
-                        form.values.cabinet.drawer_box
-                          ? "Select Hardware"
-                          : "Select Box First"
-                      }
-                      data={getSafeOptions(
-                        form.values.cabinet.drawer_box
-                          ? HARDWARE_MAPPING[form.values.cabinet.drawer_box] ||
-                              []
-                          : [],
-                        form.values.cabinet.drawer_hardware,
-                      )}
-                      {...form.getInputProps("cabinet.drawer_hardware")}
-                      value={form.values.cabinet.drawer_hardware || null}
-                      disabled={!form.values.cabinet.drawer_box}
-                    />
-                    <Autocomplete
-                      label="Flooring Type"
-                      placeholder="Hardwood, Tile, etc."
-                      data={flooringTypeOptions}
-                      {...form.getInputProps(`flooring_type`)}
-                    />
-                    <Autocomplete
-                      label="Flooring Clearance"
-                      placeholder="3/8, 1/2, etc."
-                      data={flooringClearanceOptions}
-                      {...form.getInputProps(`flooring_clearance`)}
-                    />
-                  </SimpleGrid>
-
-                  <Divider mt="md" />
-
-                  <SimpleGrid cols={3} mt="md">
-                    <Stack gap={5}>
-                      <Switch
-                        label="Glass Doors Required"
-                        color="#4a00e0"
-                        style={{
-                          display: "inline-flex",
-                        }}
-                        {...form.getInputProps(`cabinet.glass`, {
-                          type: "checkbox",
-                        })}
-                      />
-                      <TextInput
-                        label="Glass Type"
-                        placeholder="e.g., Frosted, Clear"
-                        disabled={!form.values.cabinet.glass}
-                        {...form.getInputProps(`cabinet.glass_type`)}
-                      />
-                    </Stack>
-
-                    <Stack gap={5}>
-                      <Switch
-                        label="Doors/Parts Only Order"
-                        color="#4a00e0"
-                        style={{
-                          display: "inline-flex",
-                        }}
-                        {...form.getInputProps(`cabinet.doors_parts_only`, {
-                          type: "checkbox",
-                        })}
-                      />
-                      <TextInput
-                        label="Total Piece Count"
-                        placeholder="e.g., 42"
-                        disabled={!form.values.cabinet.doors_parts_only}
-                        {...form.getInputProps(`cabinet.piece_count`)}
-                      />
-                    </Stack>
-                    <Stack justify="center" align="end">
-                      <Switch
-                        label="Handles Supplied"
-                        color="#4a00e0"
-                        {...form.getInputProps(`cabinet.handles_supplied`, {
-                          type: "checkbox",
-                        })}
-                      />
-                      <Switch
-                        label="Handles Selected"
-                        color="#4a00e0"
-                        {...form.getInputProps(`cabinet.handles_selected`, {
-                          type: "checkbox",
-                        })}
-                      />
-                    </Stack>
-                  </SimpleGrid>
-                  <Divider mt="md" />
-                </Fieldset>
-              </Stack>
-
-              <Stack>
-                <Fieldset
-                  legend="Details"
-                  variant="filled"
-                  bg={"white"}
-                  styles={{
-                    legend: { fontWeight: "bold" },
-                  }}
-                >
-                  <Textarea
-                    label="Comments"
-                    minRows={10}
-                    styles={{ input: { minHeight: "112px" } }}
-                    {...form.getInputProps("comments")}
+                  <DatePickerInput
+                    label="1st Markout"
+                    placeholder="Scheduled Date..."
+                    clearable
+                    radius="md"
+                    style={{ width: 180 }}
+                    valueFormat="YYYY-MM-DD"
+                    disabled={form.values.stage !== "SOLD"}
+                    {...form.getInputProps("markout_date")}
                   />
 
-                  <TextInput
-                    label="Site Super Email (For Automatic Emails)"
-                    placeholder="sitesuper@builder.com..."
-                    {...form.getInputProps(`sitesuper_email`)}
-                    styles={{
-                      root: {
-                        marginTop: 10,
-                      },
+                  <DatePickerInput
+                    label="2nd Markout"
+                    placeholder="Scheduled Date..."
+                    clearable
+                    radius="md"
+                    style={{ width: 180 }}
+                    valueFormat="YYYY-MM-DD"
+                    disabled={form.values.stage !== "SOLD"}
+                    {...form.getInputProps("second_markout_date")}
+                  />
+                </Group>
+
+                <Group gap="md" wrap="wrap" align="flex-end">
+                  <Box h={36} style={{ display: "flex", alignItems: "center" }}>
+                    <Switch
+                      onLabel="Memo"
+                      offLabel="Memo"
+                      size="xl"
+                      thumbIcon={
+                        form.values.is_memo ? <FaCheckCircle /> : <FaCircle />
+                      }
+                      checked={form.values.is_memo}
+                      onChange={(e) =>
+                        form.setFieldValue("is_memo", e.currentTarget.checked)
+                      }
+                      styles={{
+                        track: {
+                          cursor: "pointer",
+                          background: form.values.is_memo
+                            ? linearGradients.success
+                            : linearGradients.inactive,
+                          color: form.values.is_memo
+                            ? "white"
+                            : colors.gray.title,
+                          border: "none",
+                          padding: "0 0.2rem",
+                          width: "6rem",
+                        },
+                        thumb: {
+                          background: form.values.is_memo
+                            ? colors.green.primary
+                            : "#ffffff",
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Box h={36} style={{ display: "flex", alignItems: "center" }}>
+                    <Switch
+                      offLabel="Quote"
+                      onLabel="Sold"
+                      size="xl"
+                      thumbIcon={<FaCheckCircle />}
+                      styles={{
+                        track: {
+                          cursor: "pointer",
+                          background:
+                            form.values.stage === "SOLD"
+                              ? linearGradients.success
+                              : linearGradients.primary,
+                          color: "white",
+                          border: "none",
+                          padding: "0 0.2rem",
+                          width: "6rem",
+                        },
+                        thumb: {
+                          background:
+                            form.values.stage === "SOLD"
+                              ? colors.green.primary
+                              : colors.violet.primary,
+                        },
+                      }}
+                      checked={form.values.stage === "SOLD"}
+                      onChange={(e) =>
+                        form.setFieldValue(
+                          "stage",
+                          e.currentTarget.checked ? "SOLD" : "QUOTE",
+                        )
+                      }
+                    />
+                  </Box>
+
+                  <Group
+                    gap="md"
+                    wrap="nowrap"
+                    style={{
+                      opacity: form.values.stage === "SOLD" ? 1 : 0.55,
+                      pointerEvents:
+                        form.values.stage === "SOLD" ? "auto" : "none",
+                      transition: "opacity 150ms ease",
                     }}
-                  />
-                </Fieldset>
-
-                <Fieldset
-                  legend="Requirements"
-                  variant="filled"
-                  bg={"white"}
-                  styles={{
-                    legend: { fontWeight: "bold" },
-                  }}
-                >
-                  <Group>
-                    <Checkbox
-                      label="Column/Floating Shelf/Woodtop"
-                      color="#4A00E0"
-                      styles={{
-                        label: { fontWeight: 500, cursor: "pointer" },
-                        input: { cursor: "pointer" },
+                  >
+                    <TextInput
+                      label="Job Number"
+                      placeholder="40000..."
+                      radius="md"
+                      w={140}
+                      withAsterisk={form.values.stage === "SOLD"}
+                      disabled={form.values.stage !== "SOLD"}
+                      value={form.values.manual_job_base || ""}
+                      error={form.errors.manual_job_base}
+                      onChange={(e) => {
+                        const val = e.currentTarget.value;
+                        setJobNum(val);
+                        setIsJobBaseDirty(true);
+                        setIsVariantAutofilled(false);
+                        setAutofilledSourceJob(null);
+                        form.setFieldValue("manual_job_base", val);
                       }}
-                      {...form.getInputProps("is_woodtop_required", {
-                        type: "checkbox",
-                      })}
-                    />
-                    <Checkbox
-                      label="Canopy"
-                      color="#4A00E0"
-                      styles={{
-                        label: { fontWeight: 500, cursor: "pointer" },
-                        input: { cursor: "pointer" },
-                      }}
-                      {...form.getInputProps("is_canopy_required", {
-                        type: "checkbox",
-                      })}
                     />
 
-                    <Checkbox
-                      label="Finish Cabinet"
-                      color="#4A00E0"
-                      styles={{
-                        label: { fontWeight: 500, cursor: "pointer" },
-                        input: { cursor: "pointer" },
+                    <TextInput
+                      label="Variant"
+                      placeholder="A, B..."
+                      radius="md"
+                      w={95}
+                      disabled={form.values.stage !== "SOLD"}
+                      {...form.getInputProps("manual_job_suffix")}
+                      maxLength={10}
+                      rightSection={
+                        existingJobs && existingJobs.length > 0 ? (
+                          <Popover
+                            width={200}
+                            position="bottom"
+                            withArrow
+                            shadow="md"
+                            opened={popoverOpened}
+                            onChange={setPopoverOpened}
+                          >
+                            <Popover.Target>
+                              <div
+                                onMouseEnter={() => setPopoverOpened(true)}
+                                onMouseLeave={() => setPopoverOpened(false)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  cursor: "help",
+                                }}
+                              >
+                                <ThemeIcon
+                                  size="xs"
+                                  color={
+                                    isVariantAutofilled ? "orange" : "blue"
+                                  }
+                                  variant="light"
+                                >
+                                  <FaInfoCircle size={10} />
+                                </ThemeIcon>
+                              </div>
+                            </Popover.Target>
+                            <Popover.Dropdown style={{ pointerEvents: "none" }}>
+                              <Text size="xs" fw={700} mb={5}>
+                                Existing Variants
+                              </Text>
+                              <List size="xs" spacing={2}>
+                                {existingJobs.map((j) => (
+                                  <List.Item key={j.id}>
+                                    {j.job_base_number && j.job_suffix
+                                      ? `${j.job_base_number}-${j.job_suffix}`
+                                      : `${j.job_base_number}`}
+                                  </List.Item>
+                                ))}
+                              </List>
+                            </Popover.Dropdown>
+                          </Popover>
+                        ) : null
+                      }
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        form.setFieldValue("manual_job_suffix", value);
+                        setIsVariantAutofilled(false);
                       }}
-                      {...form.getInputProps("is_custom_cab_required", {
-                        type: "checkbox",
-                      })}
                     />
                   </Group>
-                </Fieldset>
+                </Group>
+              </Group>
+            </Paper>
 
-                <Fieldset
-                  legend="Financials"
-                  variant="filled"
-                  bg={"white"}
-                  styles={{
-                    legend: { fontWeight: "bold" },
-                  }}
-                >
-                  {form.values.order_type != "Multi Fam" && (
-                    <Group gap={50}>
-                      <Radio.Group
-                        label="Payment Required Before Delivery (COD)"
-                        withAsterisk
-                        value={String(form.values.is_cod ?? "")}
-                        onChange={(val) =>
-                          form.setFieldValue("is_cod", val === "true")
-                        }
-                        error={form.errors.is_cod}
+            {/* MAIN TWO-COLUMN LAYOUT */}
+            <Grid gutter="lg" align="flex-start">
+              <Grid.Col span={{ base: 12, lg: 8 }}>
+                <Stack gap="lg">
+                  {/* ORDER & CLIENT */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
                       >
-                        <Group mt="xs" style={{ marginBottom: 10 }}>
-                          <Radio value="true" label="Yes" color="#4a00e0" />
-                          <Radio value="false" label="No" color="#4a00e0" />
-                        </Group>
-                      </Radio.Group>
-                      <Collapse in={!!form.values.is_cod}>
-                        <Switch
-                          label="Payment Received"
-                          color="#4a00e0"
-                          {...form.getInputProps(`payment_received`, {
-                            type: "checkbox",
-                          })}
-                        />
-                      </Collapse>
+                        <User size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Order & Client
+                      </Text>
                     </Group>
-                  )}
-                  <Grid align="flex-end">
-                    <Grid.Col span={3}>
-                      <NumberInput
-                        label="Price"
-                        placeholder="0.00"
-                        prefix="$"
-                        min={0}
-                        thousandSeparator=","
-                        decimalScale={2}
-                        fixedDecimalScale
-                        {...form.getInputProps(`total`)}
-                        styles={{ input: { fontWeight: 700 } }}
+
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                      <Select
+                        label="Order Type"
+                        withAsterisk
+                        placeholder="Select type"
+                        radius="md"
+                        data={OrderTypeOptions}
+                        {...form.getInputProps("order_type")}
                       />
-                    </Grid.Col>
-                    <Grid.Col span={3}>
-                      <NumberInput
-                        label="Deposit"
-                        placeholder="0.00"
-                        prefix="$"
-                        min={0}
-                        thousandSeparator=","
-                        decimalScale={2}
-                        fixedDecimalScale
-                        {...form.getInputProps(`deposit`)}
-                      />{" "}
-                    </Grid.Col>
-                    <Grid.Col span={6} mb={"8px"}>
-                      <Group>
-                        <Group gap="sm">
-                          <Checkbox
-                            size="xs"
-                            label="+ GST"
-                            color="#4A00E0"
-                            checked={viewGst}
-                            onChange={(e) =>
-                              setViewGst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                          <Checkbox
-                            size="xs"
-                            label="+ PST (7%)"
-                            color="#4A00E0"
-                            checked={viewPst}
-                            onChange={(e) =>
-                              setViewPst(e.currentTarget.checked)
-                            }
-                            styles={{
-                              label: { fontWeight: 500, cursor: "pointer" },
-                              input: { cursor: "pointer" },
-                            }}
-                          />
-                        </Group>
-                        <Collapse
-                          in={viewGst || viewPst}
-                          transitionDuration={50}
+
+                      <Select
+                        label="Client"
+                        placeholder="Search clients..."
+                        radius="md"
+                        clearable
+                        comboboxProps={{
+                          position: "bottom",
+                          middlewares: { flip: false, shift: false },
+                          offset: 4,
+                        }}
+                        data={selectData}
+                        filter={({ options }) => options}
+                        searchable
+                        searchValue={clientSearch}
+                        onSearchChange={setClientSearch}
+                        nothingFoundMessage={null}
+                        rightSection={
+                          clientsLoading ? <Loader size={16} /> : null
+                        }
+                        renderOption={({ option }) => {
+                          if (option.value === "ADD_NEW_CLIENT_OPTION") {
+                            return (
+                              <div
+                                style={{
+                                  width: "100%",
+                                  padding: "4px 0",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <Center>
+                                  <Button
+                                    variant="filled"
+                                    size="xs"
+                                    component="div"
+                                    leftSection={<FaPlus size={12} />}
+                                    style={{
+                                      background: linearGradients.primary,
+                                      color: "white",
+                                      border: "none",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    Add New Client
+                                  </Button>
+                                </Center>
+                              </div>
+                            );
+                          }
+                          if (option.value === "STATUS_SEARCHING") {
+                            return (
+                              <Text size="sm" c="dimmed" ta="center" py="xs">
+                                Searching...
+                              </Text>
+                            );
+                          }
+                          if (option.value === "STATUS_NOTHING_FOUND") {
+                            return (
+                              <Text size="sm" c="dimmed" ta="center" py="xs">
+                                No matching clients found.
+                              </Text>
+                            );
+                          }
+                          return option.label;
+                        }}
+                        {...form.getInputProps("client_id")}
+                        value={
+                          form.values.client_id
+                            ? String(form.values.client_id)
+                            : null
+                        }
+                        onChange={(val) => {
+                          if (val === "ADD_NEW_CLIENT_OPTION") {
+                            setIsAddClientModalOpen(true);
+                            return;
+                          }
+
+                          form.setFieldValue("client_id", Number(val));
+                          const fullObj = clientOptions.find(
+                            (c: any) => c.value === val,
+                          )?.original;
+                          setSelectedClientData(
+                            (fullObj as Tables<"client">) || null,
+                          );
+
+                          setUnitNumber("");
+                          form.setFieldValue("shipping", {
+                            shipping_client_name: fullObj?.lastName || "",
+                            project_name: "",
+                            shipping_street: "",
+                            shipping_city: "",
+                            shipping_province: "",
+                            shipping_zip: "",
+                            shipping_phone_1: "",
+                            shipping_phone_2: "",
+                            shipping_email_1: "",
+                            shipping_email_2: "",
+                          });
+                          setTargetProjectName(null);
+                          setAutofilledSourceJob(null);
+                          setHighlightedFields([]);
+                        }}
+                      />
+                    </SimpleGrid>
+                  </Paper>
+
+                  {/* BILLING & SHIPPING */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group justify="space-between" align="center" mb="md">
+                      <Group gap="xs">
+                        <ThemeIcon
+                          size="sm"
+                          radius="md"
+                          style={{
+                            background: linearGradients.primaryVertical,
+                            color: "white",
+                          }}
                         >
-                          <Text size="sm" fw={700} c="violet">
-                            After Taxes: {getInclusiveTotal()}
-                          </Text>
-                        </Collapse>
+                          <Truck size={14} />
+                        </ThemeIcon>
+                        <Text fw={600} size="sm" c={colors.gray.title}>
+                          Billing & Shipping
+                        </Text>
+                        {autofilledSourceJob && (
+                          <Badge
+                            variant="light"
+                            size="sm"
+                            style={{
+                              background: linearGradients.lightViolet,
+                              color: colors.violet.primary,
+                            }}
+                          >
+                            Autofilled from {autofilledSourceJob}
+                          </Badge>
+                        )}
                       </Group>
-                    </Grid.Col>
-                  </Grid>
-                </Fieldset>
-              </Stack>
-            </SimpleGrid>
-          </Paper>
+                      {selectedClientData && (
+                        <Button
+                          size="xs"
+                          radius="md"
+                          leftSection={<FaCopy size={11} />}
+                          onClick={copyClientToShipping}
+                          style={{
+                            background: linearGradients.primary,
+                            color: "white",
+                            border: "none",
+                          }}
+                        >
+                          Copy from Billing
+                        </Button>
+                      )}
+                    </Group>
 
-          {jobId && <RelatedServiceOrders jobId={jobId} readOnly />}
+                    {selectedClientData ? (
+                      <Stack gap="md">
+                        <Box
+                          className="new-sale-billing-summary"
+                          p="md"
+                          style={{
+                            background: linearGradients.lightViolet,
+                            border: "1px solid rgba(142, 45, 226, 0.16)",
+                            borderRadius: "var(--mantine-radius-md)",
+                          }}
+                        >
+                          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+                            <Stack gap={2}>
+                              <Text size="xs" c="dimmed">
+                                Billing Client
+                              </Text>
+                              <Text size="sm" fw={600}>
+                                {selectedClientData.lastName}
+                              </Text>
+                              <Text size="xs" c="dimmed" mt={4}>
+                                {`${selectedClientData.street || "—"}, ${
+                                  selectedClientData.city || "—"
+                                }, ${selectedClientData.province || "—"} ${
+                                  selectedClientData.zip || "—"
+                                }`}
+                              </Text>
+                            </Stack>
+                            <Stack gap={2}>
+                              <Text size="xs" c="dimmed">
+                                Phones
+                              </Text>
+                              <Text size="sm">
+                                {selectedClientData.phone1 || "N/A"}
+                              </Text>
+                              {selectedClientData.phone2 && (
+                                <Text size="xs" c="dimmed">
+                                  {selectedClientData.phone2}
+                                </Text>
+                              )}
+                            </Stack>
+                            <Stack gap={2}>
+                              <Text size="xs" c="dimmed">
+                                Emails
+                              </Text>
+                              <Text size="sm">
+                                {selectedClientData.email1 || "N/A"}
+                              </Text>
+                              {selectedClientData.email2 && (
+                                <Text size="xs" c="dimmed">
+                                  {selectedClientData.email2}
+                                </Text>
+                              )}
+                            </Stack>
+                          </SimpleGrid>
+                        </Box>
 
-          <Paper
-            withBorder
-            p="md"
-            radius="md"
-            pos="sticky"
-            bottom={0}
-            style={{ zIndex: 10 }}
-          >
-            <Group justify="flex-end">
-              <Button
-                variant="outline"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #FF6B6B 0%, #FF3B3B 100%)",
-                  color: "white",
-                  border: "none",
-                }}
-                size="md"
-                onClick={() => {
-                  const nav = (window as any).navigation;
-                  if (nav && "canGoBack" in nav) {
-                    if (nav.canGoBack) {
-                      router.back();
-                    } else {
-                      window.close();
-                    }
-                    return;
-                  }
-                }}
+                        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                          <TextInput
+                            label="Shipping Client Name"
+                            placeholder="Builder/Client Name..."
+                            radius="md"
+                            {...form.getInputProps(
+                              "shipping.shipping_client_name",
+                            )}
+                            styles={getAutofillStyles(
+                              "shipping.shipping_client_name",
+                            )}
+                          />
+                          <Autocomplete
+                            label="Project Name"
+                            placeholder="Project Name for Multi-fams..."
+                            radius="md"
+                            data={projectOptions || []}
+                            clearable={true}
+                            leftSection={
+                              projectsLoading || isLoadingProjectDetails ? (
+                                <Loader size={12} />
+                              ) : null
+                            }
+                            value={form.values.shipping.project_name}
+                            onChange={(val) => {
+                              form.setFieldValue("shipping.project_name", val);
+                              if (val === "") {
+                                setTargetProjectName(null);
+                                setAutofilledSourceJob(null);
+                                setHighlightedFields([]);
+                              }
+                            }}
+                            onOptionSubmit={(val) => {
+                              setTargetProjectName(val);
+                            }}
+                          />
+                        </SimpleGrid>
+
+                        <Grid gutter="sm">
+                          <GridCol span={{ base: 12, sm: 2 }}>
+                            <TextInput
+                              label="Unit #"
+                              placeholder="123"
+                              radius="md"
+                              value={unitNumber}
+                              onChange={(e) =>
+                                setUnitNumber(e.currentTarget.value)
+                              }
+                            />
+                          </GridCol>
+                          <GridCol span={{ base: 12, sm: 4 }}>
+                            <TextInput
+                              label="Street Address"
+                              placeholder="123 Main St..."
+                              radius="md"
+                              {...form.getInputProps(
+                                "shipping.shipping_street",
+                              )}
+                              styles={getAutofillStyles(
+                                "shipping.shipping_street",
+                              )}
+                            />
+                          </GridCol>
+                          <GridCol span={{ base: 12, sm: 2 }}>
+                            <TextInput
+                              label="City"
+                              placeholder="Calgary"
+                              radius="md"
+                              {...form.getInputProps("shipping.shipping_city")}
+                              styles={getAutofillStyles(
+                                "shipping.shipping_city",
+                              )}
+                            />
+                          </GridCol>
+                          <GridCol span={{ base: 12, sm: 2 }}>
+                            <TextInput
+                              label="Province"
+                              placeholder="AB"
+                              radius="md"
+                              {...form.getInputProps(
+                                "shipping.shipping_province",
+                              )}
+                              styles={getAutofillStyles(
+                                "shipping.shipping_province",
+                              )}
+                            />
+                          </GridCol>
+                          <GridCol span={{ base: 12, sm: 2 }}>
+                            <TextInput
+                              label="Zip"
+                              placeholder="A1B 2C3"
+                              radius="md"
+                              {...form.getInputProps("shipping.shipping_zip")}
+                              styles={getAutofillStyles(
+                                "shipping.shipping_zip",
+                              )}
+                            />
+                          </GridCol>
+                        </Grid>
+
+                        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                          <TextInput
+                            label="Phone 1"
+                            radius="md"
+                            {...form.getInputProps("shipping.shipping_phone_1")}
+                            styles={getAutofillStyles(
+                              "shipping.shipping_phone_1",
+                            )}
+                          />
+                          <TextInput
+                            label="Phone 2"
+                            radius="md"
+                            {...form.getInputProps("shipping.shipping_phone_2")}
+                            styles={getAutofillStyles(
+                              "shipping.shipping_phone_2",
+                            )}
+                          />
+                          <TextInput
+                            label="Email 1"
+                            radius="md"
+                            {...form.getInputProps("shipping.shipping_email_1")}
+                            styles={getAutofillStyles(
+                              "shipping.shipping_email_1",
+                            )}
+                          />
+                          <TextInput
+                            label="Email 2"
+                            radius="md"
+                            {...form.getInputProps("shipping.shipping_email_2")}
+                            styles={getAutofillStyles(
+                              "shipping.shipping_email_2",
+                            )}
+                          />
+                        </SimpleGrid>
+                      </Stack>
+                    ) : (
+                      <Text size="sm" c="dimmed" ta="center" py="lg">
+                        Select a client above to view billing details and enter
+                        shipping information.
+                      </Text>
+                    )}
+                  </Paper>
+
+                  {/* DELIVERY & SITE SETUP */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
+                      >
+                        <Truck size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Delivery & Site Setup
+                      </Text>
+                    </Group>
+
+                    <Stack gap="md">
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <Select
+                          label="Delivery Type"
+                          withAsterisk
+                          radius="md"
+                          placeholder="Pickup, Delivery..."
+                          data={DeliveryTypeOptions}
+                          searchable
+                          nothingFoundMessage="No delivery type found"
+                          {...form.getInputProps("delivery_type")}
+                        />
+
+                        <Radio.Group
+                          label="Installation Required"
+                          withAsterisk
+                          value={
+                            form.values.install === true
+                              ? "true"
+                              : form.values.install === false
+                                ? "false"
+                                : ""
+                          }
+                          onChange={(val) =>
+                            form.setFieldValue("install", val === "true")
+                          }
+                          error={form.errors.install}
+                        >
+                          <Group mt={8} gap="lg">
+                            <Radio
+                              value="true"
+                              label="Yes"
+                              color={colors.violet.primary}
+                              styles={{
+                                radio: { cursor: "pointer" },
+                                label: { cursor: "pointer" },
+                              }}
+                            />
+                            <Radio
+                              value="false"
+                              label="No"
+                              color={colors.violet.primary}
+                              styles={{
+                                radio: { cursor: "pointer" },
+                                label: { cursor: "pointer" },
+                              }}
+                            />
+                          </Group>
+                        </Radio.Group>
+                      </SimpleGrid>
+
+                      <Collapse in={form.values.order_type === "Reno"}>
+                        <Radio.Group
+                          label="Site Expectations Document is signed by the customer"
+                          withAsterisk
+                          value={
+                            form.values.site_prep === true
+                              ? "true"
+                              : form.values.site_prep === false
+                                ? "false"
+                                : ""
+                          }
+                          onChange={(val) =>
+                            form.setFieldValue("site_prep", val === "true")
+                          }
+                          error={form.errors.site_prep}
+                        >
+                          <Group mt={8} gap="lg">
+                            <Radio
+                              value="true"
+                              label="Yes"
+                              color={colors.violet.primary}
+                              styles={{
+                                radio: { cursor: "pointer" },
+                                label: { cursor: "pointer" },
+                              }}
+                            />
+                            <Radio
+                              value="false"
+                              label="No"
+                              color={colors.violet.primary}
+                              styles={{
+                                radio: { cursor: "pointer" },
+                                label: { cursor: "pointer" },
+                              }}
+                            />
+                          </Group>
+                        </Radio.Group>
+                      </Collapse>
+                    </Stack>
+                  </Paper>
+
+                  {/* CABINET SPECIFICATIONS */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
+                      >
+                        <Layers size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Cabinet Specifications
+                      </Text>
+                    </Group>
+
+                    <Stack gap="md">
+                      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                        <Select
+                          label="Species"
+                          placeholder="Select Species"
+                          radius="md"
+                          data={speciesOptions}
+                          searchable
+                          allowDeselect
+                          clearable
+                          searchValue={speciesSearchValue}
+                          onSearchChange={setSpeciesSearch}
+                          onKeyDown={(e) => {
+                            handleTabSelect(
+                              e,
+                              speciesOptions,
+                              "cabinet.species",
+                              setSpeciesSearch,
+                              form,
+                            );
+                          }}
+                          nothingFoundMessage={
+                            speciesSearchValue.trim().length > 0 && (
+                              <Button
+                                fullWidth
+                                variant="light"
+                                size="xs"
+                                onClick={() => {
+                                  setNewItemValue(speciesSearchValue);
+                                  openSpeciesModal();
+                                }}
+                              >
+                                + Add "{speciesSearchValue}"
+                              </Button>
+                            )
+                          }
+                          {...form.getInputProps("cabinet.species")}
+                        />
+                        <Select
+                          label="Color"
+                          placeholder="Select Color"
+                          radius="md"
+                          data={colorOptions}
+                          searchable
+                          clearable
+                          searchValue={colorSearchValue}
+                          onSearchChange={setColorSearch}
+                          onKeyDown={(e) =>
+                            handleTabSelect(
+                              e,
+                              colorOptions,
+                              "cabinet.color",
+                              setColorSearch,
+                              form,
+                            )
+                          }
+                          nothingFoundMessage={
+                            colorSearchValue.trim().length > 0 && (
+                              <Button
+                                fullWidth
+                                variant="light"
+                                size="xs"
+                                onClick={() => {
+                                  setNewItemValue(colorSearchValue);
+                                  openColorModal();
+                                }}
+                              >
+                                + Add "{colorSearchValue}"
+                              </Button>
+                            )
+                          }
+                          {...form.getInputProps("cabinet.color")}
+                        />
+                        <Select
+                          label="Door Style"
+                          placeholder="Select Door Style"
+                          radius="md"
+                          data={doorStyleOptions}
+                          searchable
+                          clearable
+                          searchValue={doorStyleSearchValue}
+                          onSearchChange={setDoorStyleSearch}
+                          onKeyDown={(e) =>
+                            handleTabSelect(
+                              e,
+                              doorStyleOptions,
+                              "cabinet.door_style",
+                              setDoorStyleSearch,
+                              form,
+                            )
+                          }
+                          nothingFoundMessage={
+                            doorStyleSearchValue.trim().length > 0 && (
+                              <Button
+                                fullWidth
+                                variant="light"
+                                size="xs"
+                                onClick={() => {
+                                  setNewDoorStyle((prev) => ({
+                                    ...prev,
+                                    name: doorStyleSearchValue,
+                                  }));
+                                  openDoorStyleModal();
+                                }}
+                              >
+                                + Add "{doorStyleSearchValue}"
+                              </Button>
+                            )
+                          }
+                          {...form.getInputProps("cabinet.door_style")}
+                        />
+
+                        <Autocomplete
+                          label="Top Drawer Front"
+                          placeholder="Matching"
+                          radius="md"
+                          clearable
+                          data={TopDrawerFrontOptions}
+                          {...form.getInputProps("cabinet.top_drawer_front")}
+                          onFocus={(e) => {
+                            form
+                              .getInputProps("cabinet.top_drawer_front")
+                              .onFocus?.(e);
+                            focusValues.current["cabinet.top_drawer_front"] =
+                              form.values.cabinet.top_drawer_front;
+                          }}
+                          onBlur={(e) => {
+                            form
+                              .getInputProps("cabinet.top_drawer_front")
+                              .onBlur(e);
+                            const wasEmpty =
+                              !focusValues.current["cabinet.top_drawer_front"];
+                            const isEmpty =
+                              !form.values.cabinet.top_drawer_front;
+                            if (wasEmpty && isEmpty) {
+                              form.setFieldValue(
+                                "cabinet.top_drawer_front",
+                                "Matching",
+                              );
+                            }
+                          }}
+                        />
+                        <Select
+                          label="Interior Material"
+                          placeholder="White Mel"
+                          radius="md"
+                          searchable
+                          clearable
+                          data={getSafeOptions(
+                            InteriorOptions,
+                            form.values.cabinet.interior,
+                          )}
+                          {...form.getInputProps("cabinet.interior")}
+                          onFocus={(e) => {
+                            form.getInputProps("cabinet.interior").onFocus?.(e);
+                            focusValues.current["cabinet.interior"] =
+                              form.values.cabinet.interior;
+                          }}
+                          onBlur={(e) => {
+                            form.getInputProps("cabinet.interior").onBlur(e);
+                            const wasEmpty =
+                              !focusValues.current["cabinet.interior"];
+                            const isEmpty = !form.values.cabinet.interior;
+                            if (wasEmpty && isEmpty) {
+                              form.setFieldValue(
+                                "cabinet.interior",
+                                "WHITE MEL",
+                              );
+                            }
+                          }}
+                        />
+
+                        <NumberInput
+                          label="Box"
+                          radius="md"
+                          min={0}
+                          allowDecimal={false}
+                          {...form.getInputProps("cabinet.box")}
+                        />
+                      </SimpleGrid>
+
+                      <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+                        <Select
+                          label="Drawer Box"
+                          radius="md"
+                          data={getSafeOptions(
+                            DrawerBoxOptions,
+                            form.values.cabinet.drawer_box,
+                          )}
+                          {...form.getInputProps("cabinet.drawer_box")}
+                          onChange={(val) => {
+                            form.setFieldValue("cabinet.drawer_box", val || "");
+                            form.setFieldValue("cabinet.drawer_hardware", "");
+                          }}
+                          allowDeselect={false}
+                        />
+                        <Select
+                          label="Drawer Hardware"
+                          radius="md"
+                          key={form.values.cabinet.drawer_box}
+                          placeholder={
+                            form.values.cabinet.drawer_box
+                              ? "Select Hardware"
+                              : "Select Box First"
+                          }
+                          data={getSafeOptions(
+                            form.values.cabinet.drawer_box
+                              ? HARDWARE_MAPPING[
+                                  form.values.cabinet.drawer_box
+                                ] || []
+                              : [],
+                            form.values.cabinet.drawer_hardware,
+                          )}
+                          {...form.getInputProps("cabinet.drawer_hardware")}
+                          value={form.values.cabinet.drawer_hardware || null}
+                          disabled={!form.values.cabinet.drawer_box}
+                        />
+                        <Autocomplete
+                          label="Flooring Type"
+                          placeholder="Hardwood, Tile..."
+                          radius="md"
+                          data={flooringTypeOptions}
+                          {...form.getInputProps("flooring_type")}
+                        />
+                        <Autocomplete
+                          label="Flooring Clearance"
+                          placeholder="3/8, 1/2..."
+                          radius="md"
+                          data={flooringClearanceOptions}
+                          {...form.getInputProps("flooring_clearance")}
+                        />
+                      </SimpleGrid>
+
+                      <Divider color={colors.gray.borderLight} />
+
+                      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+                        <Stack gap="xs">
+                          <Switch
+                            label="Glass Doors Required"
+                            color={colors.violet.primary}
+                            {...form.getInputProps("cabinet.glass", {
+                              type: "checkbox",
+                            })}
+                          />
+                          <TextInput
+                            label="Glass Type"
+                            placeholder="e.g., Frosted, Clear"
+                            radius="md"
+                            disabled={!form.values.cabinet.glass}
+                            {...form.getInputProps("cabinet.glass_type")}
+                          />
+                        </Stack>
+
+                        <Stack gap="xs">
+                          <Switch
+                            label="Doors/Parts Only Order"
+                            color={colors.violet.primary}
+                            {...form.getInputProps("cabinet.doors_parts_only", {
+                              type: "checkbox",
+                            })}
+                          />
+                          <TextInput
+                            label="Total Piece Count"
+                            placeholder="e.g., 42"
+                            radius="md"
+                            disabled={!form.values.cabinet.doors_parts_only}
+                            {...form.getInputProps("cabinet.piece_count")}
+                          />
+                        </Stack>
+
+                        <Stack gap="sm" justify="center">
+                          <Switch
+                            label="Handles Supplied"
+                            color={colors.violet.primary}
+                            {...form.getInputProps("cabinet.handles_supplied", {
+                              type: "checkbox",
+                            })}
+                          />
+                          <Switch
+                            label="Handles Selected"
+                            color={colors.violet.primary}
+                            {...form.getInputProps("cabinet.handles_selected", {
+                              type: "checkbox",
+                            })}
+                          />
+                        </Stack>
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
+
+                  {/* RELATED SERVICE ORDERS */}
+                  {jobId && <RelatedServiceOrders jobId={jobId} readOnly />}
+                </Stack>
+              </Grid.Col>
+
+              {/* RIGHT STICKY SIDEBAR */}
+              <Grid.Col
+                span={{ base: 12, lg: 4 }}
+                style={{ position: "sticky", top: 16 }}
               >
-                Back
+                <Stack gap="lg">
+                  {/* FINANCIALS */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
+                      >
+                        <DollarSign size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Financials
+                      </Text>
+                    </Group>
+
+                    <Stack gap="md">
+                      {form.values.order_type != "Multi Fam" && (
+                        <Stack gap="xs">
+                          <Radio.Group
+                            label="Payment Required Before Delivery (COD)"
+                            withAsterisk
+                            value={
+                              form.values.is_cod === true
+                                ? "true"
+                                : form.values.is_cod === false
+                                  ? "false"
+                                  : ""
+                            }
+                            onChange={(val) =>
+                              form.setFieldValue("is_cod", val === "true")
+                            }
+                            error={form.errors.is_cod}
+                          >
+                            <Group mt={8} gap="lg">
+                              <Radio
+                                value="true"
+                                label="Yes"
+                                color={colors.violet.primary}
+                                styles={{
+                                  radio: { cursor: "pointer" },
+                                  label: { cursor: "pointer" },
+                                }}
+                              />
+                              <Radio
+                                value="false"
+                                label="No"
+                                color={colors.violet.primary}
+                                styles={{
+                                  radio: { cursor: "pointer" },
+                                  label: { cursor: "pointer" },
+                                }}
+                              />
+                            </Group>
+                          </Radio.Group>
+                          <Collapse in={!!form.values.is_cod}>
+                            <Switch
+                              label="Payment Received"
+                              color={colors.green.primary}
+                              {...form.getInputProps("payment_received", {
+                                type: "checkbox",
+                              })}
+                            />
+                          </Collapse>
+                        </Stack>
+                      )}
+
+                      <SimpleGrid cols={2} spacing="md">
+                        <NumberInput
+                          label="Price"
+                          placeholder="0.00"
+                          prefix="$"
+                          radius="md"
+                          min={0}
+                          thousandSeparator=","
+                          decimalScale={2}
+                          fixedDecimalScale
+                          {...form.getInputProps("total")}
+                          styles={{ input: { fontWeight: 700 } }}
+                        />
+                        <NumberInput
+                          label="Deposit"
+                          placeholder="0.00"
+                          prefix="$"
+                          radius="md"
+                          min={0}
+                          thousandSeparator=","
+                          decimalScale={2}
+                          fixedDecimalScale
+                          {...form.getInputProps("deposit")}
+                        />
+                      </SimpleGrid>
+
+                      <Group gap="xs">
+                        <Chip
+                          checked={viewGst}
+                          onChange={setViewGst}
+                          variant="light"
+                          color={colors.violet.primary}
+                          size="xs"
+                          radius="md"
+                        >
+                          + GST (5%)
+                        </Chip>
+                        <Chip
+                          checked={viewPst}
+                          onChange={setViewPst}
+                          variant="light"
+                          color={colors.violet.primary}
+                          size="xs"
+                          radius="md"
+                        >
+                          + PST (7%)
+                        </Chip>
+                      </Group>
+
+                      <Collapse in={viewGst || viewPst}>
+                        <Box
+                          p="sm"
+                          style={{
+                            background: linearGradients.lightViolet,
+                            borderRadius: "var(--mantine-radius-md)",
+                          }}
+                        >
+                          <Group justify="space-between" align="center">
+                            <Text size="xs" fw={600} c={colors.violet.primary}>
+                              Total After Taxes
+                            </Text>
+                            <Text size="md" fw={700} c={colors.violet.primary}>
+                              {getInclusiveTotal()}
+                            </Text>
+                          </Group>
+                        </Box>
+                      </Collapse>
+                    </Stack>
+                  </Paper>
+
+                  {/* SPECIAL REQUIREMENTS */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
+                      >
+                        <CheckSquare size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Special Requirements
+                      </Text>
+                    </Group>
+
+                    <Stack gap="sm">
+                      <Checkbox
+                        label="Column/Floating Shelf/Woodtop"
+                        color={colors.violet.primary}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                        {...form.getInputProps("is_woodtop_required", {
+                          type: "checkbox",
+                        })}
+                      />
+                      <Checkbox
+                        label="Canopy"
+                        color={colors.violet.primary}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                        {...form.getInputProps("is_canopy_required", {
+                          type: "checkbox",
+                        })}
+                      />
+                      <Checkbox
+                        label="Finish Cabinet"
+                        color={colors.violet.primary}
+                        styles={{
+                          label: { fontWeight: 500, cursor: "pointer" },
+                          input: { cursor: "pointer" },
+                        }}
+                        {...form.getInputProps("is_custom_cab_required", {
+                          type: "checkbox",
+                        })}
+                      />
+                    </Stack>
+                  </Paper>
+
+                  {/* NOTES & CONTACT */}
+                  <Paper
+                    withBorder
+                    p="lg"
+                    radius="lg"
+                    style={{
+                      borderColor: "rgba(142, 45, 226, 0.14)",
+                      boxShadow:
+                        "0 4px 16px rgba(44, 0, 102, 0.06), 0 1px 3px rgba(44, 0, 102, 0.04)",
+                    }}
+                  >
+                    <Group gap="xs" mb="md">
+                      <ThemeIcon
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: linearGradients.primaryVertical,
+                          color: "white",
+                        }}
+                      >
+                        <FileText size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm" c={colors.gray.title}>
+                        Notes & Contact
+                      </Text>
+                    </Group>
+
+                    <Stack gap="md">
+                      <Textarea
+                        label="Comments"
+                        placeholder="Add order notes or special instructions..."
+                        radius="md"
+                        autosize
+                        minRows={3}
+                        maxRows={7}
+                        {...form.getInputProps("comments")}
+                      />
+                      <TextInput
+                        label="Site Super Email"
+                        placeholder="sitesuper@builder.com..."
+                        radius="md"
+                        {...form.getInputProps("sitesuper_email")}
+                        styles={getAutofillStyles("sitesuper_email")}
+                      />
+                    </Stack>
+                  </Paper>
+                </Stack>
+              </Grid.Col>
+            </Grid>
+          </Stack>
+        </form>
+
+        <AddClient
+          opened={isAddClientModalOpen}
+          onClose={() => {
+            setIsAddClientModalOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["client-search"] });
+          }}
+        />
+
+        <Modal
+          opened={speciesModalOpened}
+          onClose={closeSpeciesModal}
+          title="Add New Species"
+          centered
+        >
+          <Stack>
+            <TextInput
+              label="Species Name"
+              value={newItemValue}
+              onChange={(e) => setNewItemValue(e.target.value)}
+              data-autofocus
+            />
+            <Group justify="flex-end">
+              <Button variant="default" onClick={closeSpeciesModal}>
+                Cancel
               </Button>
               <Button
-                type="submit"
-                size="md"
-                color="blue"
-                loading={updateMutation.isPending}
-                disabled={
-                  (!form.isDirty() && unitNumber === initialUnitNumber) ||
-                  updateMutation.isPending
-                }
-                style={{
-                  background:
-                    !form.isDirty() && unitNumber === initialUnitNumber
-                      ? "linear-gradient(135deg, #c6c6c6 0%, #9e9e9e 100%)"
-                      : "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
-                  color: "white",
-                  border: "none",
-                }}
+                onClick={() => addSpeciesMutation.mutate(newItemValue)}
+                loading={addSpeciesMutation.isPending}
               >
-                Update Sale
+                Save Species
               </Button>
             </Group>
-          </Paper>
-        </Stack>
-      </form>
+          </Stack>
+        </Modal>
 
-      <Modal
-        opened={speciesModalOpened}
-        onClose={closeSpeciesModal}
-        title="Add New Species"
-        centered
-      >
-        <Stack>
-          <TextInput
-            label="Species Name"
-            value={newItemValue}
-            onChange={(e) => setNewItemValue(e.target.value)}
-            data-autofocus
-          />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={closeSpeciesModal}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => addSpeciesMutation.mutate(newItemValue)}
-              loading={addSpeciesMutation.isPending}
-            >
-              Save Species
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      <Modal
-        opened={colorModalOpened}
-        onClose={closeColorModal}
-        title="Add New Color"
-        centered
-      >
-        <Stack>
-          <TextInput
-            label="Color Name"
-            value={newItemValue}
-            onChange={(e) => setNewItemValue(e.target.value)}
-            data-autofocus
-          />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={closeColorModal}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => addColorMutation.mutate(newItemValue)}
-              loading={addColorMutation.isPending}
-            >
-              Save Color
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      <Modal
-        opened={doorStyleModalOpened}
-        onClose={closeDoorStyleModal}
-        title="Add New Door Style"
-        centered
-      >
-        <Stack>
-          <TextInput
-            label="Door Style Name"
-            value={newDoorStyle.name}
-            onChange={(e) =>
-              setNewDoorStyle((prev) => ({ ...prev, name: e.target.value }))
-            }
-            data-autofocus
-          />
-
-          <Group>
-            <Checkbox
-              label="Pre-Manufactured"
-              checked={newDoorStyle.is_pre_manufactured}
-              onChange={(e) => {
-                const isChecked = e.currentTarget.checked;
-                setNewDoorStyle((prev) => ({
-                  ...prev,
-                  is_pre_manufactured: isChecked,
-                }));
-              }}
+        <Modal
+          opened={colorModalOpened}
+          onClose={closeColorModal}
+          title="Add New Color"
+          centered
+        >
+          <Stack>
+            <TextInput
+              label="Color Name"
+              value={newItemValue}
+              onChange={(e) => setNewItemValue(e.target.value)}
+              data-autofocus
             />
-            <Checkbox
-              label="Made In House"
-              checked={newDoorStyle.is_made_in_house}
-              onChange={(e) => {
-                const isChecked = e.currentTarget.checked;
-                setNewDoorStyle((prev) => ({
-                  ...prev,
-                  is_made_in_house: isChecked,
-                }));
-              }}
+            <Group justify="flex-end">
+              <Button variant="default" onClick={closeColorModal}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => addColorMutation.mutate(newItemValue)}
+                loading={addColorMutation.isPending}
+              >
+                Save Color
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+
+        <Modal
+          opened={doorStyleModalOpened}
+          onClose={closeDoorStyleModal}
+          title="Add New Door Style"
+          centered
+        >
+          <Stack>
+            <TextInput
+              label="Door Style Name"
+              value={newDoorStyle.name}
+              onChange={(e) =>
+                setNewDoorStyle((prev) => ({ ...prev, name: e.target.value }))
+              }
+              data-autofocus
             />
-          </Group>
+
+            <Group>
+              <Checkbox
+                label="Pre-Manufactured"
+                checked={newDoorStyle.is_pre_manufactured}
+                onChange={(e) => {
+                  const isChecked = e.currentTarget.checked;
+                  setNewDoorStyle((prev) => ({
+                    ...prev,
+                    is_pre_manufactured: isChecked,
+                  }));
+                }}
+              />
+              <Checkbox
+                label="Made In House"
+                checked={newDoorStyle.is_made_in_house}
+                onChange={(e) => {
+                  const isChecked = e.currentTarget.checked;
+                  setNewDoorStyle((prev) => ({
+                    ...prev,
+                    is_made_in_house: isChecked,
+                  }));
+                }}
+              />
+            </Group>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={closeDoorStyleModal}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => addDoorStyleMutation.mutate(newDoorStyle)}
+                loading={addDoorStyleMutation.isPending}
+              >
+                Save Door Style
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+
+        {/* STICKY ACTION BAR */}
+        <Paper
+          className="new-sale-action-bar"
+          withBorder
+          px="lg"
+          py="sm"
+          mt="lg"
+          radius="lg"
+          pos="sticky"
+          bottom={12}
+          style={{
+            zIndex: 10,
+            borderColor: "rgba(142, 45, 226, 0.18)",
+            boxShadow: "0 6px 24px rgba(44, 0, 102, 0.12)",
+            display: "flex",
+            justifyContent:
+              form.values.stage === "SOLD" ? "space-between" : "flex-end",
+            alignItems: "center",
+          }}
+        >
+          {form.values.stage === "SOLD" && (
+            <Box h={36} style={{ display: "flex", alignItems: "center" }}>
+              <Switch
+                onLabel="Active"
+                offLabel="Dead"
+                size="xl"
+                thumbIcon={
+                  form.values.is_active ? <FaCheckCircle /> : <FaCircle />
+                }
+                checked={form.values.is_active}
+                onChange={(e) =>
+                  form.setFieldValue("is_active", e.currentTarget.checked)
+                }
+                styles={{
+                  track: {
+                    cursor: "pointer",
+                    background: form.values.is_active
+                      ? linearGradients.success
+                      : linearGradients.danger,
+                    color: "white",
+                    border: "none",
+                    padding: "0 0.2rem",
+                    width: "6rem",
+                  },
+                  thumb: {
+                    background: form.values.is_active
+                      ? colors.green.primary
+                      : "#cf0000ff",
+                  },
+                }}
+              />
+            </Box>
+          )}
           <Group justify="flex-end">
-            <Button variant="default" onClick={closeDoorStyleModal}>
-              Cancel
+            <Button
+              size="md"
+              radius="md"
+              style={{
+                background: linearGradients.danger,
+                color: "white",
+                border: "none",
+              }}
+              onClick={() => {
+                const nav = (window as any).navigation;
+                if (nav && "canGoBack" in nav) {
+                  if (nav.canGoBack) {
+                    router.back();
+                  } else {
+                    window.close();
+                  }
+                  return;
+                }
+                router.back();
+              }}
+            >
+              Back
             </Button>
             <Button
-              onClick={() => addDoorStyleMutation.mutate(newDoorStyle)}
-              loading={addDoorStyleMutation.isPending}
+              type="submit"
+              size="md"
+              radius="md"
+              loading={updateMutation.isPending}
+              disabled={isUpdateDisabled}
+              style={{
+                background: isUpdateDisabled
+                  ? "linear-gradient(135deg, #c6c6c6 0%, #9e9e9e 100%)"
+                  : linearGradients.primary,
+                color: "white",
+                border: "none",
+              }}
+              form="edit-order-form"
             >
-              Save Door Style
+              Update Sale
             </Button>
           </Group>
-        </Stack>
-      </Modal>
-
-      <AddClient
-        opened={isAddClientModalOpen}
-        onClose={() => {
-          setIsAddClientModalOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["client-search"] });
-        }}
-      />
-    </Container>
+        </Paper>
+      </Container>
+    </Box>
   );
 }

@@ -34,7 +34,7 @@ CREATE VIEW "public"."plant_shipping_view" AS  SELECT j.id AS job_id,
      JOIN public.installation i ON ((j.installation_id = i.installation_id)))
      LEFT JOIN public.production_schedule ps ON ((j.prod_id = ps.prod_id)))
      LEFT JOIN public.warehouse_tracking wt ON ((j.id = wt.job_id)))
-  WHERE (j.is_active = true);
+  WHERE (j.is_active = true AND j.in_prod = true);
 
 GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."plant_shipping_view" TO "anon", "authenticated";
 

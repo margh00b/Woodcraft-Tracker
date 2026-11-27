@@ -24,7 +24,7 @@ CREATE VIEW "public"."prod_table_view" AS  SELECT j.id,
      LEFT JOIN public.colors c ON ((cab.color_id = c."Id")))
      LEFT JOIN public.door_styles ds ON ((cab.door_style_id = ds.id)))
      LEFT JOIN public.installation i ON ((j.installation_id = i.installation_id)))
-  WHERE (j.is_active = true);
+  WHERE (j.is_active = true AND j.in_prod = true);
 
 GRANT DELETE, INSERT, MAINTAIN, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON TABLE "public"."prod_table_view" TO "anon", "authenticated";
 

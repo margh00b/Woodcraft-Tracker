@@ -10,7 +10,11 @@ export const CabinetSpecsSchema = z.object({
   drawer_hardware: z.string().nullable().optional(),
   box: z.preprocess(
     (val) => (val === "" || val === undefined ? null : val),
-    z.number().nullable().optional(),
+    z
+      .number({ error: "Box count must be a valid number" })
+      .min(0, "Box count cannot be negative")
+      .nullable()
+      .optional(),
   ),
   doors_parts_only: z.boolean().default(false),
   handles_supplied: z.boolean().default(false),
@@ -42,11 +46,12 @@ export const MasterOrderSchema = z
     total: z.number().min(0),
     deposit: z.number().min(0),
     comments: z.string().optional(),
-    install: z.boolean({
-      error: "Select Yes/No",
-    }),
-    delivery_type: z.string({ error: "Delivery Type is required" }),
-    order_type: z.string({ error: "Order Type is required" }),
+    install: z.boolean().nullable().optional(),
+    delivery_type: z
+      .string({ error: "Please select a delivery type" })
+      .trim()
+      .min(1, "Please select a delivery type"),
+    order_type: z.string().optional(),
     flooring_type: z.string().optional(),
     flooring_clearance: z.string().optional(),
     cabinet: CabinetSpecsSchema,
@@ -65,26 +70,42 @@ export const MasterOrderSchema = z
     site_prep: z.boolean().nullable().optional(),
     markout_date: z.string().nullable().optional(),
     second_markout_date: z.string().nullable().optional(),
+    in_prod: z.boolean().nullable().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.order_type !== "Multi Fam") {
-      if (data.is_cod === undefined || data.is_cod === null) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Select Yes/No for COD",
-          path: ["is_cod"],
-        });
-      }
+    if (typeof data.install !== "boolean") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["install"],
+        message: "Required!",
+      });
     }
 
-    if (data.order_type === "Reno") {
-      if (data.site_prep === undefined || data.site_prep === null) {
+    if (!data.order_type?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["order_type"],
+        message: "Required!",
+      });
+    }
+
+    if (data.stage === "SOLD") {
+      if (!data.manual_job_base?.trim()) {
         ctx.addIssue({
           code: "custom",
-          message: "Select Yes/No",
-          path: ["site_prep"],
+          path: ["manual_job_base"],
+          message: "Required!",
+        });
+      }
+
+      if (data.in_prod == null) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["in_prod"],
+          message: "Required!",
         });
       }
     }
   });
+
 export type MasterOrderInput = z.infer<typeof MasterOrderSchema>;

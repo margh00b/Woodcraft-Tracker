@@ -22,7 +22,6 @@ export function useSiteChangesTable({
   return useQuery({
     queryKey: ["site_changes", pagination, columnFilters, sorting],
     queryFn: async () => {
-
       let query = supabase.from("jobs").select(
         `
             *,
@@ -40,7 +39,7 @@ export function useSiteChangesTable({
               shipping_zip
             )
           `,
-        { count: "exact" }
+        { count: "exact" },
       );
 
       query = query.not("installation.site_changes", "is", null);
@@ -57,13 +56,13 @@ export function useSiteChangesTable({
           case "client_name":
             query = query.ilike(
               "sales_orders.shipping_client_name",
-              `%${valStr}%`
+              `%${valStr}%`,
             );
             break;
           case "shipping_address":
             query = query.or(
               `shipping_street.ilike.%${valStr}%,shipping_city.ilike.%${valStr}%,shipping_province.ilike.%${valStr}%,shipping_zip.ilike.%${valStr}%`,
-              { foreignTable: "sales_orders" }
+              { foreignTable: "sales_orders" },
             );
             break;
           case "installation_date":
@@ -72,21 +71,21 @@ export function useSiteChangesTable({
               if (start) {
                 const startDate = new Date(start);
                 startDate.setMinutes(
-                  startDate.getMinutes() - startDate.getTimezoneOffset()
+                  startDate.getMinutes() - startDate.getTimezoneOffset(),
                 );
                 query = query.gte(
                   "installation.installation_date",
-                  startDate.toISOString().split("T")[0]
+                  startDate.toISOString().split("T")[0],
                 );
               }
               if (end) {
                 const endDate = new Date(end);
                 endDate.setMinutes(
-                  endDate.getMinutes() - endDate.getTimezoneOffset()
+                  endDate.getMinutes() - endDate.getTimezoneOffset(),
                 );
                 query = query.lte(
                   "installation.installation_date",
-                  endDate.toISOString().split("T")[0]
+                  endDate.toISOString().split("T")[0],
                 );
               }
             }

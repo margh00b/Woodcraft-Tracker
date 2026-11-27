@@ -72,6 +72,8 @@ export function useProductionScheduler(jobId: number) {
         `,
         )
         .eq("id", jobId)
+        .eq("is_active", true)
+        .eq("in_prod", true)
         .single();
 
       if (error) throw error;
