@@ -1191,7 +1191,14 @@ export default function NewSale() {
                 wrap="wrap"
                 gap="sm"
               >
-                <Group gap="sm" align="center" style={{ minWidth: "15%" }}>
+                <Group
+                  gap="sm"
+                  align="center"
+                  style={{
+                    minWidth: "15%",
+                    alignSelf: "center",
+                  }}
+                >
                   <Title order={2} fw={700} c={colors.violet.primary}>
                     {form.values.stage === "SOLD" ? "New Order" : "New Quote"}
                   </Title>
