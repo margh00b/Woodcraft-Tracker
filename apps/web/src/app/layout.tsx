@@ -28,7 +28,7 @@ const dashboardLinks: SidebarLink[] = [
   {
     iconName: "ReceiptText",
     label: "App Reports",
-    allowedRoles: ["admin", "installation", "service", "designer", "safety"],
+    allowedRoles: ["admin", "installation", "service", "designer", "safety", "inspection"],
     links: [
       {
         iconName: "ClipboardCheck",
@@ -41,6 +41,12 @@ const dashboardLinks: SidebarLink[] = [
         label: "Markout Reports",
         path: "/dashboard/markout-reports",
         allowedRoles: ["admin", "installation", "service", "designer"],
+      },
+      {
+        iconName: "ClipboardCheck",
+        label: "Inspection Reports",
+        path: "/dashboard/inspection-reports",
+        allowedRoles: ["admin", "inspection"],
       },
       {
         iconName: "AlertTriangle",

@@ -143,6 +143,14 @@ BEGIN
     END IF;
   END IF;
 
+  -- Completing the report also completes the inspection for its job.
+  -- Keep this inside the same transaction as the report and attachment inserts.
+  UPDATE public.installation AS i
+  SET inspection_completed = COALESCE(i.inspection_completed, now())
+  FROM public.jobs AS j
+  WHERE j.id = p_job_id
+    AND j.installation_id = i.installation_id;
+
   RETURN v_report_id;
 END;
 $function$;
