@@ -5,7 +5,7 @@ import type { PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useSupabase } from "@/hooks/useSupabase";
 
-export type InsiteReportType = "install_reports" | "markouts" | "flha";
+export type InsiteReportType = "install_reports" | "markouts" | "flha" | "inspection_reports";
 
 export type InsiteReport = {
   id: number;
@@ -39,6 +39,7 @@ const attachmentColumns: Record<InsiteReportType, string | null> = {
   install_reports: "install_report_id",
   markouts: "markout_id",
   flha: null,
+  inspection_reports: "inspection_report_id",
 };
 
 type UseInsiteReportsParams = {
