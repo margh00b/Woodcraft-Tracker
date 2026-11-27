@@ -117,6 +117,24 @@ export function FormSubmissionsList({
               </View>
             </View>
 
+            {Boolean(item.started_at) && (
+              <View className="mb-3">
+                <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
+                  Started
+                </Text>
+                <Text className="text-sm font-medium text-[#68677D]">
+                  {new Date(item.started_at!).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </Text>
+              </View>
+            )}
+
             <View className="pt-2 border-t border-slate-100 flex-row justify-between items-center">
               <View>
                 <Text className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">
