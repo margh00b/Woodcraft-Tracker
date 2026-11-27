@@ -1,10 +1,11 @@
 import { useSupabase } from "@/hooks/useSupabase";
 import type { JobOption } from "@/context/JobContext";
-import { JOB_DETAILS_SELECT } from "@/constants/queries";
+import { JOB_DETAILS_SELECT, INSPECTION_JOB_DETAILS_SELECT } from "@/constants/queries";
 
 type Supabase = ReturnType<typeof useSupabase>["supabase"];
 type AuthUser = NonNullable<ReturnType<typeof useSupabase>["user"]>;
 export type MarkoutTab = "Today" | "This Week" | "All";
+export type ScheduledJobsTab = MarkoutTab;
 
 const MARKOUT_PAGE_SIZE = 30;
 
@@ -49,6 +50,46 @@ export async function useAssignedJobs(
     } else {
       query = query.or("markout_date.not.is.null,second_markout_date.not.is.null", {
         referencedTable: "sales_orders",
+      });
+    }
+
+    const { data, error, count } = await query
+      .order("id", { ascending: true })
+      .range(offset, offset + MARKOUT_PAGE_SIZE - 1);
+
+    if (error) throw error;
+    return {
+      jobs: (data ?? []) as unknown as JobOption[],
+      hasMore: (count ?? 0) > offset + (data?.length ?? 0),
+    };
+  }
+
+  if (role === "inspection") {
+    const tab = options.markoutTab ?? "Today";
+    const offset = options.offset ?? 0;
+    let query = supabase
+      .from("jobs")
+      .select(INSPECTION_JOB_DETAILS_SELECT, { count: "exact" })
+      .eq("is_active", true);
+
+    if (tab === "Today") {
+      const today = dateKey(new Date());
+      query = query.or(`inspection_date.eq.${today}`, {
+        referencedTable: "installation",
+      });
+    } else if (tab === "This Week") {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      query = query.or(
+        `and(inspection_date.gte.${dateKey(start)},inspection_date.lt.${dateKey(end)})`,
+        { referencedTable: "installation" },
+      );
+    } else {
+      query = query.or("inspection_date.not.is.null", {
+        referencedTable: "installation",
       });
     }
 

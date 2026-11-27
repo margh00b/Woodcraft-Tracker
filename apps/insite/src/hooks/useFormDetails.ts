@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSupabase } from "./useSupabase";
 
-export type FormType = "flha" | "install_reports" | "markouts";
+export type FormType = "flha" | "install_reports" | "markouts" | "inspection_reports";
 
 export interface FormSubmissionMeta {
   id: number;
@@ -10,6 +10,7 @@ export interface FormSubmissionMeta {
   created_at: string;
   updated_at: string;
   form_type: FormType;
+  started_at?: string;
 }
 
 export interface UseFormDetailsOptions {
@@ -102,7 +103,11 @@ export function useFormDetails(
         const { data, error: queryError } = await supabase
           .schema("insite")
           .from(targetFormType)
-          .select("id, job_id, submitted_by, created_at, updated_at")
+          .select(
+            targetFormType === "inspection_reports"
+              ? "id, job_id, submitted_by, created_at, updated_at, started_at"
+              : "id, job_id, submitted_by, created_at, updated_at",
+          )
           .eq("job_id", targetJobId)
           .order("created_at", { ascending: false })
           .limit(limit);
@@ -119,6 +124,9 @@ export function useFormDetails(
             created_at: row.created_at,
             updated_at: row.updated_at || row.created_at,
             form_type: targetFormType,
+            ...(targetFormType === "inspection_reports" && "started_at" in row
+              ? { started_at: row.started_at }
+              : {}),
           }),
         );
 
