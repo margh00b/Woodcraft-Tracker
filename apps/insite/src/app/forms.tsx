@@ -29,6 +29,7 @@ export default function FormsScreen() {
     markouts: ["admin", "markouts"],
     flha: ["admin", "installer"],
     installationReports: ["admin", "installer"],
+    inspectionReports: ["admin", "inspection"],
   };
 
   const canView = (item: keyof typeof permissions) =>
@@ -56,14 +57,17 @@ export default function FormsScreen() {
       autoFetch: !!jobId,
     },
   );
+  const { forms: inspectionReports, refetch: refetchInspectionReports } =
+    useFormDetails(jobId, "inspection_reports", { autoFetch: !!jobId });
   useFocusEffect(
     useCallback(() => {
       if (jobId) {
         void refetchFlhaForms(false);
         void refetchInstallationReports(false);
         void refetchMarkouts(false);
+        void refetchInspectionReports(false);
       }
-    }, [jobId, refetchFlhaForms, refetchInstallationReports, refetchMarkouts]),
+    }, [jobId, refetchFlhaForms, refetchInstallationReports, refetchMarkouts, refetchInspectionReports]),
   );
 
   if (!jobId) {
@@ -189,6 +193,20 @@ export default function FormsScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/install-reports",
+                  params: { jobId: String(jobId) },
+                })
+              }
+            />
+          )}
+          {canView("inspectionReports") && (
+            <ActionPill
+              title="Inspection Reports"
+              badge={inspectionReports.length}
+              description={`${inspectionReports.length} report${inspectionReports.length === 1 ? "" : "s"} submitted`}
+              icon="🔎"
+              onPress={() =>
+                router.push({
+                  pathname: "/inspection-reports",
                   params: { jobId: String(jobId) },
                 })
               }

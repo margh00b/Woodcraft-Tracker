@@ -22,6 +22,7 @@ export interface JobOption {
     markout_date?: string | null;
     second_markout_date?: string | null;
   } | null;
+  installation?: { inspection_date?: string | null } | { inspection_date?: string | null }[] | null;
 }
 
 interface JobContextType {
@@ -51,7 +52,7 @@ const JobContext = createContext<JobContextType | undefined>(undefined);
 export function JobProvider({ children }: { children: ReactNode }) {
   const { supabase, user, isLoading: isAuthLoading } = useSupabase();
   const role = user?.app_metadata?.role;
-  const canLoadAssignedJobs = role === "installer" || role === "markouts";
+  const canLoadAssignedJobs = role === "installer" || role === "markouts" || role === "inspection";
 
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null);
   const [activeJobVariants, setActiveJobVariants] = useState<JobOption[]>([]);
@@ -95,7 +96,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   }, [supabase, user, isAuthLoading, canLoadAssignedJobs]);
 
   const loadMoreAssignedJobs = useCallback(async () => {
-    if (role !== "markouts" || !user || isLoadingMoreAssignedJobs || !hasMoreAssignedJobs) return;
+    if ((role !== "markouts" && role !== "inspection") || !user || isLoadingMoreAssignedJobs || !hasMoreAssignedJobs) return;
     setIsLoadingMoreAssignedJobs(true);
     setAssignedJobsError(null);
     const nextOffset = assignedJobsOffset + 30;
@@ -108,7 +109,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setAssignedJobsOffset(nextOffset);
       setHasMoreAssignedJobs(page.hasMore);
     } catch (error) {
-      console.error("Failed to load more markouts:", error);
+      console.error("Failed to load more scheduled jobs:", error);
       setAssignedJobsError(
         error instanceof Error ? error.message : "Unable to load more markouts.",
       );
