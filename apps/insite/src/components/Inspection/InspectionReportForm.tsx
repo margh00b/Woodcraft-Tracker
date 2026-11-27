@@ -1,14 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
   Modal,
   Pressable,
   ScrollView,
-<<<<<<< HEAD
-=======
   Switch,
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
   Text,
   TextInput,
   View,
@@ -49,11 +52,21 @@ type AttachmentRow = {
 };
 
 type InspectionDetails = {
-  areas?: Array<{ id?: string; name: string; notes?: string | null; is_na?: boolean }>;
+  areas?: Array<{
+    id?: string;
+    name: string;
+    notes?: string | null;
+    is_na?: boolean;
+  }>;
 };
 
 const DEFAULT_AREAS: Omit<InspectionArea, "photos">[] = [
-  { id: "material-on-site", name: "Materials On-Site", notes: "", is_na: false },
+  {
+    id: "material-on-site",
+    name: "Materials On-Site",
+    notes: "",
+    is_na: false,
+  },
   { id: "kitchen", name: "Kitchen", notes: "", is_na: false },
   { id: "island", name: "Island", notes: "", is_na: false },
   { id: "main-bath", name: "Main Bath", notes: "", is_na: false },
@@ -69,10 +82,7 @@ function formatTimestamp(value: string) {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-<<<<<<< HEAD
-=======
     second: "2-digit",
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
   });
 }
 
@@ -93,15 +103,24 @@ export default function InspectionReportForm() {
     DEFAULT_AREAS.map((area) => ({ ...area, photos: [] })),
   );
   const [generalPhotos, setGeneralPhotos] = useState<InspectionPhoto[]>([]);
-  const [photoTarget, setPhotoTarget] = useState<string | "generic" | null>(null);
+  const [photoTarget, setPhotoTarget] = useState<string | "generic" | null>(
+    null,
+  );
   const [addAreaVisible, setAddAreaVisible] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
   const [isLoading, setIsLoading] = useState(!!isEditing);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const [startedAt] = useState(() => new Date().toISOString());
-  const [originalStartedAt, setOriginalStartedAt] = useState<string | null>(null);
-  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
+  const [originalStartedAt, setOriginalStartedAt] = useState<string | null>(
+    null,
+  );
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>(
+    [],
+  );
   const [deletedStoragePaths, setDeletedStoragePaths] = useState<string[]>([]);
   const [reportJobId, setReportJobId] = useState<number | null>(null);
   const submissionIdRef = useRef<string | null>(null);
@@ -109,7 +128,7 @@ export default function InspectionReportForm() {
   const scrollRef = useRef<ScrollView>(null);
   const { uploadPhotos, commitSuccess } = usePhotoUploadPipeline();
 
-  const jobId = isEditing ? reportJobId ?? parsedJobId : parsedJobId;
+  const jobId = isEditing ? (reportJobId ?? parsedJobId) : parsedJobId;
   const activeJob = selectedJob?.id === jobId ? selectedJob : null;
 
   useEffect(() => {
@@ -134,7 +153,9 @@ export default function InspectionReportForm() {
         if (attachmentError) throw attachmentError;
 
         const rows = (attachments ?? []) as AttachmentRow[];
-        const photosForTag = async (tag: string): Promise<InspectionPhoto[]> => {
+        const photosForTag = async (
+          tag: string,
+        ): Promise<InspectionPhoto[]> => {
           const matching = rows.filter((row) => row.file_tag === tag);
           return Promise.all(
             matching.map(async (row) => {
@@ -158,12 +179,21 @@ export default function InspectionReportForm() {
         const loadedAreas = await Promise.all(
           (savedAreas.length
             ? savedAreas
-            : DEFAULT_AREAS.map((area) => ({ ...area, notes: "", is_na: false }))
+            : DEFAULT_AREAS.map((area) => ({
+                ...area,
+                notes: "",
+                is_na: false,
+              }))
           ).map(async (area, index) => {
             const name = area.name;
-            const fallbackId = DEFAULT_AREAS.find((item) => item.name === name)?.id;
+            const fallbackId = DEFAULT_AREAS.find(
+              (item) => item.name === name,
+            )?.id;
             return {
-              id: area.id || fallbackId || `custom-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+              id:
+                area.id ||
+                fallbackId ||
+                `custom-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
               name,
               notes: area.notes ?? "",
               is_na: !!area.is_na,
@@ -179,7 +209,8 @@ export default function InspectionReportForm() {
         setAreas(loadedAreas);
         setGeneralPhotos(loadedGeneral);
       } catch (error) {
-        if (!cancelled) Alert.alert("Unable to load inspection", getErrorMessage(error));
+        if (!cancelled)
+          Alert.alert("Unable to load inspection", getErrorMessage(error));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -199,28 +230,38 @@ export default function InspectionReportForm() {
     }
     setAreas((current) =>
       current.map((area) =>
-        area.id === target ? { ...area, photos: [...area.photos, ...additions] } : area,
+        area.id === target
+          ? { ...area, photos: [...area.photos, ...additions] }
+          : area,
       ),
     );
   }, []);
 
   const removePhoto = useCallback(
     (target: string, index: number) => {
-      const list = target === "generic"
-        ? generalPhotos
-        : areas.find((area) => area.id === target)?.photos ?? [];
+      const list =
+        target === "generic"
+          ? generalPhotos
+          : (areas.find((area) => area.id === target)?.photos ?? []);
       const photo = list[index];
       if (photo && !photo.isNew && photo.id && photo.storagePath) {
         setDeletedAttachmentIds((current) => [...current, photo.id!]);
         setDeletedStoragePaths((current) => [...current, photo.storagePath!]);
       }
       if (target === "generic") {
-        setGeneralPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index));
+        setGeneralPhotos((current) =>
+          current.filter((_, photoIndex) => photoIndex !== index),
+        );
       } else {
         setAreas((current) =>
           current.map((area) =>
             area.id === target
-              ? { ...area, photos: area.photos.filter((_, photoIndex) => photoIndex !== index) }
+              ? {
+                  ...area,
+                  photos: area.photos.filter(
+                    (_, photoIndex) => photoIndex !== index,
+                  ),
+                }
               : area,
           ),
         );
@@ -229,11 +270,14 @@ export default function InspectionReportForm() {
     [areas, generalPhotos],
   );
 
-  const updateArea = useCallback((id: string, patch: Partial<InspectionArea>) => {
-    setAreas((current) =>
-      current.map((area) => area.id === id ? { ...area, ...patch } : area),
-    );
-  }, []);
+  const updateArea = useCallback(
+    (id: string, patch: Partial<InspectionArea>) => {
+      setAreas((current) =>
+        current.map((area) => (area.id === id ? { ...area, ...patch } : area)),
+      );
+    },
+    [],
+  );
 
   const addArea = () => {
     const name = newAreaName.trim();
@@ -251,41 +295,60 @@ export default function InspectionReportForm() {
   };
 
   const removeArea = (areaId: string) => {
-    Alert.alert("Remove Area", "Remove this area and its photos from the report?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: () => {
-          const area = areas.find((item) => item.id === areaId);
-          area?.photos.forEach((photo) => {
-            if (!photo.isNew && photo.id && photo.storagePath) {
-              setDeletedAttachmentIds((current) => [...current, photo.id!]);
-              setDeletedStoragePaths((current) => [...current, photo.storagePath!]);
-            }
-          });
-          setAreas((current) => current.filter((item) => item.id !== areaId));
+    Alert.alert(
+      "Remove Area",
+      "Remove this area and its photos from the report?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            const area = areas.find((item) => item.id === areaId);
+            area?.photos.forEach((photo) => {
+              if (!photo.isNew && photo.id && photo.storagePath) {
+                setDeletedAttachmentIds((current) => [...current, photo.id!]);
+                setDeletedStoragePaths((current) => [
+                  ...current,
+                  photo.storagePath!,
+                ]);
+              }
+            });
+            setAreas((current) => current.filter((item) => item.id !== areaId));
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    if (!jobId || !activeJob && !isEditing) {
-      Alert.alert("No Job Selected", "Return to the dashboard and select a job first.");
+    if (!jobId || (!activeJob && !isEditing)) {
+      Alert.alert(
+        "No Job Selected",
+        "Return to the dashboard and select a job first.",
+      );
       return;
     }
     if (areas.length === 0) {
-      Alert.alert("Inspection Areas Required", "Add at least one inspection area.");
+      Alert.alert(
+        "Inspection Areas Required",
+        "Add at least one inspection area.",
+      );
       return;
     }
 
     const newPhotos = [
       ...areas.flatMap((area) =>
-        area.is_na ? [] : area.photos.filter((photo) => photo.isNew).map((photo) => ({ ...photo, tag: area.name })),
+        area.is_na
+          ? []
+          : area.photos
+              .filter((photo) => photo.isNew)
+              .map((photo) => ({ ...photo, tag: area.name })),
       ),
-      ...generalPhotos.filter((photo) => photo.isNew).map((photo) => ({ ...photo, tag: GENERAL_TAG })),
+      ...generalPhotos
+        .filter((photo) => photo.isNew)
+        .map((photo) => ({ ...photo, tag: GENERAL_TAG })),
     ];
 
     setIsSubmitting(true);
@@ -326,21 +389,30 @@ export default function InspectionReportForm() {
             .from("job_attachments")
             .select("file_path")
             .eq("inspection_report_id", reportId)
-            .in("file_path", attachments.map((attachment) => attachment.file_path));
+            .in(
+              "file_path",
+              attachments.map((attachment) => attachment.file_path),
+            );
           if (linkedError) throw linkedError;
-          const linkedPaths = new Set((linkedAttachments ?? []).map((item) => item.file_path));
-          attachments = attachments.filter((attachment) => !linkedPaths.has(attachment.file_path));
+          const linkedPaths = new Set(
+            (linkedAttachments ?? []).map((item) => item.file_path),
+          );
+          attachments = attachments.filter(
+            (attachment) => !linkedPaths.has(attachment.file_path),
+          );
         }
         const newAttachments = attachments.map((attachment) => ({
           ...attachment,
           uploaded_by: username,
         }));
-        const { error } = await supabase.schema("insite").rpc("update_inspection_report", {
-          p_report_id: reportId,
-          p_details: details,
-          p_deleted_attachment_ids: deletedAttachmentIds,
-          p_new_attachments: newAttachments,
-        });
+        const { error } = await supabase
+          .schema("insite")
+          .rpc("update_inspection_report", {
+            p_report_id: reportId,
+            p_details: details,
+            p_deleted_attachment_ids: deletedAttachmentIds,
+            p_new_attachments: newAttachments,
+          });
         if (error) throw error;
 
         if (submissionId) await commitSuccess(submissionId);
@@ -351,7 +423,10 @@ export default function InspectionReportForm() {
             .from("job_files")
             .remove(deletedStoragePaths);
           if (storageError) {
-            console.warn("Inspection report updated, but removed photos could not be deleted from storage:", storageError);
+            console.warn(
+              "Inspection report updated, but removed photos could not be deleted from storage:",
+              storageError,
+            );
           }
         }
         if (jobId) invalidateFormDetailsCache(jobId, "inspection_reports");
@@ -360,16 +435,19 @@ export default function InspectionReportForm() {
         ]);
       } else {
         const idempotencyKey = submissionId ?? Crypto.randomUUID();
-        const { data, error } = await supabase.schema("insite").rpc("submit_inspection_report", {
-          p_job_id: jobId,
-          p_details: details,
-          p_submitted_by: username,
-          p_idempotency_key: idempotencyKey,
-          p_started_at: startedAt,
-          p_attachments: attachments,
-        });
+        const { data, error } = await supabase
+          .schema("insite")
+          .rpc("submit_inspection_report", {
+            p_job_id: jobId,
+            p_details: details,
+            p_submitted_by: username,
+            p_idempotency_key: idempotencyKey,
+            p_started_at: startedAt,
+            p_attachments: attachments,
+          });
         if (error) throw error;
-        if (data == null) throw new Error("The server did not return an inspection report ID.");
+        if (data == null)
+          throw new Error("The server did not return an inspection report ID.");
         if (submissionId) await commitSuccess(submissionId);
         submissionIdRef.current = null;
         uploadedAttachmentsRef.current = null;
@@ -393,7 +471,9 @@ export default function InspectionReportForm() {
     [areas],
   );
 
-  const title = isEditing ? `Edit Inspection #${reportId}` : "New Inspection Report";
+  const title = isEditing
+    ? `Edit Inspection #${reportId}`
+    : "New Inspection Report";
   const canSubmit = !!jobId && (isEditing || !!activeJob);
 
   return (
@@ -414,19 +494,27 @@ export default function InspectionReportForm() {
         {isLoading ? (
           <View className="items-center justify-center py-12">
             <ActivityIndicator size="large" color="#6654D9" />
-            <Text className="mt-3 text-sm text-[#85849A]">Loading inspection report...</Text>
+            <Text className="mt-3 text-sm text-[#85849A]">
+              Loading inspection report...
+            </Text>
           </View>
         ) : !canSubmit ? (
           <View className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <Text className="font-bold text-amber-800">No Job Selected</Text>
-            <Text className="mt-1 text-sm text-amber-700">Return to the dashboard and select a job first.</Text>
+            <Text className="mt-1 text-sm text-amber-700">
+              Return to the dashboard and select a job first.
+            </Text>
           </View>
         ) : (
           <View>
             {isEditing && originalStartedAt && (
               <View className="mb-4 rounded-xl border border-[#DDD7FA] bg-[#F5F2FF] p-3">
-                <Text className="text-xs font-semibold uppercase text-[#68677D]">Report started</Text>
-                <Text className="mt-1 text-sm font-semibold text-[#39306F]">{formatTimestamp(originalStartedAt)}</Text>
+                <Text className="text-xs font-semibold uppercase text-[#68677D]">
+                  Report started
+                </Text>
+                <Text className="mt-1 text-sm font-semibold text-[#39306F]">
+                  {formatTimestamp(originalStartedAt)}
+                </Text>
               </View>
             )}
 
@@ -435,46 +523,43 @@ export default function InspectionReportForm() {
                 Inspection Areas
               </Text>
               {areas.map((area) => (
-<<<<<<< HEAD
-                <View key={area.id} className="mb-3 rounded-2xl border border-[#E9E8F1] bg-white p-4 shadow-sm">
-                  <View className="mb-3 flex-row items-center justify-between">
-                    <Text className="flex-1 text-base font-bold text-[#302D4B]">{area.name}</Text>
-                    {!DEFAULT_AREAS.some((item) => item.id === area.id) && (
-                      <Pressable onPress={() => removeArea(area.id)} disabled={isSubmitting}>
-                        <Text className="font-semibold text-rose-600">Remove</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                  <Pressable
-                    onPress={() => updateArea(area.id, { is_na: !area.is_na })}
-                    disabled={isSubmitting}
-                    className={`mb-3 self-start rounded-lg border px-3 py-2 ${area.is_na ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-slate-50"}`}
-                  >
-                    <Text className={`text-sm font-semibold ${area.is_na ? "text-amber-800" : "text-slate-600"}`}>
-                      {area.is_na ? "✓ Not Applicable" : "Mark as N/A"}
-                    </Text>
-                  </Pressable>
-                  {!area.is_na && (
-                    <>
-=======
                 <View
                   key={area.id}
-                  className={`mb-3 rounded-xl border p-4 shadow-sm ${area.is_na ? "border-[#E9E8F1] bg-[#F1EEFF]" : "border-[#E9E8F1] bg-white"}`}
+                  className={`mb-3 rounded-xl border p-4 shadow-sm ${
+                    area.is_na
+                      ? "border-[#E9E8F1] bg-[#F1EEFF]"
+                      : "border-[#E9E8F1] bg-white"
+                  }`}
                 >
                   <View className="mb-4 flex-row items-center justify-between">
-                    <Text className="mr-2 flex-1 text-sm font-bold text-[#17152D]">{area.name}</Text>
+                    <Text className="mr-2 flex-1 text-sm font-bold text-[#17152D]">
+                      {area.name}
+                    </Text>
+
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-xs font-medium text-[#85849A]">N/A</Text>
+                      <Text className="text-xs font-medium text-[#85849A]">
+                        N/A
+                      </Text>
+
                       <Switch
                         value={area.is_na}
-                        onValueChange={(value) => updateArea(area.id, { is_na: value })}
+                        onValueChange={(value) =>
+                          updateArea(area.id, { is_na: value })
+                        }
                         disabled={isSubmitting}
                         trackColor={{ false: "#cbd5e1", true: "#64748b" }}
                         thumbColor="#ffffff"
                       />
+
                       {!DEFAULT_AREAS.some((item) => item.id === area.id) && (
-                        <Pressable onPress={() => removeArea(area.id)} disabled={isSubmitting} className="ml-1">
-                          <Text className="text-xs font-bold text-rose-500">Remove</Text>
+                        <Pressable
+                          onPress={() => removeArea(area.id)}
+                          disabled={isSubmitting}
+                          className="ml-1"
+                        >
+                          <Text className="text-xs font-bold text-rose-500">
+                            Remove
+                          </Text>
                         </Pressable>
                       )}
                     </View>
@@ -485,51 +570,48 @@ export default function InspectionReportForm() {
                       className={area.is_na ? "opacity-30" : ""}
                       pointerEvents={area.is_na ? "none" : "auto"}
                     >
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
-                      <Text className="mb-1 text-xs font-semibold uppercase text-[#85849A]">Notes</Text>
+                      <Text className="mb-1 text-xs font-semibold uppercase text-[#85849A]">
+                        Notes
+                      </Text>
+
                       <TextInput
                         value={area.notes}
-                        onChangeText={(value) => updateArea(area.id, { notes: value })}
-<<<<<<< HEAD
-                        editable={!isSubmitting}
-=======
+                        onChangeText={(value) =>
+                          updateArea(area.id, { notes: value })
+                        }
                         editable={!isSubmitting && !area.is_na}
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                         multiline
                         textAlignVertical="top"
                         placeholder={`Enter notes for ${area.name.toLowerCase()}...`}
                         placeholderTextColor="#A5A3B8"
-<<<<<<< HEAD
-                        className="mb-3 min-h-[88px] rounded-xl border border-[#E9E8F1] bg-[#FAFAFD] p-3 text-sm text-[#302D4B]"
-                      />
-                      <Text className="mb-2 text-xs font-semibold uppercase text-[#85849A]">Area Photos</Text>
-=======
                         className="mb-3 min-h-[88px] rounded-xl border border-[#E9E8F1] bg-[#F1F1F7] p-3 text-sm text-[#17152D]"
                       />
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
+
+                      <Text className="mb-2 text-xs font-semibold uppercase text-[#85849A]">
+                        Area Photos
+                      </Text>
+
                       <PhotoGrid
                         photos={area.photos}
                         onAdd={() => setPhotoTarget(area.id)}
                         onRemove={(index) => removePhoto(area.id, index)}
-<<<<<<< HEAD
-                        disabled={isSubmitting}
-                      />
-                    </>
-                  )}
-=======
                         disabled={isSubmitting || area.is_na}
                       />
                     </View>
 
                     {area.is_na && (
-                      <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+                      <View
+                        pointerEvents="none"
+                        className="absolute inset-0 items-center justify-center"
+                      >
                         <View className="rounded-lg border border-slate-300 bg-[#F1EEFF]/95 px-4 py-2">
-                          <Text className="text-sm font-semibold text-[#68677D]">Not applicable</Text>
+                          <Text className="text-sm font-semibold text-[#68677D]">
+                            Not applicable
+                          </Text>
                         </View>
                       </View>
                     )}
                   </View>
->>>>>>> d0274d398d7405c95ea04d333a15deb3869a4944
                 </View>
               ))}
               <Pressable
@@ -537,13 +619,20 @@ export default function InspectionReportForm() {
                 disabled={isSubmitting}
                 className="mb-5 items-center rounded-xl border border-indigo-200 bg-indigo-50 p-3"
               >
-                <Text className="text-sm font-bold text-indigo-700">+ Add Area</Text>
+                <Text className="text-sm font-bold text-indigo-700">
+                  + Add Area
+                </Text>
               </Pressable>
             </View>
 
             <View className="mb-5 rounded-2xl border border-[#E9E8F1] bg-white p-4 shadow-sm">
-              <Text className="mb-2 text-md font-bold uppercase tracking-wider text-[#85849A]">General Inspection Photos</Text>
-              <Text className="mb-3 text-xs text-[#85849A]">Add overall site or inspection photos that do not belong to a specific area.</Text>
+              <Text className="mb-2 text-md font-bold uppercase tracking-wider text-[#85849A]">
+                General Inspection Photos
+              </Text>
+              <Text className="mb-3 text-xs text-[#85849A]">
+                Add overall site or inspection photos that do not belong to a
+                specific area.
+              </Text>
               <PhotoGrid
                 photos={generalPhotos}
                 onAdd={() => setPhotoTarget("generic")}
@@ -555,7 +644,9 @@ export default function InspectionReportForm() {
             {isSubmitting && (
               <View className="mb-3 flex-row items-center justify-center">
                 <ActivityIndicator color="#6654D9" />
-                <Text className="ml-2 text-sm text-[#85849A]">Saving inspection photos and report...</Text>
+                <Text className="ml-2 text-sm text-[#85849A]">
+                  Saving inspection photos and report...
+                </Text>
               </View>
             )}
 
@@ -567,7 +658,9 @@ export default function InspectionReportForm() {
               {isSubmitting ? (
                 <Text className="font-semibold text-white">Submitting...</Text>
               ) : (
-                <Text className="text-lg font-bold text-white">{isEditing ? "Save Changes" : "Submit Inspection Report"}</Text>
+                <Text className="text-lg font-bold text-white">
+                  {isEditing ? "Save Changes" : "Submit Inspection Report"}
+                </Text>
               )}
             </Pressable>
           </View>
@@ -589,7 +682,9 @@ export default function InspectionReportForm() {
       >
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full rounded-2xl bg-white p-5">
-            <Text className="text-lg font-bold text-[#302D4B]">Add Inspection Area</Text>
+            <Text className="text-lg font-bold text-[#302D4B]">
+              Add Inspection Area
+            </Text>
             <TextInput
               value={newAreaName}
               onChangeText={setNewAreaName}
@@ -599,10 +694,19 @@ export default function InspectionReportForm() {
               className="mt-4 rounded-xl border border-[#E9E8F1] bg-[#FAFAFD] p-3 text-[#302D4B]"
             />
             <View className="mt-4 flex-row justify-end gap-3">
-              <Pressable onPress={() => { setAddAreaVisible(false); setNewAreaName(""); }} className="rounded-lg px-4 py-3">
+              <Pressable
+                onPress={() => {
+                  setAddAreaVisible(false);
+                  setNewAreaName("");
+                }}
+                className="rounded-lg px-4 py-3"
+              >
                 <Text className="font-semibold text-[#68677D]">Cancel</Text>
               </Pressable>
-              <Pressable onPress={addArea} className="rounded-lg bg-[#5141A5] px-4 py-3">
+              <Pressable
+                onPress={addArea}
+                className="rounded-lg bg-[#5141A5] px-4 py-3"
+              >
                 <Text className="font-semibold text-white">Add Area</Text>
               </Pressable>
             </View>
